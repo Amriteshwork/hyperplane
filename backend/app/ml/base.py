@@ -67,6 +67,11 @@ class ExplainedTemplate:
 
     source: str
     annotations: Mapping[str, Annotation] = field(default_factory=dict)
+    filename: str = "train.py"
+    #: Human label, e.g. "Training script" or "Under the hood".
+    title: str = "Training script"
+    #: Jinja (`.j2`) sources are rendered with a run's config; plain sources are shown as-is.
+    templated: bool = False
 
 
 class Progress(BaseModel):

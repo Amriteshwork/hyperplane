@@ -68,10 +68,9 @@ def make_package(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Ma
         del sys.modules[module]
 
 
-def test_real_algorithms_package_is_empty_for_now() -> None:
+def test_real_algorithms_package_registers_linear_regression() -> None:
     registry = AlgorithmRegistry.discover()
-    assert len(registry) == 0
-    assert registry.list() == []
+    assert [p.spec.id for p in registry.list()] == ["linear_regression"]
 
 
 def test_discovers_packs_sorted_by_id(make_package: MakePackage) -> None:

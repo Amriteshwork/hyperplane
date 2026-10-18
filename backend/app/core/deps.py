@@ -15,6 +15,7 @@ from redis import Redis
 from redis.asyncio import Redis as AsyncRedis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.content.catalog import ContentCatalog
 from app.core.clock import Clock, SystemClock
 from app.core.config import Settings
 from app.db.probe import DatabaseProbe
@@ -28,6 +29,7 @@ from app.jobs.probe import RedisProbe
 from app.jobs.rq_queue import RqJobQueue
 from app.ml.registry import AlgorithmRegistry
 from app.samples.catalog import SampleCatalog
+from app.services.content_service import ContentService
 from app.services.dataset_service import DatasetService, UploadPolicy
 from app.services.health_service import HealthService
 from app.services.session_service import SessionService
@@ -49,6 +51,7 @@ class Container:
     storage: StorageBackend
     registry: AlgorithmRegistry
     samples: SampleCatalog
+    content: ContentCatalog
     clock: Clock
 
     async def aclose(self) -> None:
@@ -77,6 +80,7 @@ def build_container(settings: Settings) -> Container:
         storage=build_storage(settings),
         registry=AlgorithmRegistry.discover(),
         samples=SampleCatalog.load(settings.datasets_dir),
+        content=ContentCatalog.load(settings.content_dir),
         clock=SystemClock(),
     )
 
@@ -135,6 +139,10 @@ def get_clock(container: ContainerDep) -> Clock:
 
 def get_sample_catalog(container: ContainerDep) -> SampleCatalog:
     return container.samples
+
+
+def get_content_service(container: ContainerDep) -> ContentService:
+    return ContentService(container.content, container.registry)
 
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]

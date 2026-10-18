@@ -8,7 +8,9 @@ dependencies = [
     "asyncpg>=0.32.0",
     "boto3>=1.43.114",
     "fastapi[standard]>=0.143.5",
+    "jinja2>=3.1.6",
     "joblib>=1.6.0",
+    "nbformat>=5.10.4",
     "numpy>=2.5.4",
     "openpyxl>=3.1.5",
     "pandas>=3.0.6",
@@ -62,6 +64,11 @@ ignore_missing_imports = true
 # No inline types; pandas-stubs / pyarrow-stubs would be new dependencies.
 module = ["pandas", "pandas.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Learner-facing NumPy code: kept free of casts for readability (NumPy returns Any in places).
+module = ["app.ml.algorithms.*.scratch"]
+warn_return_any = false
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

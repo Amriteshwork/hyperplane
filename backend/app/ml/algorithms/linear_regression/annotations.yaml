@@ -1,0 +1,217 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas for tables, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      Each import is one building block of the workflow: **pandas** reads the data, the
+      `sklearn.*` modules provide the model, preprocessing, splitting and metrics, and
+      **joblib** writes the trained pipeline to disk.
+
+      Only what the script uses is imported, so the list doubles as a table of contents.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, then separate the features (X) from the target we predict (y)."
+    deep: |
+      By convention `X` is the **feature matrix** (one row per example, one column per
+      feature) and `y` is the **target vector**. The model learns a function $f$ such that
+      $f(X) \approx y$.
+
+      Selecting columns explicitly (instead of "everything except the target") guarantees the
+      same features are used here and in the Lab, even if the file has extra columns.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      A model always looks good on the data it was fitted to. Scoring it on a held-out **test
+      set** estimates how it will do on new data.
+
+      `test_size` is the fraction held out (e.g. 0.2 = 20%). `random_state` fixes the shuffle,
+      so the split is identical every run.
+    concepts: [train-test-split]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values and put features on a comparable scale before fitting."
+    deep: |
+      OLS needs a complete numeric matrix:
+
+      - **Imputation** replaces missing numbers with the column median (robust to outliers) and
+        missing categories with the most frequent value.
+      - **Standardisation** rescales each numeric feature to mean 0 and standard deviation 1.
+        Predictions of plain OLS don't change, but coefficients become comparable: each is the
+        effect of a one–standard-deviation change.
+      - **One-hot encoding** turns a category into 0/1 columns, one per value.
+
+      The `ColumnTransformer` learns medians, means and categories **from the training set
+      only**, so no information leaks from the test set.
+
+  model:
+    span: block
+    short: "Create the Linear Regression model with your settings, chained after preprocessing."
+    deep: |
+      `LinearRegression` models the target as a weighted sum of the features:
+
+      $$\hat{y} = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p$$
+
+      The `Pipeline` glues preprocessing and the model into one object, so `fit` and `predict`
+      always apply the same steps in the same order, which is what makes the saved model safe
+      to reuse.
+
+  fit:
+    short: "Learn the coefficients that minimise squared error on the training set."
+    deep: |
+      `fit` first fits the preprocessing on `X_train`, transforms it, then finds the
+      coefficients $\beta$ that minimise the **mean squared error**:
+
+      $$\min_\beta \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+
+      For OLS this has an exact solution (the normal equation), computed with a numerically
+      stable least-squares solver, with no iterations and no learning rate.
+    concepts: [loss-function, mean-squared-error, normal-equation]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and report R², RMSE and MAE."
+    deep: |
+      - **R²**: the share of the target's variance the model explains. 1 is perfect, 0 is no
+        better than always predicting the mean, and it can be negative.
+      - **RMSE**: the typical error, in the target's own units; it punishes large misses.
+      - **MAE**: the average absolute error, less sensitive to outliers than RMSE.
+
+      Compare RMSE with the target's spread: an RMSE of 50 is great if values range in the
+      thousands and poor if they range from 0 to 100.
+    concepts: [r-squared, mean-squared-error, residuals]
+
+  coefficients:
+    span: block
+    short: "List each feature's learned weight, largest effect first."
+    deep: |
+      Each coefficient is the change in the prediction for a one-unit change in that
+      (standardised) feature, **holding the others fixed**. The sign gives the direction.
+
+      Be careful reading them as causes: correlated features share credit unpredictably
+      (multicollinearity), and a coefficient says nothing about features the model never saw.
+    concepts: [linear-regression-assumptions]
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      Saving the **pipeline**, not just the model, means new data goes through exactly the
+      same imputation, scaling and encoding before predicting:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy linear algebra; no machine-learning library."
+    deep: |
+      NumPy gives us arrays and fast linear algebra (`@` for matrix products,
+      `np.linalg.lstsq` for least squares). That is all OLS needs: the whole model is about
+      ten lines of maths.
+
+  class:
+    span: block
+    short: "A minimal model with the same fit/predict interface and attributes as scikit-learn."
+    deep: |
+      Mirroring scikit-learn's names (`coef_`, `intercept_`) lets you compare the two
+      implementations number for number: the test suite checks they agree.
+
+  design-matrix:
+    span: block
+    short: "Prepend a column of ones so the intercept is learned like any other coefficient."
+    deep: |
+      With a column of ones, $\beta_0 \cdot 1 + \beta_1 x_1 + \dots$ is just a dot product
+      $A\theta$, so a single matrix equation solves for the intercept and slopes together.
+
+  fit:
+    short: "Fitting means solving one linear least-squares problem."
+    deep: |
+      Unlike most models, OLS has a **closed-form** solution: no loop, no learning rate, no
+      convergence check. `fit` builds the design matrix and solves for every coefficient at
+      once.
+
+  solve:
+    short: "Find θ minimising ‖Aθ − y‖², the sum of squared errors."
+    deep: |
+      Setting the gradient of the squared error to zero gives the **normal equation**:
+
+      $$A^\top A\,\theta = A^\top y \quad\Rightarrow\quad \theta = (A^\top A)^{-1} A^\top y$$
+
+      We call `np.linalg.lstsq` instead of computing the inverse: it solves the same problem
+      via an SVD, which stays accurate when features are nearly collinear and $A^\top A$ is
+      close to singular.
+    concepts: [normal-equation, mean-squared-error]
+
+  unpack:
+    span: block
+    short: "Split θ back into the intercept and the per-feature coefficients."
+    deep: |
+      Because the column of ones came first, $\theta_0$ is the intercept $\beta_0$ and
+      $\theta_{1..p}$ are the feature coefficients, stored separately to match scikit-learn.
+
+  predict:
+    span: block
+    short: "A prediction is the weighted sum of the features plus the intercept."
+    deep: |
+      $$\hat{y} = X\beta + \beta_0$$
+
+      One matrix–vector product predicts every row at once.
+
+  gradient-descent:
+    span: block
+    short: "The same model learned iteratively: repeatedly step the weights downhill on the error."
+    deep: |
+      Instead of solving the normal equation in one shot, start from zero and repeatedly move
+      the weights against the gradient of the MSE:
+
+      $$w \leftarrow w - \eta\,\frac{2}{n} X^\top (Xw + b - y)$$
+
+      $\eta$ is the **learning rate**. Too large diverges; too small crawls. It reaches the same
+      answer as `lstsq` here, but scales to data too large for a direct solve, and it is the
+      idea behind training almost every other model in this course.
+    concepts: [gradient-descent, loss-function]
+
+  error:
+    short: "The residuals of the current weights: prediction minus truth, for every row."
+    deep: |
+      $e = Xw + b - y$. Squaring and averaging $e$ gives the MSE we are minimising; its
+      gradient with respect to $w$ is $\frac{2}{n} X^\top e$, used in the next line.
+    concepts: [residuals]
+
+  update:
+    short: "Move the weights a small step in the direction that reduces the squared error most."
+    deep: |
+      The gradient points uphill, so we subtract it. The intercept gets the same update with
+      a feature that is always 1, which is why its gradient is just the sum of the errors.
+    concepts: [gradient-descent]
+
+  r2:
+    span: block
+    short: "R² = 1 − (squared error of the model) / (squared error of always guessing the mean)."
+    deep: |
+      $$R^2 = 1 - \frac{\sum_i (y_i - \hat{y}_i)^2}{\sum_i (y_i - \bar{y})^2}$$
+
+      The denominator is the error of the simplest possible model (predict the mean), so R²
+      measures how much better than that baseline the model is.
+    concepts: [r-squared]

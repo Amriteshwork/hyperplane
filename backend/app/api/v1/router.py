@@ -7,6 +7,7 @@ from app.api.v1.routes import (
     concepts,
     datasets,
     experiments,
+    families,
     health,
     recommendations,
     runs,
@@ -14,5 +15,15 @@ from app.api.v1.routes import (
 )
 
 api_router = APIRouter(prefix="/api/v1")
-for module in (health, samples, datasets, algorithms, recommendations, experiments, runs, concepts):
+for module in (
+    health,
+    samples,
+    datasets,
+    families,
+    algorithms,
+    recommendations,
+    experiments,
+    runs,
+    concepts,
+):
     api_router.include_router(module.router)
