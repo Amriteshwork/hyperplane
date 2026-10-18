@@ -1,0 +1,14 @@
+id: california-housing
+name: California Housing
+description: >-
+  Median house value for 20,640 California census block groups (1990 census) with eight
+  features such as median income, house age and location. A larger, realistic regression task.
+task: regression
+target: MedHouseVal
+rows: 20640
+columns: 9
+vendored: false   # licence unverified: fetched at build time via scikit-learn, not redistributed
+licence: Unverified — see source
+source: Pace & Barry (1997), StatLib; via scikit-learn
+url: https://scikit-learn.org/stable/datasets/real_world.html#california-housing-dataset
+citation: "Pace, R. K. & Barry, R. (1997). Sparse spatial autoregressions. Statistics & Probability Letters, 33(3), 291–297."

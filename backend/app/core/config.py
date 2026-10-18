@@ -54,6 +54,16 @@ class Settings(BaseSettings):
 
     health_timeout_seconds: float = Field(default=2.0, gt=0)
 
+    # Upload limits (ARCHITECTURE §10) and retention.
+    max_upload_mb: int = Field(default=50, gt=0)
+    max_rows: int = Field(default=1_000_000, gt=0)
+    max_columns: int = Field(default=500, gt=0)
+    retention_days: int = Field(default=7, gt=0)
+
+    # Anonymous sessions: cookie for browsers, X-Session-ID header for API clients.
+    session_cookie_name: str = "hp_session"
+    session_cookie_secure: bool = False
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:

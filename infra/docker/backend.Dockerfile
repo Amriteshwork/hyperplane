@@ -26,6 +26,11 @@ COPY backend/ /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
+# Sample datasets whose licence we couldn't verify are not committed; fetch them at build time.
+RUN --mount=type=cache,target=/root/.cache/sklearn \
+    SCIKIT_LEARN_DATA=/root/.cache/sklearn \
+    /app/.venv/bin/python -m scripts.sample_datasets --datasets-dir /srv/fetched
+
 # ── runtime: no uv, no build tooling, non-root ───────────────────────────────
 FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
 RUN groupadd --system --gid 10001 app \
@@ -35,6 +40,7 @@ RUN groupadd --system --gid 10001 app \
 COPY --from=builder --chown=app:app /app /app
 COPY --chown=app:app content/ /srv/content/
 COPY --chown=app:app datasets/ /srv/datasets/
+COPY --from=builder --chown=app:app /srv/fetched/ /srv/datasets/
 
 ENV PATH="/app/.venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \

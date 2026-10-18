@@ -1,0 +1,14 @@
+id: penguins
+name: Palmer Penguins
+description: >-
+  Body measurements of 344 penguins of three species on three islands in the Palmer
+  Archipelago, Antarctica. Mixes numeric and categorical columns and has missing values.
+task: multiclass
+target: species
+rows: 344
+columns: 8
+vendored: true
+licence: CC0 1.0
+source: Gorman, Williams & Fraser (2014), Palmer Station LTER; packaged by Horst, Hill & Gorman (palmerpenguins)
+url: https://allisonhorst.github.io/palmerpenguins/
+citation: "Horst, A. M., Hill, A. P. & Gorman, K. B. (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. https://doi.org/10.5281/zenodo.3960218"

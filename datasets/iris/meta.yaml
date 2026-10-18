@@ -1,0 +1,14 @@
+id: iris
+name: Iris
+description: >-
+  Sepal and petal measurements of 150 iris flowers from three species. The classic first
+  classification dataset: small, clean and almost linearly separable.
+task: multiclass
+target: species
+rows: 150
+columns: 5
+vendored: true
+licence: CC BY 4.0
+source: R. A. Fisher (1936), UCI Machine Learning Repository
+url: https://archive.ics.uci.edu/dataset/53/iris
+citation: "Fisher, R. A. (1936). Iris [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C56C76"

@@ -6,21 +6,31 @@ protocol-typed pieces of it. Tests override these dependencies with fakes.
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Annotated, cast
+from uuid import UUID
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, Response
 from redis import Redis
 from redis.asyncio import Redis as AsyncRedis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.core.clock import Clock, SystemClock
 from app.core.config import Settings
 from app.db.probe import DatabaseProbe
+from app.db.repositories.base import DatasetRepository, SessionRepository
+from app.db.repositories.sql_datasets import SqlDatasetRepository
+from app.db.repositories.sql_sessions import SqlSessionRepository
 from app.db.session import create_engine, create_session_factory
+from app.ingest.readers import TableLimits
 from app.jobs.base import JobQueue
 from app.jobs.probe import RedisProbe
 from app.jobs.rq_queue import RqJobQueue
 from app.ml.registry import AlgorithmRegistry
+from app.samples.catalog import SampleCatalog
+from app.services.dataset_service import DatasetService, UploadPolicy
 from app.services.health_service import HealthService
+from app.services.session_service import SessionService
 from app.storage.base import BlobReader, StorageBackend
 from app.storage.probe import StorageProbe
 from app.storage.registry import build_storage
@@ -38,6 +48,8 @@ class Container:
     queue_redis: Redis
     storage: StorageBackend
     registry: AlgorithmRegistry
+    samples: SampleCatalog
+    clock: Clock
 
     async def aclose(self) -> None:
         await self.engine.dispose()
@@ -64,6 +76,8 @@ def build_container(settings: Settings) -> Container:
         ),
         storage=build_storage(settings),
         registry=AlgorithmRegistry.discover(),
+        samples=SampleCatalog.load(settings.datasets_dir),
+        clock=SystemClock(),
     )
 
 
@@ -113,3 +127,71 @@ def get_health_service(container: ContainerDep) -> HealthService:
         ],
         timeout_seconds=container.settings.health_timeout_seconds,
     )
+
+
+def get_clock(container: ContainerDep) -> Clock:
+    return container.clock
+
+
+def get_sample_catalog(container: ContainerDep) -> SampleCatalog:
+    return container.samples
+
+
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
+
+def get_session_repository(db: DbSession) -> SessionRepository:
+    return SqlSessionRepository(db)
+
+
+def get_dataset_repository(db: DbSession) -> DatasetRepository:
+    return SqlDatasetRepository(db)
+
+
+def get_session_service(
+    sessions: Annotated[SessionRepository, Depends(get_session_repository)],
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> SessionService:
+    return SessionService(sessions, clock)
+
+
+def get_dataset_service(
+    datasets: Annotated[DatasetRepository, Depends(get_dataset_repository)],
+    storage: Annotated[StorageBackend, Depends(get_storage)],
+    queue: Annotated[JobQueue, Depends(get_job_queue)],
+    clock: Annotated[Clock, Depends(get_clock)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> DatasetService:
+    policy = UploadPolicy(
+        max_bytes=settings.max_upload_mb * 2**20,
+        limits=TableLimits(max_rows=settings.max_rows, max_columns=settings.max_columns),
+        retention=timedelta(days=settings.retention_days),
+    )
+    return DatasetService(datasets, storage, queue, clock, policy)
+
+
+SESSION_HEADER = "X-Session-ID"
+
+
+async def get_session_id(
+    request: Request,
+    response: Response,
+    service: Annotated[SessionService, Depends(get_session_service)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> UUID:
+    """Anonymous session from the X-Session-ID header or cookie; starts one if absent."""
+    raw = request.headers.get(SESSION_HEADER) or request.cookies.get(settings.session_cookie_name)
+    session_id = await service.resolve(raw)
+    response.set_cookie(
+        settings.session_cookie_name,
+        str(session_id),
+        max_age=settings.retention_days * 86_400,
+        httponly=True,
+        samesite="lax",
+        secure=settings.session_cookie_secure,
+    )
+    response.headers[SESSION_HEADER] = str(session_id)
+    return session_id
+
+
+SessionId = Annotated[UUID, Depends(get_session_id)]

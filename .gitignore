@@ -247,3 +247,8 @@ frontend/playwright/.cache/
 !.vscode/extensions.json
 .DS_Store
 *.swp
+
+# Sample datasets with unverified licences are fetched, never committed
+# (backend: uv run python -m scripts.sample_datasets)
+datasets/diabetes/data.csv
+datasets/california-housing/data.csv

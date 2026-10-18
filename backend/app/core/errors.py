@@ -35,6 +35,26 @@ class ConflictError(AppError):
     title = "Conflict"
 
 
+class PayloadTooLargeError(AppError):
+    status = HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+    title = "Payload Too Large"
+
+
+class UnsupportedMediaTypeError(AppError):
+    status = HTTPStatus.UNSUPPORTED_MEDIA_TYPE
+    title = "Unsupported Media Type"
+
+
+class ServiceUnavailableError(AppError):
+    status = HTTPStatus.SERVICE_UNAVAILABLE
+    title = "Service Unavailable"
+
+
+class UnprocessableError(AppError):
+    status = HTTPStatus.UNPROCESSABLE_CONTENT
+    title = "Unprocessable Content"
+
+
 def problem_response(
     request: Request,
     status: int,
@@ -63,7 +83,7 @@ def problem_response(
 
 async def _app_error(request: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)
-    return problem_response(request, exc.status, title=exc.title, detail=exc.detail)
+    return problem_response(request, int(exc.status), title=exc.title, detail=exc.detail)
 
 
 async def _http_error(request: Request, exc: Exception) -> JSONResponse:

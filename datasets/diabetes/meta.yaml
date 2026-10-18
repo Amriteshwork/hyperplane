@@ -1,0 +1,15 @@
+id: diabetes
+name: Diabetes
+description: >-
+  Ten baseline variables (age, sex, BMI, blood pressure and six blood serum measurements) for
+  442 diabetes patients, with a quantitative measure of disease progression one year later.
+  Features are already mean-centred and scaled.
+task: regression
+target: disease_progression
+rows: 442
+columns: 11
+vendored: false   # licence unverified: fetched at build time via scikit-learn, not redistributed
+licence: Unverified — see source
+source: Efron, Hastie, Johnstone & Tibshirani (2004), "Least Angle Regression"; via scikit-learn
+url: https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset
+citation: "Efron, B., Hastie, T., Johnstone, I. & Tibshirani, R. (2004). Least Angle Regression. Annals of Statistics, 32(2), 407–499."

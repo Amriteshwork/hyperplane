@@ -3,31 +3,41 @@
 Sample datasets users can pick in the Lab instead of uploading. One folder per dataset:
 
 ```
-datasets/<dataset_id>/         kebab-case id, e.g. california-housing
-  data.parquet                 the table (Parquet; small sets may use data.csv)
-  meta.yaml                    metadata (below)
+datasets/<dataset_id>/         kebab-case id (must match `id` in meta.yaml)
+  data.csv                     the table
+  meta.yaml                    metadata (below), validated at API startup
 ```
+
+Every `data.csv` is produced by `backend/scripts/sample_datasets.py`, so it can be rebuilt
+exactly (the synthetic set uses a fixed seed).
+
+- **Vendored** (`vendored: true`): the licence allows redistribution, so the CSV is committed.
+- **Fetched** (`vendored: false`): no licence could be verified, so the CSV is git-ignored and
+  downloaded instead. That happens when the Docker image is built, in CI, and locally with
+  `make datasets`. The API lists a sample whose CSV is missing as `status: not-fetched`.
 
 ## `meta.yaml`
 
 ```yaml
-name: California Housing
-description: Median house values for California districts (1990 census).
+id: synthetic-linear
+name: Synthetic Linear
+description: One line on what the data is and why it is a good teaching set.
 task: regression               # regression | binary | multiclass
-target: MedHouseVal            # default target column
-rows: 20640
-columns: 9
-source: scikit-learn (sklearn.datasets.fetch_california_housing)
-license: Public domain
-url: https://scikit-learn.org/stable/datasets/real_world.html#california-housing-dataset
+target: y                      # default target column
+rows: 500
+columns: 6
+vendored: true
+licence: CC0 1.0               # or "Unverified — see source" when vendored is false
+source: Who published it / how it was obtained
+url: https://…                 # or null
+citation: "…"                  # or null
 ```
 
 ## Rules
 
-- Licence must allow redistribution; record it in `meta.yaml`.
-- Keep files small (≤ 10 MB) so the repo stays light; larger sets are downloaded by a script.
+- Only vendor a dataset whose licence allows redistribution, and record that licence here.
+- Keep files small (≤ 10 MB) so the repo stays light. Larger sets are fetched.
 - Every pack's contract tests train on each sample dataset of a supported task type, so adding a
   dataset here extends test coverage automatically.
 
-Planned for M0: Iris, Penguins, Titanic, Breast Cancer, Wine, California Housing, Diabetes, and a
-small synthetic linear set.
+Titanic is planned but not added yet, because no source with a clear licence has been found.

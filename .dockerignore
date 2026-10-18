@@ -23,3 +23,7 @@ docs
 
 # Backend tests are not part of the runtime image.
 backend/tests
+
+# Fetched at build time instead (see scripts/sample_datasets.py).
+datasets/diabetes/data.csv
+datasets/california-housing/data.csv

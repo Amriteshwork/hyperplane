@@ -1,0 +1,14 @@
+id: wine
+name: Wine
+description: >-
+  Chemical analysis of 178 wines grown in the same region of Italy by three cultivars.
+  Thirteen numeric features on very different scales, which makes it a good feature-scaling example.
+task: multiclass
+target: cultivar
+rows: 178
+columns: 14
+vendored: true
+licence: CC BY 4.0
+source: S. Aeberhard and M. Forina, UCI Machine Learning Repository
+url: https://archive.ics.uci.edu/dataset/109/wine
+citation: "Aeberhard, S. & Forina, M. (1992). Wine [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5PC7J"

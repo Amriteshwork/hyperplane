@@ -1,0 +1,14 @@
+id: breast-cancer
+name: Breast Cancer Wisconsin (Diagnostic)
+description: >-
+  Thirty features computed from digitised images of breast mass cell nuclei, labelled
+  malignant or benign. A realistic binary classification task with correlated features.
+task: binary
+target: diagnosis
+rows: 569
+columns: 31
+vendored: true
+licence: CC BY 4.0
+source: W. Wolberg, O. Mangasarian, N. Street, W. Street, UCI Machine Learning Repository
+url: https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic
+citation: "Wolberg, W., Mangasarian, O., Street, N. & Street, W. (1993). Breast Cancer Wisconsin (Diagnostic) [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5DW2B"

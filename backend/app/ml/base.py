@@ -13,12 +13,9 @@ from numpy.typing import ArrayLike, NDArray
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.ml.profiling.profile import DatasetProfile
+from app.ml.types import TaskType
 
-
-class TaskType(StrEnum):
-    REGRESSION = "regression"
-    BINARY = "binary"
-    MULTICLASS = "multiclass"
+__all__ = ["TaskType"]  # re-exported: packs import it from app.ml.base
 
 
 class Capability(StrEnum):

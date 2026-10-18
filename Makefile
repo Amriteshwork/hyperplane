@@ -12,7 +12,7 @@ COMPOSE := docker compose --env-file .env -f infra/docker-compose.yml
 BACKEND := cd backend &&
 FRONTEND := cd frontend &&
 
-.PHONY: help env up down logs backend-dev worker frontend-dev \
+.PHONY: help env up down logs backend-dev worker datasets frontend-dev \
         test backend-test frontend-test lint backend-lint frontend-lint \
         format api-generate hooks
 
@@ -38,6 +38,9 @@ backend-dev: env ## Run the API with reload on :8000
 
 worker: env ## Run an RQ worker on the host
 	$(BACKEND) uv run rq worker --url "$(REDIS_URL)" "$(JOB_QUEUE_NAME)"
+
+datasets: ## Fetch the sample datasets that are not committed (licence unverified)
+	$(BACKEND) uv run python -m scripts.sample_datasets
 
 frontend-dev: ## Run ng serve on :4200 (proxies /api → :8000)
 	$(FRONTEND) npm start
