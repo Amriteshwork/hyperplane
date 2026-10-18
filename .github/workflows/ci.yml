@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff, mypy, pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: hyperplane
+          POSTGRES_PASSWORD: hyperplane
+          POSTGRES_DB: hyperplane
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hyperplane -d hyperplane"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:8.8.3-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://hyperplane:hyperplane@localhost:5432/hyperplane
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.13.1"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install
+        run: uv sync --locked
+      - name: Ruff
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Mypy
+        run: uv run mypy app
+      - name: Migrations apply
+        run: uv run alembic upgrade head
+      - name: Pytest
+        run: uv run pytest
+
+  frontend:
+    name: Frontend (lint, test, build, e2e)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint && npm run format:check
+      - name: Unit / component tests
+        run: npm test -- --watch=false
+      - name: Build
+        run: npm run build
+      - name: Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: E2E smoke
+        run: npm run e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+
+  content:
+    name: Content check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.13.1"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install
+        run: uv sync --locked --no-dev
+      - name: Validate content/
+        run: uv run python -m scripts.content_check
