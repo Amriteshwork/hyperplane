@@ -3,3 +3,15 @@
 
 export type { GetHealth$Params as GetHealth$Params } from './fn/health/get-health';
 export { getHealth as getHealth } from './fn/health/get-health';
+export type { ListSamples$Params as ListSamples$Params } from './fn/samples/list-samples';
+export { listSamples as listSamples } from './fn/samples/list-samples';
+export type { CreateDatasetFromSample$Params as CreateDatasetFromSample$Params } from './fn/samples/create-dataset-from-sample';
+export { createDatasetFromSample as createDatasetFromSample } from './fn/samples/create-dataset-from-sample';
+export type { UploadDataset$Params as UploadDataset$Params } from './fn/datasets/upload-dataset';
+export { uploadDataset as uploadDataset } from './fn/datasets/upload-dataset';
+export type { GetDataset$Params as GetDataset$Params } from './fn/datasets/get-dataset';
+export { getDataset as getDataset } from './fn/datasets/get-dataset';
+export type { GetDatasetProfile$Params as GetDatasetProfile$Params } from './fn/datasets/get-dataset-profile';
+export { getDatasetProfile as getDatasetProfile } from './fn/datasets/get-dataset-profile';
+export type { GetDatasetPreview$Params as GetDatasetPreview$Params } from './fn/datasets/get-dataset-preview';
+export { getDatasetPreview as getDatasetPreview } from './fn/datasets/get-dataset-preview';

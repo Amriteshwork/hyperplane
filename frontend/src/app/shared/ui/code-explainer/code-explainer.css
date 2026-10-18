@@ -1,0 +1,40 @@
+/* Token colours come from Shiki's dual-theme variables; `.dark` on <html> switches them. */
+.token {
+  color: var(--shiki-light);
+}
+:host-context(.dark) .token {
+  color: var(--shiki-dark);
+}
+
+.line {
+  display: block;
+  min-height: 1lh;
+  padding-inline-end: 1rem;
+  white-space: pre;
+}
+
+.line-number {
+  display: inline-block;
+  width: 3rem;
+  padding-inline-end: 1rem;
+  text-align: end;
+  color: var(--muted-foreground);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.segment {
+  border-inline-start: 2px solid transparent;
+  cursor: pointer;
+}
+.segment:hover {
+  background: color-mix(in oklab, var(--muted) 70%, transparent);
+}
+.segment:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.segment[aria-pressed='true'] {
+  border-inline-start-color: var(--primary);
+  background: var(--muted);
+}

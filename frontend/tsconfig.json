@@ -16,7 +16,13 @@
       "@spartan-ng/helm/utils": ["./src/app/shared/ui/helm/utils/src/index.ts"],
       "@spartan-ng/helm/badge": ["./src/app/shared/ui/helm/badge/src/index.ts"],
       "@spartan-ng/helm/card": ["./src/app/shared/ui/helm/card/src/index.ts"],
-      "@spartan-ng/helm/sheet": ["./src/app/shared/ui/helm/sheet/src/index.ts"]
+      "@spartan-ng/helm/sheet": ["./src/app/shared/ui/helm/sheet/src/index.ts"],
+      "@spartan-ng/helm/input": ["./src/app/shared/ui/helm/input/src/index.ts"],
+      "@spartan-ng/helm/label": ["./src/app/shared/ui/helm/label/src/index.ts"],
+      "@spartan-ng/helm/switch": ["./src/app/shared/ui/helm/switch/src/index.ts"],
+      "@spartan-ng/helm/collapsible": ["./src/app/shared/ui/helm/collapsible/src/index.ts"],
+      "@spartan-ng/helm/progress": ["./src/app/shared/ui/helm/progress/src/index.ts"],
+      "@spartan-ng/helm/native-select": ["./src/app/shared/ui/helm/native-select/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

@@ -9,6 +9,7 @@
 
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
+@import 'katex/dist/katex.min.css';
 
 /* Tokens beyond the Spartan set; exposed as `bg-success`, `text-success-foreground`, ... */
 @theme inline {
@@ -95,5 +96,64 @@
   pre,
   kbd {
     @apply font-mono;
+  }
+}
+
+/* Reading typography for `app-markdown-view` (plain CSS; no typography plugin). */
+@layer components {
+  .prose-hp {
+    @apply block max-w-prose leading-7 text-foreground;
+  }
+  .prose-hp > * + * {
+    @apply mt-4;
+  }
+  .prose-hp h2 {
+    @apply mt-8 text-xl font-semibold tracking-tight;
+  }
+  .prose-hp h3 {
+    @apply mt-6 text-lg font-semibold;
+  }
+  .prose-hp a {
+    @apply underline underline-offset-4 hover:text-muted-foreground;
+  }
+  .prose-hp ul {
+    @apply list-disc ps-6;
+  }
+  .prose-hp ol {
+    @apply list-decimal ps-6;
+  }
+  .prose-hp li + li {
+    @apply mt-1;
+  }
+  .prose-hp blockquote {
+    @apply border-s-2 ps-4 text-muted-foreground;
+  }
+  .prose-hp :not(pre) > code {
+    @apply rounded bg-muted px-1 py-0.5 text-[0.875em];
+  }
+  .prose-hp pre {
+    @apply overflow-x-auto rounded-lg border bg-muted/50 p-4 text-sm;
+  }
+  .prose-hp table {
+    @apply block overflow-x-auto text-sm;
+  }
+  .prose-hp th,
+  .prose-hp td {
+    @apply border px-3 py-1.5 text-left;
+  }
+  .prose-hp .math-display {
+    @apply overflow-x-auto py-1;
+  }
+}
+
+/* Respect the OS setting everywhere, including third-party animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
