@@ -20,3 +20,6 @@ docs
 *.md
 !content/**/*.md
 !datasets/**/*.md
+
+# Backend tests are not part of the runtime image.
+backend/tests

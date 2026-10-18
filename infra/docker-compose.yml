@@ -7,9 +7,12 @@
 
 name: ${COMPOSE_PROJECT_NAME:-hyperplane}
 
-x-backend-build: &backend-build
-  context: ..
-  dockerfile: infra/docker/backend.Dockerfile
+# api, worker and migrate run the same image; it is built once and tagged.
+x-backend-image: &backend-image
+  image: ${COMPOSE_PROJECT_NAME:-hyperplane}-backend:local
+  build:
+    context: ..
+    dockerfile: infra/docker/backend.Dockerfile
 
 # Shared by api, worker and migrate. In-network hostnames replace the localhost URLs.
 x-backend-env: &backend-env
@@ -47,7 +50,7 @@ services:
     restart: unless-stopped
 
   api:
-    build: *backend-build
+    <<: *backend-image
     environment: *backend-env
     ports:
       - "${API_PORT:-8000}:8000"
@@ -72,7 +75,7 @@ services:
     restart: unless-stopped
 
   worker:
-    build: *backend-build
+    <<: *backend-image
     environment: *backend-env
     command: ["rq", "worker", "--url", "redis://redis:6379/0", "${JOB_QUEUE_NAME:-default}"]
     depends_on:
@@ -95,7 +98,7 @@ services:
 
   # One-shot: apply Alembic migrations before api/worker start.
   migrate:
-    build: *backend-build
+    <<: *backend-image
     environment: *backend-env
     command: ["alembic", "upgrade", "head"]
     depends_on:

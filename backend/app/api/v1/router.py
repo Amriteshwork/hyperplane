@@ -1,0 +1,18 @@
+"""Assembles the v1 API."""
+
+from fastapi import APIRouter
+
+from app.api.v1.routes import (
+    algorithms,
+    concepts,
+    datasets,
+    experiments,
+    health,
+    recommendations,
+    runs,
+    samples,
+)
+
+api_router = APIRouter(prefix="/api/v1")
+for module in (health, samples, datasets, algorithms, recommendations, experiments, runs, concepts):
+    api_router.include_router(module.router)
