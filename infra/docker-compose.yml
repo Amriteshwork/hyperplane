@@ -1,0 +1,170 @@
+# Hyperplane — full local stack.
+#   make up                       (preferred: passes --env-file .env and waits for health)
+#   docker compose --env-file .env -f infra/docker-compose.yml up --build
+#
+# Every ${VAR:-default} falls back to the dev value in .env.example, so the stack also starts
+# without a .env file. Images are built with the repo root as context.
+
+name: ${COMPOSE_PROJECT_NAME:-hyperplane}
+
+x-backend-build: &backend-build
+  context: ..
+  dockerfile: infra/docker/backend.Dockerfile
+
+# Shared by api, worker and migrate. In-network hostnames replace the localhost URLs.
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://localhost:8080}
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hyperplane}:${POSTGRES_PASSWORD:-hyperplane}@postgres:5432/${POSTGRES_DB:-hyperplane}
+  REDIS_URL: redis://redis:6379/0
+  JOB_QUEUE_NAME: ${JOB_QUEUE_NAME:-default}
+  JOB_TIMEOUT_SECONDS: ${JOB_TIMEOUT_SECONDS:-300}
+  STORAGE_BACKEND: s3
+  S3_ENDPOINT_URL: http://garage:3900
+  S3_REGION: ${S3_REGION:-garage}
+  S3_BUCKET: ${S3_BUCKET:-hyperplane}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-GK0123456789abcdef01234567}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  api:
+    build: *backend-build
+    environment: *backend-env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+    healthcheck:
+      # /api/v1/health returns 200 only when db, redis and storage are all reachable.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3).status != 200)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  worker:
+    build: *backend-build
+    environment: *backend-env
+    command: ["rq", "worker", "--url", "redis://redis:6379/0", "${JOB_QUEUE_NAME:-default}"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+    healthcheck:
+      # Healthy when this container's RQ worker is registered in Redis.
+      test: ["CMD", "python", "-m", "app.workers.healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    # Training jobs are memory-hungry; cap the worker (ARCHITECTURE §2).
+    mem_limit: 2g
+    restart: unless-stopped
+
+  # One-shot: apply Alembic migrations before api/worker start.
+  migrate:
+    build: *backend-build
+    environment: *backend-env
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  postgres:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hyperplane}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hyperplane}
+      POSTGRES_DB: ${POSTGRES_DB:-hyperplane}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Postgres ≥ 18 images keep PGDATA under /var/lib/postgresql/<major>/docker.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.8.3-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # S3-compatible object storage. Replaces MinIO, whose community images were withdrawn
+  # (see docs/adr). The default key + bucket are created on first start from the env below.
+  garage:
+    image: dxflrs/garage:v2.4.1
+    command: ["/garage", "server", "--single-node", "--default-bucket"]
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-1111111111111111111111111111111111111111111111111111111111111111}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-dev-garage-admin-token}
+      GARAGE_METRICS_TOKEN: ${GARAGE_METRICS_TOKEN:-dev-garage-metrics-token}
+      GARAGE_DEFAULT_ACCESS_KEY: ${S3_ACCESS_KEY_ID:-GK0123456789abcdef01234567}
+      GARAGE_DEFAULT_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      GARAGE_DEFAULT_BUCKET: ${S3_BUCKET:-hyperplane}
+    ports:
+      - "${S3_PORT:-3900}:3900"
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    healthcheck:
+      # Image is distroless (no shell/curl); `garage status` exits 0 once the node is up.
+      test: ["CMD", "/garage", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  garage-meta:
+  garage-data:

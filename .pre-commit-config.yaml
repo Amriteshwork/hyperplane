@@ -1,0 +1,33 @@
+# https://pre-commit.com — install with `make hooks`.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.1
+    hooks:
+      # Picks up backend/pyproject.toml for files under backend/.
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  # pre-commit/mirrors-prettier is archived, so run the project's own pinned Prettier
+  # (frontend/node_modules, installed by `npm ci`). Uses frontend/.prettierrc.
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        language: system
+        entry: frontend/node_modules/.bin/prettier --write --ignore-unknown
+        files: ^frontend/
+        types: [text]

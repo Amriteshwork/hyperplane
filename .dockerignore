@@ -1,0 +1,22 @@
+# Build context is the repo root (images need backend/ + content/ + datasets/).
+**/.git
+**/.venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/node_modules
+**/.angular
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+.data
+.env
+.env.*
+!.env.example
+docs
+*.md
+!content/**/*.md
+!datasets/**/*.md

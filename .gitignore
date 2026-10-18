@@ -218,3 +218,32 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Others
+docs
+CLAUDE.md
+prompt.txt
+# --- Hyperplane ---
+# Local runtime data (LocalStorage root, uploads, artifacts)
+.data/
+# Env files (only the documented template is tracked)
+.env.*
+!.env.example
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+
+# Editors / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.swp
