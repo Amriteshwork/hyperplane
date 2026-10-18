@@ -107,6 +107,9 @@
   .prose-hp > * + * {
     @apply mt-4;
   }
+  .prose-hp > :first-child {
+    @apply mt-0;
+  }
   .prose-hp h2 {
     @apply mt-8 text-xl font-semibold tracking-tight;
   }

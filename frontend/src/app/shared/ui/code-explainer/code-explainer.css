@@ -24,7 +24,8 @@
 }
 
 .segment {
-  border-inline-start: 2px solid transparent;
+  /* A faint gutter mark says "this block is explained"; it turns solid when selected. */
+  border-inline-start: 2px solid color-mix(in oklab, var(--primary) 18%, transparent);
   cursor: pointer;
 }
 .segment:hover {

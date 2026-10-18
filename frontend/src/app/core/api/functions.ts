@@ -15,3 +15,11 @@ export type { GetDatasetProfile$Params as GetDatasetProfile$Params } from './fn/
 export { getDatasetProfile as getDatasetProfile } from './fn/datasets/get-dataset-profile';
 export type { GetDatasetPreview$Params as GetDatasetPreview$Params } from './fn/datasets/get-dataset-preview';
 export { getDatasetPreview as getDatasetPreview } from './fn/datasets/get-dataset-preview';
+export type { ListFamilies$Params as ListFamilies$Params } from './fn/learn/list-families';
+export { listFamilies as listFamilies } from './fn/learn/list-families';
+export type { GetAlgorithm$Params as GetAlgorithm$Params } from './fn/learn/get-algorithm';
+export { getAlgorithm as getAlgorithm } from './fn/learn/get-algorithm';
+export type { GetAlgorithmCode$Params as GetAlgorithmCode$Params } from './fn/learn/get-algorithm-code';
+export { getAlgorithmCode as getAlgorithmCode } from './fn/learn/get-algorithm-code';
+export type { GetConcept$Params as GetConcept$Params } from './fn/learn/get-concept';
+export { getConcept as getConcept } from './fn/learn/get-concept';

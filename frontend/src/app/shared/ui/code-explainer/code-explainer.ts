@@ -18,6 +18,7 @@ import {
   lucideChevronRight,
   lucideCopy,
   lucideDownload,
+  lucideX,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 
@@ -62,6 +63,7 @@ let nextExplainerId = 0;
       lucideChevronRight,
       lucideCopy,
       lucideDownload,
+      lucideX,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -114,7 +116,19 @@ let nextExplainerId = 0;
       >
         @if (selected(); as annotation) {
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="font-mono text-xs text-muted-foreground">{{ lineRange(annotation) }}</p>
+            <p class="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon-sm"
+                type="button"
+                aria-label="Close explanation"
+                (click)="selectedId.set(null)"
+              >
+                <ng-icon name="lucideX" aria-hidden="true" />
+              </button>
+              {{ lineRange(annotation) }}
+            </p>
             <div
               class="inline-flex rounded-md border p-0.5"
               role="group"

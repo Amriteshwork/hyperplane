@@ -14,7 +14,7 @@ export const routes: Routes = [
     loadChildren: () => import('./features/catalog/catalog.routes').then((m) => m.CATALOG_ROUTES),
   },
   {
-    path: 'learn/:algorithmId',
+    path: 'learn/algorithms/:algorithmId',
     title: 'Algorithm · Hyperplane',
     loadChildren: () =>
       import('./features/algorithm/algorithm.routes').then((m) => m.ALGORITHM_ROUTES),
