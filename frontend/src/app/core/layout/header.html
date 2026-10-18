@@ -1,0 +1,88 @@
+<header class="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <div class="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
+    <a
+      routerLink="/"
+      class="rounded-md font-mono text-lg font-semibold tracking-tight focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      Hyperplane
+    </a>
+
+    <nav aria-label="Primary" class="hidden md:block">
+      <ul class="flex items-center gap-1">
+        @for (item of navItems; track item.path) {
+          <li>
+            <a
+              hlmBtn
+              variant="ghost"
+              size="sm"
+              [routerLink]="item.path"
+              routerLinkActive="bg-muted text-foreground"
+              ariaCurrentWhenActive="page"
+              class="text-muted-foreground"
+            >
+              {{ item.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="ms-auto flex items-center gap-1">
+      <button
+        hlmBtn
+        variant="ghost"
+        size="icon"
+        type="button"
+        (click)="theme.toggle()"
+        [attr.aria-label]="
+          theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+        "
+        data-testid="theme-toggle"
+      >
+        <ng-icon
+          [name]="theme.theme() === 'dark' ? 'lucideSun' : 'lucideMoon'"
+          aria-hidden="true"
+        />
+      </button>
+
+      <hlm-sheet side="right">
+        <button
+          hlmSheetTrigger
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          type="button"
+          class="md:hidden"
+          aria-label="Open menu"
+          data-testid="mobile-menu-trigger"
+        >
+          <ng-icon name="lucideMenu" aria-hidden="true" />
+        </button>
+        <hlm-sheet-content *hlmSheetPortal="let ctx" class="p-6">
+          <hlm-sheet-header>
+            <h2 hlmSheetTitle class="font-mono">Hyperplane</h2>
+          </hlm-sheet-header>
+          <nav aria-label="Mobile">
+            <ul class="flex flex-col gap-1">
+              @for (item of navItems; track item.path) {
+                <li>
+                  <a
+                    hlmBtn
+                    variant="ghost"
+                    class="w-full justify-start"
+                    [routerLink]="item.path"
+                    routerLinkActive="bg-muted"
+                    ariaCurrentWhenActive="page"
+                    (click)="ctx.close()"
+                  >
+                    {{ item.label }}
+                  </a>
+                </li>
+              }
+            </ul>
+          </nav>
+        </hlm-sheet-content>
+      </hlm-sheet>
+    </div>
+  </div>
+</header>

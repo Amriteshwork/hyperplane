@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src/**/*.ts", "src/app/shared/ui/helm/**/src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

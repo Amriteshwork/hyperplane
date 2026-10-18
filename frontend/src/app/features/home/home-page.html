@@ -1,0 +1,49 @@
+<section class="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+  <h1 class="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
+    Learn machine learning by doing.
+  </h1>
+  <p class="mt-4 max-w-prose text-lg text-muted-foreground">
+    Bring a dataset, get algorithm recommendations, read the theory, train a model, and see the
+    exact code that ran — explained line by line.
+  </p>
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a hlmBtn size="lg" routerLink="/lab">Open the Lab</a>
+    <a hlmBtn size="lg" variant="outline" routerLink="/learn">Browse algorithms</a>
+  </div>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 pb-16" aria-labelledby="status-heading">
+  <div hlmCard class="max-w-md">
+    <div hlmCardHeader class="flex flex-row items-center justify-between">
+      <h2 hlmCardTitle id="status-heading">System status</h2>
+      @if (!health.loading()) {
+        @if (health.allUp()) {
+          <span hlmBadge class="bg-success/15 text-success" data-testid="overall-status"
+            >All systems up</span
+          >
+        } @else {
+          <span hlmBadge variant="destructive" data-testid="overall-status">Degraded</span>
+        }
+      }
+    </div>
+    <div hlmCardContent aria-live="polite" [attr.aria-busy]="health.loading()">
+      @if (health.loading() && health.rows().length === 0) {
+        <p class="py-3 text-sm text-muted-foreground">Checking services…</p>
+      } @else {
+        <app-service-status-list [rows]="health.rows()" />
+      }
+    </div>
+    <div hlmCardFooter>
+      <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        type="button"
+        (click)="health.reload()"
+        [disabled]="health.loading()"
+      >
+        Refresh
+      </button>
+    </div>
+  </div>
+</section>
