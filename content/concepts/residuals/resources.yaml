@@ -1,1 +1,27 @@
-[]
+- type: blog
+  title: "Introduction to residuals"
+  url: https://www.khanacademy.org/math/statistics-probability/describing-relationships-quantitative-data/regression-library/a/introduction-to-residuals
+  author: Khan Academy
+  level: beginner
+  duration_min: 5
+  why: "Defines a residual with a worked example and the sign convention we use."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Introduction to residuals and least-squares regression"
+  url: https://www.youtube.com/watch?v=VqD-nf1YUks
+  author: Khan Academy
+  level: beginner
+  duration_min: 5
+  why: "Five minutes from 'what is a residual' to why least squares minimises them."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Residual plots"
+  url: https://www.youtube.com/watch?v=VamMrPZ-8fc
+  author: Khan Academy
+  level: beginner
+  duration_min: 6
+  why: "How to read a residual plot, the chart our results page shows after training."
+  source: curated
+  checked: 2026-10-20

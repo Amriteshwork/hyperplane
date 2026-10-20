@@ -1,1 +1,27 @@
-[]
+- type: blog
+  title: "Linear regression: Gradient descent"
+  url: https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent
+  author: Google
+  level: beginner
+  duration_min: 10
+  why: "Walks through the update loop and loss curves on a linear model, the same setting as ours."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Gradient Descent, Step-by-Step"
+  url: https://www.youtube.com/watch?v=sDv4f4s2SB8
+  author: StatQuest with Josh Starmer
+  level: beginner
+  duration_min: 24
+  why: "Does every step by hand on a tiny line fit, including the learning rate."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Gradient descent, how neural networks learn"
+  url: https://www.youtube.com/watch?v=IHZwWFHWa-w
+  author: 3Blue1Brown
+  level: intermediate
+  duration_min: 21
+  why: "Beautiful geometric intuition for the gradient as 'downhill' in many dimensions."
+  source: curated
+  checked: 2026-10-20

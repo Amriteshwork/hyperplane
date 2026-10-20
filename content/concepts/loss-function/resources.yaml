@@ -1,1 +1,18 @@
-[]
+- type: blog
+  title: "Linear regression: Loss"
+  url: https://developers.google.com/machine-learning/crash-course/linear-regression/loss
+  author: Google
+  level: beginner
+  duration_min: 10
+  why: "Defines loss as a single number for how wrong the model is, with concrete regression examples."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "What is a Loss Function? Understanding How AI Models Learn"
+  url: https://www.youtube.com/watch?v=v_ueBW_5dLg
+  author: IBM Technology
+  level: beginner
+  duration_min: 10
+  why: "Plain-language tour of what a loss is for and how training uses it to improve the model."
+  source: curated
+  checked: 2026-10-20

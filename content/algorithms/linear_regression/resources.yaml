@@ -1,1 +1,34 @@
-[]
+- type: interactive
+  title: "Linear Regression"
+  url: https://mlu-explain.github.io/linear-regression/
+  author: Amazon MLU-Explain
+  level: beginner
+  duration_min: 15
+  why: "Scroll-driven visuals that fit a line in front of you and show what each coefficient means."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Linear Regression, Clearly Explained!!!"
+  url: https://www.youtube.com/watch?v=7ArmBVF2dCs
+  author: StatQuest with Josh Starmer
+  level: beginner
+  duration_min: 27
+  why: "Builds least squares, R² and p-values from one small example, with no notation shock."
+  source: curated
+  checked: 2026-10-20
+- type: course
+  title: "Machine Learning Crash Course: Linear regression"
+  url: https://developers.google.com/machine-learning/crash-course/linear-regression
+  author: Google
+  level: beginner
+  why: "Short module covering the model, loss, gradient descent and hyperparameters, with exercises."
+  source: curated
+  checked: 2026-10-20
+- type: course
+  title: "An Introduction to Statistical Learning (Chapter 3: Linear Regression)"
+  url: https://www.statlearning.com/
+  author: James, Witten, Hastie, Tibshirani
+  level: intermediate
+  why: "The free standard textbook; chapter 3 is the thorough treatment of fit, inference and pitfalls."
+  source: curated
+  checked: 2026-10-20

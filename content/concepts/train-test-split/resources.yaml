@@ -1,1 +1,27 @@
-[]
+- type: blog
+  title: "Dividing the original dataset"
+  url: https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets
+  author: Google
+  level: beginner
+  duration_min: 10
+  why: "Why we hold data back, how to split it, and the leakage traps to avoid."
+  source: curated
+  checked: 2026-10-20
+- type: interactive
+  title: "Train, Test, and Validation Sets"
+  url: https://mlu-explain.github.io/train-test-validation/
+  author: Amazon MLU-Explain
+  level: beginner
+  duration_min: 10
+  why: "Interactive walk-through of what each split is for."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Machine Learning Fundamentals: Cross Validation"
+  url: https://www.youtube.com/watch?v=fSytzGwwBVw
+  author: StatQuest with Josh Starmer
+  level: beginner
+  duration_min: 6
+  why: "Starts from a single train/test split and shows why rotating it gives a fairer score."
+  source: curated
+  checked: 2026-10-20

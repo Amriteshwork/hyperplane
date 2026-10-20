@@ -1,1 +1,18 @@
-[]
+- type: blog
+  title: "The Four Assumptions of Linear Regression"
+  url: https://www.statology.org/linear-regression-assumptions/
+  author: Statology
+  level: beginner
+  duration_min: 10
+  why: "Each assumption with how to check it and what to do when it fails."
+  source: curated
+  checked: 2026-10-20
+- type: video
+  title: "Regression assumptions explained!"
+  url: https://www.youtube.com/watch?v=0MFpOQRY0rw
+  author: zedstatistics
+  level: intermediate
+  duration_min: 47
+  why: "Thorough tour of every assumption with residual-plot diagnostics."
+  source: curated
+  checked: 2026-10-20
