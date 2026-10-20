@@ -6,6 +6,7 @@ import { AlgorithmStore } from './algorithm.store';
 import { CodeTab } from './code-tab';
 import { ConceptsTab } from './concepts-tab';
 import { OverviewTab } from './overview-tab';
+import { PapersTab } from './papers-tab';
 import { ResourcesTab } from './resources-tab';
 
 export const ALGORITHM_ROUTES: Routes = [
@@ -18,6 +19,7 @@ export const ALGORITHM_ROUTES: Routes = [
       { path: 'overview', component: OverviewTab },
       { path: 'concepts', component: ConceptsTab },
       { path: 'resources', component: ResourcesTab },
+      { path: 'papers', component: PapersTab },
       { path: 'code', pathMatch: 'full', redirectTo: 'code/train' },
       { path: 'code/:variant', component: CodeTab },
     ],

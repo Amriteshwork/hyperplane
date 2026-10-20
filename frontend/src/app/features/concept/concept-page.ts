@@ -64,6 +64,13 @@ import { ConceptStore } from './concept.store';
           <h2 id="resources" class="mb-3 text-lg font-semibold">Resources</h2>
           <app-resource-list [resources]="store.resources()" />
         </section>
+
+        @if (store.papers().length) {
+          <section class="mt-10" aria-labelledby="papers">
+            <h2 id="papers" class="mb-3 text-lg font-semibold">Research papers</h2>
+            <app-resource-list [resources]="store.papers()" />
+          </section>
+        }
       } @else if (store.notFound()) {
         <app-empty-state heading="Concept not found">
           <a hlmBtn variant="outline" routerLink="/learn">Back to Learn</a>

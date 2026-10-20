@@ -73,6 +73,7 @@ describe('Algorithm page', () => {
       'Overview',
       'Concepts',
       'Resources',
+      'Papers',
       'Code',
     ]);
     expect(tabs[0].getAttribute('aria-current')).toBe('page');
@@ -82,36 +83,35 @@ describe('Algorithm page', () => {
     );
   });
 
-  it('lists research papers above the overview, and only papers', async () => {
+  it('lists papers on their own tab and keeps them out of Resources', async () => {
     const resource = {
-      title: 'A survey',
       url: 'https://arxiv.org/abs/1609.04747',
       author: 'Ruder',
       level: 'intermediate',
       duration_min: null,
       why: 'Standard survey.',
     } as const;
-    const harness = await open('/learn/algorithms/linear_regression', {
+    const body: AlgorithmOut = {
       ...algorithm,
       resources: [
         { ...resource, type: 'blog', title: 'A blog', url: 'https://example.org' },
-        { ...resource, type: 'paper' },
+        { ...resource, type: 'paper', title: 'A survey' },
       ],
-    });
-    const el = harness.routeNativeElement as HTMLElement;
-    const papers = el.querySelector('section[aria-labelledby="papers-heading"]');
+    };
+    const titles = (el: HTMLElement) => [...el.querySelectorAll('h3')].map((h) => h.textContent);
 
-    expect([...(papers?.querySelectorAll('h3') ?? [])].map((h) => h.textContent?.trim())).toEqual([
-      'A survey (opens in a new tab)',
-    ]);
-    expect(papers?.compareDocumentPosition(el.querySelector('strong')!)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    const papers = await open('/learn/algorithms/linear_regression/papers', body);
+    expect(titles(papers.routeNativeElement as HTMLElement).join()).toContain('A survey');
+    expect(titles(papers.routeNativeElement as HTMLElement).join()).not.toContain('A blog');
+
+    TestBed.resetTestingModule();
+    const resources = await open('/learn/algorithms/linear_regression/resources', body);
+    expect(titles(resources.routeNativeElement as HTMLElement).join()).not.toContain('A survey');
   });
 
-  it('has no papers section when there are no papers', async () => {
-    const harness = await open('/learn/algorithms/linear_regression');
-    expect(harness.routeNativeElement?.textContent).not.toContain('Research papers');
+  it('says so when there are no papers', async () => {
+    const harness = await open('/learn/algorithms/linear_regression/papers');
+    expect(harness.routeNativeElement?.textContent).toContain('No research papers yet');
   });
 
   it('shows an empty state when there are no curated resources', async () => {

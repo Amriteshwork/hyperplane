@@ -4,7 +4,7 @@ import { Api } from '../../core/api/api';
 import { getAlgorithm } from '../../core/api/fn/learn/get-algorithm';
 import { getAlgorithmCode } from '../../core/api/fn/learn/get-algorithm-code';
 import { errorMessage, isNotFound } from '../../core/http/http-errors';
-import { toCodeAnnotations, toLearningResource } from '../../shared/learn/mappers';
+import { splitPapers, toCodeAnnotations, toLearningResource } from '../../shared/learn/mappers';
 
 /** State for one algorithm page and its tabs. Provided by the algorithm route. */
 @Injectable()
@@ -33,8 +33,11 @@ export class AlgorithmStore {
   readonly notFound = computed(() => isNotFound(this.detail.error()));
   readonly error = computed(() => (this.detail.error() ? errorMessage(this.detail.error()) : null));
 
-  readonly resources = computed(() => this.algorithm()?.resources.map(toLearningResource) ?? []);
-  readonly papers = computed(() => this.resources().filter((r) => r.type === 'paper'));
+  private readonly split = computed(() =>
+    splitPapers(this.algorithm()?.resources.map(toLearningResource) ?? []),
+  );
+  readonly resources = computed(() => this.split().others);
+  readonly papers = computed(() => this.split().papers);
 
   readonly code = computed(() => {
     if (!this.codeResource.hasValue()) return null;

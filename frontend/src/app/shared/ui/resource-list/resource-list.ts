@@ -15,13 +15,14 @@ import { LearningResource, ResourceCard } from '../resource-card/resource-card';
         }
       </ul>
     } @else {
-      <app-empty-state
-        heading="Curated resources coming soon"
-        description="We only list material we've checked for accuracy, clarity and level. Nothing has passed review here yet."
-      />
+      <app-empty-state [heading]="emptyHeading()" [description]="emptyDescription()" />
     }
   `,
 })
 export class ResourceList {
   readonly resources = input.required<readonly LearningResource[]>();
+  readonly emptyHeading = input('Curated resources coming soon');
+  readonly emptyDescription = input(
+    "We only list material we've checked for accuracy, clarity and level. Nothing has passed review here yet.",
+  );
 }

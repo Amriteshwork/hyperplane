@@ -15,6 +15,14 @@ export function toCodeAnnotations(code: CodeOut): CodeAnnotation[] {
   }));
 }
 
+/** Papers get their own section; everything else is a learning resource. */
+export function splitPapers(resources: readonly LearningResource[]) {
+  return {
+    papers: resources.filter((r) => r.type === 'paper'),
+    others: resources.filter((r) => r.type !== 'paper'),
+  };
+}
+
 export function toLearningResource(resource: ResourceOut): LearningResource {
   return {
     type: resource.type,

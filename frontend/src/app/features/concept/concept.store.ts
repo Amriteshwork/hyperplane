@@ -3,7 +3,7 @@ import { Injectable, computed, inject, resource, signal } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { getConcept } from '../../core/api/fn/learn/get-concept';
 import { errorMessage, isNotFound } from '../../core/http/http-errors';
-import { toLearningResource } from '../../shared/learn/mappers';
+import { splitPapers, toLearningResource } from '../../shared/learn/mappers';
 
 @Injectable()
 export class ConceptStore {
@@ -17,7 +17,11 @@ export class ConceptStore {
   });
 
   readonly concept = computed(() => (this.detail.hasValue() ? this.detail.value() : null));
-  readonly resources = computed(() => this.concept()?.resources.map(toLearningResource) ?? []);
+  private readonly split = computed(() =>
+    splitPapers(this.concept()?.resources.map(toLearningResource) ?? []),
+  );
+  readonly resources = computed(() => this.split().others);
+  readonly papers = computed(() => this.split().papers);
   readonly notFound = computed(() => isNotFound(this.detail.error()));
   readonly error = computed(() => (this.detail.error() ? errorMessage(this.detail.error()) : null));
 
