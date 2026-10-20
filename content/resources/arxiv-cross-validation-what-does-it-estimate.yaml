@@ -1,0 +1,8 @@
+type: paper
+title: 'Cross-validation: what does it estimate and how well does it do it?'
+url: https://arxiv.org/abs/2104.00673
+author: Stephen Bates, Trevor Hastie, Robert Tibshirani
+level: advanced
+why: Shows what a held-out score really measures and why naive confidence intervals for it are too narrow.
+source: curated
+checked: 2026-10-20

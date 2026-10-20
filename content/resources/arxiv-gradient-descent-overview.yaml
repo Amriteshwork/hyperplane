@@ -1,0 +1,8 @@
+type: paper
+title: An overview of gradient descent optimization algorithms
+url: https://arxiv.org/abs/1609.04747
+author: Sebastian Ruder
+level: intermediate
+why: The standard survey of batch, stochastic and mini-batch descent and the optimisers built on them.
+source: curated
+checked: 2026-10-20

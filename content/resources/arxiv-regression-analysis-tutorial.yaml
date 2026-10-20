@@ -1,0 +1,8 @@
+type: paper
+title: 'A Tutorial on Regression Analysis: From Linear Models to Deep Learning'
+url: https://arxiv.org/abs/2512.04747
+author: Jingyuan Wang, Jiahao Ji
+level: intermediate
+why: Self-contained lecture notes from least squares to gradient-based fitting and Ridge/Lasso, assuming only first-year maths.
+source: curated
+checked: 2026-10-20

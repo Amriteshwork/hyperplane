@@ -44,7 +44,7 @@ const code: CodeOut = {
 
 const API = '/api/v1/algorithms/linear_regression';
 
-async function open(path: string) {
+async function open(path: string, body: AlgorithmOut = algorithm) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter(
@@ -56,7 +56,7 @@ async function open(path: string) {
   });
   const harness = await RouterTestingHarness.create();
   const navigation = harness.navigateByUrl(path);
-  await respond(API, algorithm);
+  await respond(API, body);
   await navigation;
   await settle();
   return harness;
@@ -80,6 +80,38 @@ describe('Algorithm page', () => {
     expect(el.querySelector('[data-testid="try-it"]')?.getAttribute('href')).toBe(
       '/lab?algorithm=linear_regression',
     );
+  });
+
+  it('lists research papers above the overview, and only papers', async () => {
+    const resource = {
+      title: 'A survey',
+      url: 'https://arxiv.org/abs/1609.04747',
+      author: 'Ruder',
+      level: 'intermediate',
+      duration_min: null,
+      why: 'Standard survey.',
+    } as const;
+    const harness = await open('/learn/algorithms/linear_regression', {
+      ...algorithm,
+      resources: [
+        { ...resource, type: 'blog', title: 'A blog', url: 'https://example.org' },
+        { ...resource, type: 'paper' },
+      ],
+    });
+    const el = harness.routeNativeElement as HTMLElement;
+    const papers = el.querySelector('section[aria-labelledby="papers-heading"]');
+
+    expect([...(papers?.querySelectorAll('h3') ?? [])].map((h) => h.textContent?.trim())).toEqual([
+      'A survey (opens in a new tab)',
+    ]);
+    expect(papers?.compareDocumentPosition(el.querySelector('strong')!)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('has no papers section when there are no papers', async () => {
+    const harness = await open('/learn/algorithms/linear_regression');
+    expect(harness.routeNativeElement?.textContent).not.toContain('Research papers');
   });
 
   it('shows an empty state when there are no curated resources', async () => {

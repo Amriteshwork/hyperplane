@@ -34,6 +34,7 @@ export class AlgorithmStore {
   readonly error = computed(() => (this.detail.error() ? errorMessage(this.detail.error()) : null));
 
   readonly resources = computed(() => this.algorithm()?.resources.map(toLearningResource) ?? []);
+  readonly papers = computed(() => this.resources().filter((r) => r.type === 'paper'));
 
   readonly code = computed(() => {
     if (!this.codeResource.hasValue()) return null;

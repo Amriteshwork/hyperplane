@@ -1,0 +1,8 @@
+type: paper
+title: Surprises in High-Dimensional Ridgeless Least Squares Interpolation
+url: https://arxiv.org/abs/1903.08560
+author: Trevor Hastie, Andrea Montanari, Saharon Rosset, Ryan J. Tibshirani
+level: advanced
+why: What happens to least squares when features outnumber rows, and why test error can fall again.
+source: curated
+checked: 2026-10-20
