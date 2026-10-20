@@ -26,6 +26,8 @@ export interface LearningResource {
   readonly durationMin?: number | null;
   /** One line on why it's worth the learner's time. */
   readonly why?: string | null;
+  /** What it teaches on the page listing it. */
+  readonly note?: string | null;
 }
 
 const ICONS: Record<ResourceType, string> = {
@@ -122,8 +124,11 @@ const ICONS: Record<ResourceType, string> = {
         @if (resource().author) {
           <p class="text-xs text-muted-foreground">{{ resource().author }}</p>
         }
+        @if (resource().note) {
+          <p class="text-sm" data-testid="resource-note">{{ resource().note }}</p>
+        }
         @if (resource().why) {
-          <p class="text-sm text-muted-foreground">{{ resource().why }}</p>
+          <p class="text-xs text-muted-foreground">{{ resource().why }}</p>
         }
       </div>
     </article>

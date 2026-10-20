@@ -1,0 +1,9 @@
+type: interactive
+title: The Bias Variance Tradeoff
+url: https://mlu-explain.github.io/bias-variance/
+author: Jared Wilber & Brent Werness (MLU-Explain)
+level: beginner
+duration_min: 15
+why: Interactive plots let you raise model complexity and watch bias fall and variance rise.
+source: curated
+checked: 2026-10-20

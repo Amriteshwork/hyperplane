@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Polynomial features"
+url: https://scikit-learn.org/stable/modules/preprocessing.html#polynomial-features
+author: scikit-learn developers
+level: beginner
+duration_min: 5
+why: The official, short reference for PolynomialFeatures, with worked examples of powers and interactions.
+source: curated
+checked: 2026-10-20

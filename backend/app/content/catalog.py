@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import TypedDict
 
 import yaml
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
+from app.content.code_imports import code_uses
+from app.content.graph import ConceptGraphError, check_graph, learning_path, reading_order
 from app.content.models import (
     AlgorithmContent,
     AlgorithmFrontmatter,
@@ -18,12 +20,25 @@ from app.content.models import (
     Family,
     FamilyFrontmatter,
     Resource,
+    ResourceLink,
+    code_module,
 )
 from app.ml.base import Annotation
 from app.ml.codegen import AnchorMismatchError, strip_anchors
 
 _FRONTMATTER = re.compile(r"\A---\n(?P<meta>.*?)\n---\n?(?P<body>.*)\Z", re.DOTALL)
-_RESOURCE_IDS = TypeAdapter(tuple[str, ...])
+
+
+class _ResourceRef(BaseModel):
+    """One entry of a page's `resources.yaml`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    note: str = Field(min_length=1)
+
+
+_RESOURCE_REFS = TypeAdapter(tuple[_ResourceRef, ...])
 _CODE_ANNOTATIONS = TypeAdapter(dict[CodeLibrary, dict[str, Annotation]])
 CODE_ANNOTATIONS_FILE = "annotations.yaml"
 _IGNORED = {".DS_Store", "__pycache__"}
@@ -34,7 +49,7 @@ class ContentError(ValueError):
 
 
 class UnknownContentError(KeyError):
-    """No family/algorithm/concept with this id."""
+    """No family/algorithm/concept (or concept code in that library) with this id."""
 
 
 class ContentCatalog:
@@ -80,7 +95,7 @@ class ContentCatalog:
             )
             for folder in _folders(root / "concepts")
         ]
-        return cls(families, algorithms, concepts, list(resources.values()))
+        return cls(families, algorithms, _link_concepts(concepts), list(resources.values()))
 
     def families(self) -> Sequence[Family]:
         return list(self._families.values())
@@ -99,6 +114,43 @@ class ContentCatalog:
 
     def resources(self) -> Sequence[Resource]:
         return list(self._resources.values())
+
+    def learning_path(self, concept_id: str) -> Sequence[Concept]:
+        """Every prerequisite of the concept, transitively, each after everything it needs."""
+        _get(self._concepts, concept_id)
+        prerequisites = {c.id: c.meta.prerequisites for c in self._concepts.values()}
+        return [self._concepts[i] for i in learning_path(prerequisites, concept_id)]
+
+    def code_with_dependencies(
+        self, concept_id: str, library: CodeLibrary
+    ) -> Sequence[tuple[str, ConceptCode]]:
+        """The concept's code in `library`, then every file it imports, transitively, once each."""
+        found: dict[str, ConceptCode] = {}
+
+        def visit(concept: str) -> None:
+            code = next(
+                (c for c in _get(self._concepts, concept).code if c.library is library), None
+            )
+            if code is None:
+                raise UnknownContentError(f"concepts/{concept} has no {library} code")
+            found[concept] = code
+            for use in code.uses:
+                if use.concept not in found:
+                    visit(use.concept)
+
+        visit(concept_id)
+        return list(found.items())
+
+    def concept_index(self) -> Sequence[Concept]:
+        """Every concept, each after everything it needs."""
+        return self.reading_order(sorted(self._concepts))
+
+    def reading_order(self, concept_ids: Sequence[str]) -> Sequence[Concept]:
+        """The concepts plus everything they build on, each after what it needs."""
+        for concept_id in concept_ids:
+            _get(self._concepts, concept_id)
+        prerequisites = {c.id: c.meta.prerequisites for c in self._concepts.values()}
+        return [self._concepts[i] for i in reading_order(prerequisites, concept_ids)]
 
     def has_concept(self, concept_id: str) -> bool:
         return concept_id in self._concepts
@@ -149,17 +201,45 @@ def _resource(path: Path) -> Resource:
         raise ContentError(f"{path}: invalid resource: {exc}") from exc
 
 
-def _resource_refs(path: Path, index: dict[str, Resource]) -> tuple[Resource, ...]:
-    """An algorithm's or concept's `resources.yaml`: a list of resource ids, in display order."""
+def _resource_refs(path: Path, index: dict[str, Resource]) -> tuple[ResourceLink, ...]:
+    """A page's `resources.yaml`: `{id, note}` entries in display order (ADR 0016)."""
     try:
-        ids = _RESOURCE_IDS.validate_python(yaml.safe_load(_read(path)) or [])
+        refs = _RESOURCE_REFS.validate_python(yaml.safe_load(_read(path)) or [])
     except (yaml.YAMLError, ValidationError) as exc:
         raise ContentError(f"{path}: invalid resources: {exc}") from exc
+    ids = [r.id for r in refs]
     if unknown := [i for i in ids if i not in index]:
         raise ContentError(f"{path}: unknown resources {unknown}")
     if len(set(ids)) != len(ids):
         raise ContentError(f"{path}: duplicate resource ids")
-    return tuple(index[i] for i in ids)
+    return tuple(ResourceLink(resource=index[r.id], note=r.note.strip()) for r in refs)
+
+
+def _link_concepts(concepts: list[Concept]) -> list[Concept]:
+    """Check the prerequisite graph, then resolve what each concept's code imports."""
+    prerequisites = {c.id: c.meta.prerequisites for c in concepts}
+    sources = {c.id: {code.library: code.source for code in c.code} for c in concepts}
+    try:
+        check_graph(prerequisites)
+        linked = []
+        for concept in concepts:
+            ancestors = set(learning_path(prerequisites, concept.id))
+            code = tuple(_with_uses(concept.id, c, ancestors, sources) for c in concept.code)
+            linked.append(concept.model_copy(update={"code": code}))
+        return linked
+    except ConceptGraphError as exc:
+        raise ContentError(str(exc)) from exc
+
+
+def _with_uses(
+    concept_id: str,
+    code: ConceptCode,
+    ancestors: set[str],
+    sources: dict[str, dict[CodeLibrary, str]],
+) -> ConceptCode:
+    filename = f"{code_module(concept_id, code.library)}.py"
+    uses = code_uses(filename, code.source, code.library, ancestors, sources)
+    return code.model_copy(update={"uses": uses})
 
 
 def _concept_code(folder: Path) -> tuple[ConceptCode, ...]:

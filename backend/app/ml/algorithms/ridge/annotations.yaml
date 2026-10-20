@@ -1,0 +1,220 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas and NumPy, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same building blocks as Linear Regression, with `Ridge` as the model. A plain
+      `LinearRegression` and `clone` are imported too, only to compare the two at the end.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` is
+      the **target vector**.
+
+      A row without a target value can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The test set is also how you choose α: try a few values and keep the one with the best
+      *test* score. (Choosing many settings on one test set slowly overfits it, which is why
+      cross-validation exists.)
+
+      `test_size` is the fraction held out; `random_state` fixes the shuffle.
+    concepts: [train-test-split, cross-validation]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values and standardise features: essential for Ridge, not optional."
+    deep: |
+      The penalty $\alpha \sum_j \beta_j^2$ treats every coefficient alike, but a coefficient's
+      size depends on its feature's units. Measure a distance in metres instead of
+      kilometres and its coefficient shrinks 1000×, so the penalty barely touches it.
+
+      **Standardising** each numeric feature to mean 0 and standard deviation 1 puts them on
+      equal footing, so the penalty means the same thing for all of them.
+
+      Imputation, scaling and one-hot encoding are all learned **from the training set
+      only**, so no information leaks from the test set.
+    concepts: [feature-scaling]
+
+  model:
+    span: block
+    short: "Create the Ridge model with your α, chained after preprocessing."
+    deep: |
+      Ridge minimises the squared error **plus** a penalty on the size of the coefficients:
+
+      $$\min_\beta \; \lVert y - X\beta \rVert^2 + \alpha \lVert \beta \rVert^2$$
+
+      Larger $\alpha$ pulls every coefficient towards zero (never exactly to zero). The
+      intercept is not penalised.
+    concepts: [regularization, l2-regularization]
+
+  fit:
+    short: "Learn coefficients that balance fitting the training data against staying small."
+    deep: |
+      Like OLS, Ridge has an exact solution, a slightly modified normal equation:
+
+      $$\hat\beta = (X^\top X + \alpha I)^{-1} X^\top y$$
+
+      Adding $\alpha I$ makes the matrix invertible even when features are perfectly
+      collinear or outnumber the rows, which is where plain OLS breaks down.
+    concepts: [l2-regularization, normal-equation]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and report R², RMSE and MAE."
+    deep: |
+      - **R²**: the share of the target's variance the model explains.
+      - **RMSE**: the typical error, in the target's own units; it punishes large misses.
+      - **MAE**: the average absolute error, less sensitive to outliers than RMSE.
+
+      Rerun with α 10× larger and 10× smaller: if the test scores barely move, the penalty
+      isn't doing much on this data.
+    concepts: [r-squared, mean-squared-error]
+
+  shrinkage:
+    span: block
+    short: "Fit plain Linear Regression on the same split to see what the penalty changed."
+    deep: |
+      Two numbers to compare:
+
+      - **Test R²**: Ridge should match or beat OLS when OLS overfits (few rows, correlated
+        features). With lots of clean data the two are nearly identical.
+      - **Coefficient size** $\lVert\beta\rVert_2 = \sqrt{\sum_j \beta_j^2}$: Ridge's is always
+        smaller. That shrinkage is the bias it accepts in exchange for lower variance.
+
+      `clone` gives the comparison its own copy of the preprocessing, so the saved Ridge
+      pipeline is untouched.
+    concepts: [bias-variance, regularization]
+
+  coefficients:
+    span: block
+    short: "List each feature's learned weight, largest effect first."
+    deep: |
+      Each coefficient is the change in the prediction for a one–standard-deviation change
+      in that feature, holding the others fixed, *shrunk* by the penalty.
+
+      With correlated features Ridge spreads the weight between them instead of giving one a
+      huge positive and the other a huge negative coefficient, so the values are more stable
+      between fits than OLS's.
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed and scaled exactly as the training data was, so the whole
+      pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy linear algebra; no machine-learning library."
+    deep: |
+      Ridge needs one linear solve. Cross-validation, at the bottom, is just loops and
+      indexing.
+
+  class:
+    span: block
+    short: "A minimal model with the same fit/predict interface and attributes as scikit-learn."
+    deep: |
+      Mirroring scikit-learn's names (`coef_`, `intercept_`) lets you compare the two
+      implementations number for number: the test suite checks they agree.
+
+  fit:
+    short: "Fitting is one linear solve, as for OLS, with α added to the diagonal."
+    deep: |
+      No loop, no learning rate: the penalised loss is still a quadratic in $\beta$, so
+      setting its gradient to zero gives an exact answer.
+    concepts: [l2-regularization]
+
+  center:
+    span: block
+    short: "Subtract the column means so the intercept can be left out of the penalty."
+    deep: |
+      Penalising the intercept would pull predictions towards 0 for no reason. After
+      centring $X$ and $y$, the best intercept for the centred problem is exactly 0, so we
+      solve for the slopes alone and recover the intercept afterwards.
+
+  solve:
+    span: block
+    short: "Solve (XᵀX + αI) β = Xᵀy: the normal equation with α added to the diagonal."
+    deep: |
+      Minimising $\lVert y - X\beta \rVert^2 + \alpha \lVert \beta \rVert^2$ and setting the
+      gradient to zero gives
+
+      $$(X^\top X + \alpha I)\,\beta = X^\top y .$$
+
+      $X^\top X$ can be singular (collinear features, more features than rows), but
+      $X^\top X + \alpha I$ never is for $\alpha > 0$: every eigenvalue is lifted by
+      $\alpha$. That's why Ridge works where OLS fails.
+    concepts: [normal-equation, l2-regularization]
+
+  intercept:
+    span: block
+    short: "Put the means back: the intercept makes the line pass through (x̄, ȳ)."
+    deep: |
+      $\beta_0 = \bar y - \bar x^\top \beta$, so predicting at the average feature values
+      gives the average target, just as in OLS.
+
+  predict:
+    span: block
+    short: "A prediction is the weighted sum of the features plus the intercept."
+    deep: |
+      $$\hat{y} = X\beta + \beta_0$$
+
+      Exactly the same formula as Linear Regression; only the way $\beta$ was chosen differs.
+
+  path:
+    span: block
+    short: "Refit for a range of α values to trace each coefficient's path towards zero."
+    deep: |
+      Plot the rows against $\log \alpha$ and you get the **regularisation path**: at tiny
+      $\alpha$ the OLS coefficients, at huge $\alpha$ everything near 0. Ridge shrinks
+      smoothly and never sets a coefficient exactly to 0. Lasso, next, does.
+    concepts: [regularization]
+
+  cross-validate:
+    span: block
+    short: "Pick α by k-fold cross-validation: every row gets a turn in the validation fold."
+    deep: |
+      Choosing α on the test set would leak the test set into training decisions. Instead,
+      split the *training* data into $k$ folds; for each α, train on $k-1$ folds, score on
+      the one left out, and average over all $k$. The α with the lowest average error wins,
+      and the test set stays untouched for the final, honest score.
+    concepts: [cross-validation, train-test-split]
+
+  folds:
+    short: "Shuffle the row indices once and cut them into k nearly equal folds."
+    deep: |
+      Shuffling first matters when rows are sorted (by date, by target…). Every α is scored
+      on the *same* folds, so differences in score come from α, not from luck of the split.
+
+  fold-score:
+    short: "Add this fold's validation MSE, averaged over the k folds."
+    deep: |
+      Dividing by $k$ as we go makes `scores[i]` the mean validation MSE for `alphas[i]`.
+    concepts: [mean-squared-error]

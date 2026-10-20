@@ -14,6 +14,9 @@ numpy:
     span: block
     short: "Solve (XᵀX)β = Xᵀy: the coefficients that minimise squared error, in one step."
     deep: |
+      Defined once as `least_squares`, so later concepts import it from this file instead
+      of re-deriving it.
+
       Setting the gradient of the MSE to zero gives the **normal equation**:
 
       $$X^\top X \,\beta = X^\top y \quad\Rightarrow\quad \beta = (X^\top X)^{-1} X^\top y$$
@@ -22,6 +25,19 @@ numpy:
       which is faster and loses less precision. The estimate lands within a few thousandths
       of the truth; the gap is the noise.
     concepts: [mean-squared-error, gradient-descent]
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `least_squares` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When another file imports
+      `least_squares`, Python loads the function and skips this block.
+
+  fit: &fit
+    span: block
+    short: "Fit the 4 coefficients and check they land within a few thousandths of the truth."
+    deep: |
+      The gap between `estimated` and `true` is the noise: with 500 rows and noise of 0.1,
+      the estimates are very close but never exact.
 
   lstsq: &lstsq
     span: block
@@ -38,4 +54,6 @@ pytorch:
     <<: *data
     short: "500 random float64 rows, known true coefficients, and a column of 1s."
   solve: *solve
+  demo: *demo
+  fit: *fit
   lstsq: *lstsq

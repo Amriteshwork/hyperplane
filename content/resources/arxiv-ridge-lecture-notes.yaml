@@ -1,0 +1,8 @@
+type: paper
+title: Lecture notes on ridge regression
+url: https://arxiv.org/abs/1509.09169
+author: Wessel N. van Wieringen
+level: advanced
+why: A thorough, free treatment of ridge regression's theory, from the estimator's bias and variance to choosing the penalty.
+source: curated
+checked: 2026-10-20

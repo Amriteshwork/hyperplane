@@ -2,6 +2,9 @@
 
 import numpy as np
 
+# @a:reuse
+from mean_squared_error_numpy import mse
+
 # @a:data
 rng = np.random.default_rng(0)
 n = 300
@@ -11,9 +14,9 @@ y = X @ np.array([1.5, -2.0]) + rng.normal(scale=1.0, size=n)
 
 # @a:formula
 def r_squared(y, y_pred):
-    ss_res = np.sum((y - y_pred) ** 2)  # error the model leaves
-    ss_tot = np.sum((y - y.mean()) ** 2)  # error of always predicting the mean
-    return 1 - ss_res / ss_tot
+    model = mse(y, y_pred)  # error the model leaves
+    mean_only = mse(y, np.full_like(y, y.mean()))  # error of always predicting the mean
+    return 1 - model / mean_only  # SS_res / SS_tot: the 1/n cancels
 
 
 # @a:fit

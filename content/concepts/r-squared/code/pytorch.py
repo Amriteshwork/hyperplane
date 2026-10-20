@@ -2,6 +2,9 @@
 
 import torch
 
+# @a:reuse
+from mean_squared_error_pytorch import mse
+
 # @a:data
 torch.manual_seed(0)
 n = 300
@@ -11,9 +14,9 @@ y = X @ torch.tensor([1.5, -2.0], dtype=torch.float64) + torch.randn(n, dtype=to
 
 # @a:formula
 def r_squared(y, y_pred):
-    ss_res = ((y - y_pred) ** 2).sum()  # error the model leaves
-    ss_tot = ((y - y.mean()) ** 2).sum()  # error of always predicting the mean
-    return 1 - ss_res / ss_tot
+    model = mse(y, y_pred)  # error the model leaves
+    mean_only = mse(y, torch.full_like(y, y.mean().item()))  # error of predicting the mean
+    return 1 - model / mean_only  # SS_res / SS_tot: the 1/n cancels
 
 
 # @a:fit

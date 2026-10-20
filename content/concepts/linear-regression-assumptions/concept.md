@@ -1,7 +1,8 @@
 ---
 title: Linear regression assumptions
 summary: The conditions under which OLS coefficients and their uncertainty can be trusted.
-prerequisites: [residuals]
+area: evaluation
+prerequisites: [residuals, probability]
 ---
 
 Ordinary least squares always produces a line, but the line is only trustworthy when:

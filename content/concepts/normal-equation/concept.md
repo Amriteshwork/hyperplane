@@ -1,7 +1,8 @@
 ---
 title: Normal equation
 summary: The closed-form solution that gives the least-squares coefficients in one step.
-prerequisites: [mean-squared-error]
+area: optimisation
+prerequisites: [mean-squared-error, matrix-multiplication, derivatives]
 ---
 
 For a linear model $\hat{y} = X\beta$, the squared error $\lVert y - X\beta\rVert^2$ is a bowl

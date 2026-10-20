@@ -22,6 +22,7 @@ import {
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 
+import { saveFile } from '../../browser/save-file';
 import { MarkdownView } from '../markdown-view/markdown-view';
 import { CodeLanguage, CodeLine, highlightLines, plainLines } from './highlight';
 
@@ -282,14 +283,7 @@ export class CodeExplainer {
   }
 
   protected download(): void {
-    const view = this.document.defaultView;
-    if (!view) return;
-    const url = view.URL.createObjectURL(new Blob([this.code()], { type: 'text/x-python' }));
-    const link = this.document.createElement('a');
-    link.href = url;
-    link.download = this.filename();
-    link.click();
-    view.URL.revokeObjectURL(url);
+    saveFile(this.document, new Blob([this.code()], { type: 'text/x-python' }), this.filename());
   }
 }
 

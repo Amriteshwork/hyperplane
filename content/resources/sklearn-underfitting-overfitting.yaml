@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Underfitting vs. Overfitting"
+url: https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html
+author: scikit-learn developers
+level: beginner
+duration_min: 5
+why: Fits degree 1, 4 and 15 polynomials to the same data, so under- and overfitting are visible at a glance.
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,8 @@
+type: video
+title: "Regularization Part 1: Ridge (L2) Regression"
+url: https://www.youtube.com/watch?v=Q81RR3yKn30
+author: StatQuest with Josh Starmer
+level: beginner
+why: Shows visually how the penalty trades a little bias for less variance, and why it helps with few rows.
+source: curated
+checked: 2026-10-20

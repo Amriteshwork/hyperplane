@@ -1,7 +1,8 @@
 ---
 title: Mean squared error (MSE)
 summary: The average of the squared differences between predictions and true values.
-prerequisites: [loss-function]
+area: optimisation
+prerequisites: [loss-function, vectors]
 ---
 
 $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$

@@ -1,0 +1,5 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: sklearn-feature-scaling-importance
+  note: "Shows one large-valued feature dominating distances and PCA until standardisation evens things out."
+- id: google-mlcc-normalization
+  note: "Compares z-score, min–max, log scaling and clipping, and says when to use each."

@@ -58,8 +58,9 @@ const COEFFICIENT_COLUMNS: readonly TableColumn[] = [
       <section class="mt-10" aria-labelledby="coefficients-heading">
         <h2 id="coefficients-heading" class="text-lg font-semibold">Coefficients</h2>
         <p class="mt-1 max-w-prose text-sm text-muted-foreground">
-          The weight learned for each feature after scaling, largest effect first. Positive values
-          push the prediction up.
+          The weight learned for each feature after scaling (or for each power or product of
+          features, written a^2 or a × b), largest effect first. Positive values push the prediction
+          up.
         </p>
         <app-data-table
           class="mt-3 block"
@@ -88,8 +89,17 @@ export class RunResults {
   }
 }
 
-/** `numeric__age` → `age`: drop the preprocessing step's prefix. */
-function featureLabel(name: string): string {
-  const split = name.indexOf('__');
-  return split === -1 ? name : name.slice(split + 2);
+/**
+ * `numeric__age` → `age`, and a product term `numeric__age numeric__bmi` → `age × bmi`: drop each
+ * preprocessing prefix. Only a space before another `step__` prefix separates factors, since column
+ * names may contain spaces.
+ */
+export function featureLabel(name: string): string {
+  return name
+    .split(/ (?=[a-z]+__)/)
+    .map((factor) => {
+      const split = factor.indexOf('__');
+      return split === -1 ? factor : factor.slice(split + 2);
+    })
+    .join(' × ');
 }

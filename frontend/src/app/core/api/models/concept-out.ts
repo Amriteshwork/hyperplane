@@ -10,6 +10,7 @@ export interface ConceptOut {
   body: string;
   code: Array<ConceptCodeOut>;
   id: string;
+  learning_path: Array<ConceptRefOut>;
   prerequisites: Array<ConceptRefOut>;
   resources: Array<ResourceOut>;
   summary: string;

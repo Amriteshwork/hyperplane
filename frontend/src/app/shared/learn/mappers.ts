@@ -34,5 +34,6 @@ export function toLearningResource(resource: ResourceOut): LearningResource {
     level: resource.level,
     durationMin: resource.duration_min,
     why: resource.why,
+    note: resource.note,
   };
 }

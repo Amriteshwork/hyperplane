@@ -1,0 +1,9 @@
+type: blog
+title: Polynomial regression
+url: https://en.wikipedia.org/wiki/Polynomial_regression
+author: Wikipedia
+level: intermediate
+duration_min: 15
+why: Shows why a curve-fitting model is still linear regression, via the Vandermonde design matrix.
+source: curated
+checked: 2026-10-20

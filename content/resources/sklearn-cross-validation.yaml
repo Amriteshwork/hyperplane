@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Cross-validation"
+url: https://scikit-learn.org/stable/modules/cross_validation.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 30
+why: The reference for k-fold and its variants, with diagrams of how each one splits the data.
+source: curated
+checked: 2026-10-20

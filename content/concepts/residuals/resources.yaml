@@ -1,3 +1,7 @@
-- khan-introduction-to-residuals
-- khan-residuals-least-squares-video
-- khan-residual-plots-video
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: khan-introduction-to-residuals
+  note: "Defines a residual as actual minus predicted, with worked examples."
+- id: khan-residuals-least-squares-video
+  note: "Shows how residuals lead to the least-squares line."
+- id: khan-residual-plots-video
+  note: "How to read a residual plot and spot a pattern a straight line misses."

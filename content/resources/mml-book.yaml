@@ -1,0 +1,8 @@
+type: course
+title: Mathematics for Machine Learning
+url: https://mml-book.github.io/
+author: Marc Peter Deisenroth, A. Aldo Faisal, Cheng Soon Ong
+level: advanced
+why: "A free textbook covering exactly the maths ML needs: linear algebra, calculus, probability."
+source: curated
+checked: 2026-10-20

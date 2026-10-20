@@ -1,0 +1,83 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  derivative: &derivative
+    span: block
+    short: "Estimate the slope by measuring f a tiny step either side of x."
+    deep: |
+      $$f'(x) \approx \frac{f(x + h) - f(x - h)}{2h}$$
+
+      This **central difference** is far more accurate than the one-sided
+      $(f(x + h) - f(x)) / h$ from the definition: its error shrinks like $h^2$, not $h$.
+
+  gradient: &gradient
+    span: block
+    short: "The gradient: nudge one parameter at a time, holding the rest fixed. Other concepts import this to check their gradients."
+    deep: |
+      $$\nabla f(w) = \left(\frac{\partial f}{\partial w_1}, \dots, \frac{\partial f}{\partial w_n}\right)$$
+
+      Each loop iteration moves one coordinate by $\pm h$ and measures the slope: one
+      **partial derivative**. It costs two function calls per parameter, so real training
+      uses formulas (or autograd) instead, but it's the standard way to *check* them.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import the functions without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run; an `import` skips this block.
+
+  rules: &rules
+    span: block
+    short: "The numerical slope matches the textbook rules: (x²)′ = 2x, (eˣ)′ = eˣ, (sin x)′ = cos x."
+    deep: |
+      At $x = 3$ the slope of $x^2$ is $2 \cdot 3 = 6$. If a numerical check like this ever
+      disagrees with your formula, the formula is wrong.
+
+  chain: &chain
+    span: block
+    short: "The chain rule: the slope of f(g(x)) is f′ at g(x) times g′ at x."
+    deep: |
+      $$\frac{d}{dx}\sin(x^2) = \cos(x^2) \cdot 2x$$
+
+      Backpropagation is the chain rule applied through every layer of a network, from the
+      loss back to each weight.
+
+  partials: &partials
+    span: block
+    short: "For a function of two parameters, the gradient holds one partial derivative each."
+    deep: |
+      For $f(w) = w_0^2 + 3 w_0 w_1 + 2 w_1^2$:
+      $\partial f / \partial w_0 = 2 w_0 + 3 w_1$ (treat $w_1$ as a constant) and
+      $\partial f / \partial w_1 = 3 w_0 + 4 w_1$. The numerical gradient agrees.
+
+  downhill: &downhill
+    span: block
+    short: "A small step against the gradient lowers f; a step along it raises f."
+    deep: |
+      The gradient points in the direction of steepest increase, so $w - \eta \nabla f$
+      goes downhill. Repeat that step and you have gradient descent.
+    concepts: [gradient-descent]
+
+  mse-gradient: &mse-gradient
+    span: block
+    short: "The MSE gradient formula that gradient descent uses, checked numerically."
+    deep: |
+      $$\nabla_w \, \frac{1}{n}\lVert Xw - y \rVert^2 = \frac{2}{n} X^\top (Xw - y)$$
+
+      Setting this to zero gives the normal equation $X^\top X w = X^\top y$; stepping
+      against it gives gradient descent. Both come from this one formula.
+    concepts: [mean-squared-error, normal-equation, gradient-descent]
+
+pytorch:
+  derivative: *derivative
+  gradient: *gradient
+  demo: *demo
+  rules: *rules
+  chain: *chain
+  partials:
+    <<: *partials
+    short: "PyTorch's autograd computes the gradient exactly; our numerical one agrees."
+    deep: |
+      `.backward()` applies the chain rule through every operation that built the result,
+      and stores $\partial f / \partial w$ in `w.grad`. For
+      $f(w) = w_0^2 + 3 w_0 w_1 + 2 w_1^2$ that's $(2 w_0 + 3 w_1,\; 3 w_0 + 4 w_1)$.
+  downhill: *downhill
+  mse-gradient: *mse-gradient

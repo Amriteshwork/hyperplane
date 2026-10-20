@@ -1,0 +1,80 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  moments: &moments
+    span: block
+    short: "Mean and variance from their definitions: the centre, and the average squared distance from it."
+    deep: |
+      $$\bar{x} = \frac{1}{n}\sum_i x_i \qquad s^2 = \frac{1}{n - \text{ddof}}\sum_i (x_i - \bar{x})^2$$
+
+      Dividing by $n - 1$ (`ddof=1`) corrects for measuring spread around the *sample* mean,
+      which sits a little closer to the data than the true mean does. The variance is the MSE
+      of predicting every value with the mean.
+    concepts: [mean-squared-error]
+
+  pdf: &pdf
+    span: block
+    short: "The normal density: highest at μ, falling off with the squared distance in units of σ."
+    deep: |
+      $$p(x) = \frac{1}{\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right)$$
+
+      The exponent is a squared error, which is why least squares and the normal
+      distribution go together. The constant in front makes the total area 1.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import the functions without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run; an `import` skips this block.
+
+  sample: &sample
+    span: block
+    short: "Draw 100,000 values from N(10, 2²); the sample mean and standard deviation land near the true ones."
+    deep: |
+      The estimates are close but not exact: they are themselves random, and their error
+      shrinks like $\sigma / \sqrt{n}$.
+
+  rule: &rule
+    span: block
+    short: "The 68–95–99.7 rule: the share of values within 1, 2 and 3 standard deviations."
+    deep: |
+      A quick sanity check for any roughly normal quantity, such as regression residuals:
+      about 1 in 20 should fall beyond $2\sigma$, and almost none beyond $3\sigma$.
+    concepts: [residuals]
+
+  density: &density
+    span: block
+    short: "The density integrates to 1, and a histogram of the samples traces the same bell curve."
+    deep: |
+      Dividing the histogram counts by $n \times$ bin width turns them into a density, so
+      they can be compared with `normal_pdf` directly.
+
+  large-numbers: &large-numbers
+    span: block
+    short: "The law of large numbers: the average of more dice rolls settles closer to 3.5."
+    deep: |
+      With 10 rolls the average wanders; with 100,000 it's within a few hundredths. More
+      data gives steadier estimates, which is why test-set scores on tiny test sets are
+      unreliable.
+    concepts: [train-test-split]
+
+  clt: &clt
+    span: block
+    short: "The central limit theorem: sums of 30 flat random numbers already behave like a normal."
+    deep: |
+      Each uniform number has mean $1/2$ and variance $1/12$, so their sum has mean 15 and
+      variance $30/12$. After standardising, about 68% lie within 1, just as for a normal.
+      Noise made of many small effects is therefore roughly normal.
+
+pytorch:
+  moments: *moments
+  pdf: *pdf
+  demo: *demo
+  sample: *sample
+  rule: *rule
+  density:
+    <<: *density
+    short: "Our density matches torch.distributions.Normal and integrates to 1."
+    deep: |
+      `log_prob` returns the log-density (more stable for tiny values); exponentiating
+      gives the density. Summing it on a fine grid times the spacing approximates the area.
+  large-numbers: *large-numbers
+  clt: *clt

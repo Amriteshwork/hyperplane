@@ -1,7 +1,7 @@
 """Validate content/ (ARCHITECTURE §8) and report the content backlog.
 
 Errors (exit 1): bad layout, invalid frontmatter/resources, unknown resource ids, missing overview
-sections, packs without content, unknown concepts (packs, prerequisites, code annotations) and
+sections, packs without content, unknown concepts (packs, code annotations) and
 code anchors without annotations. Warnings: unreferenced resources and curation gaps (the backlog).
 
 Usage: uv run python -m scripts.content_check [--content-dir PATH] [--backlog FILE.md]
@@ -104,16 +104,8 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
         if catalog.family_of(pack.spec.id) is None:
             issues.append(Issue(Level.ERROR, folder, "not listed in any families/*.md"))
 
+    # Unknown prerequisites, cycles and bad code imports already fail loading (ADR 0016).
     for concept in catalog.concepts():
-        for prerequisite in concept.meta.prerequisites:
-            if not catalog.has_concept(prerequisite):
-                issues.append(
-                    Issue(
-                        Level.ERROR,
-                        root / "concepts" / concept.id,
-                        f"unknown prerequisite {prerequisite!r}",
-                    )
-                )
         for code in concept.code:
             for anchor, annotation in code.annotations.items():
                 for linked in annotation.concepts:
@@ -126,8 +118,8 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
                             )
                         )
 
-    used = {r.id for a in catalog.algorithms() for r in a.resources}
-    used |= {r.id for c in catalog.concepts() for r in c.resources}
+    used = {link.resource.id for a in catalog.algorithms() for link in a.resources}
+    used |= {link.resource.id for c in catalog.concepts() for link in c.resources}
     for resource in catalog.resources():
         if resource.id not in used:
             path = root / "resources" / f"{resource.id}.yaml"

@@ -13,6 +13,7 @@ export interface AlgorithmOut {
   difficulty: number;
   family: FamilyOut | null;
   id: string;
+  learning_path: Array<ConceptRefOut>;
   name: string;
   overview: string;
   params_schema: {

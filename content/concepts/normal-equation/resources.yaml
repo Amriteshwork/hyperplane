@@ -1,2 +1,5 @@
-- bendersky-normal-equation-derivation
-- mit-strang-projections-least-squares
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: bendersky-normal-equation-derivation
+  note: "A step-by-step derivation of the normal equation with matrix calculus."
+- id: mit-strang-projections-least-squares
+  note: "Gilbert Strang's lecture: least squares as projecting y onto the column space of X, the geometry behind the formula."

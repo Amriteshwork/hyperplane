@@ -1,0 +1,61 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  arrays: &arrays
+    span: block
+    short: "A 1-D array (a vector) and a 2-D array (a table): `.shape` says how many of each."
+    deep: |
+      `x` has shape `(4,)`: four numbers. `X` has shape `(4, 3)`: four rows, three columns,
+      the layout every dataset on this site uses (rows = examples, columns = features).
+      `reshape` re-reads the same 12 numbers as a 4×3 grid.
+
+  vectorised: &vectorised
+    span: block
+    short: "Arithmetic on an array applies to every element at once, with no Python loop."
+    deep: |
+      `x * 2` runs in compiled code and is typically 10–100× faster than the list
+      comprehension that computes the same thing. Reading ML code means reading formulas
+      written this way: `y - y_pred` is every row's error in one expression.
+
+  axis: &axis
+    span: block
+    short: "`axis=0` reduces down the rows (one result per column); `axis=1` across each row."
+    deep: |
+      Think of `axis` as the dimension that disappears: `X.mean(axis=0)` collapses the 4 rows
+      and leaves one mean per column, shape `(3,)`. Column means and standard deviations are
+      how features get standardised.
+    concepts: [feature-scaling]
+
+  broadcasting: &broadcasting
+    span: block
+    short: "Subtracting a (3,) array from a (4, 3) array reuses it for every row: broadcasting."
+    deep: |
+      NumPy lines shapes up from the right: `(4, 3)` and `(3,)` match on the last
+      dimension, so the 3 means are applied to each of the 4 rows. Centring a dataset is one
+      line, and every column now averages exactly 0.
+
+  mask: &mask
+    span: block
+    short: "A boolean array selects rows: `X[condition]` keeps the rows where it's True."
+    deep: |
+      `X[:, 0] > 4` is an array of True/False, one per row. Indexing with it filters the
+      rows, the way you'd select a training or test subset.
+
+  matmul: &matmul
+    span: block
+    short: "`X @ w` takes a weighted sum of each row's features: a linear model's predictions."
+    deep: |
+      For each row, multiply its features by the weights and add them up. That's the
+      prediction of a linear model, computed for every row in one product.
+    concepts: [matrix-multiplication]
+
+pytorch:
+  arrays:
+    <<: *arrays
+    short: "A 1-D tensor (a vector) and a 2-D tensor (a table): `.shape` says how many of each."
+  vectorised: *vectorised
+  axis:
+    <<: *axis
+    short: "`dim=0` reduces down the rows (one result per column); `dim=1` across each row."
+  broadcasting: *broadcasting
+  mask: *mask
+  matmul: *matmul

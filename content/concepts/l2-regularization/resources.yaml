@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: sklearn-ridge-coefficients
+  note: "Plots each coefficient's path towards zero as the L2 penalty grows, the shrinkage this page describes."
+- id: statquest-ridge-regression
+  note: "Explains the squared-weights penalty visually, and why it helps most when data is scarce."
+- id: google-mlcc-l2-regularization
+  note: "Works through the L2 penalty on a small set of weights, so you can compute it by hand."
+- id: arxiv-ridge-lecture-notes
+  note: "The mathematics in depth: the closed form, its eigenvalue view, and choosing the penalty."

@@ -1,6 +1,8 @@
 ---
 title: Loss function
 summary: A single number that says how wrong a model's predictions are; training minimises it.
+area: optimisation
+prerequisites: [numpy-basics]
 ---
 
 A **loss function** compares predictions with the true values and returns one number:

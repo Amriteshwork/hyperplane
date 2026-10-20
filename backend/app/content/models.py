@@ -44,6 +44,13 @@ class Resource(_Frozen):
     checked: date
 
 
+class ResourceLink(_Frozen):
+    """A resource as listed on one page (`resources.yaml`), with what it teaches there (ADR 0016)."""
+
+    resource: Resource
+    note: str = Field(min_length=1)
+
+
 class FamilyAlgorithm(_Frozen):
     """An algorithm the family will contain, whether or not its pack exists yet."""
 
@@ -76,6 +83,44 @@ CODE_LIBRARY_TITLES: dict[CodeLibrary, str] = {
     CodeLibrary.PYTORCH: "PyTorch",
 }
 
+#: What to `pip install` to run a library's concept code.
+CODE_LIBRARY_PACKAGES: dict[CodeLibrary, str] = {
+    CodeLibrary.NUMPY: "numpy",
+    CodeLibrary.PYTORCH: "torch",
+}
+
+
+class ConceptArea(StrEnum):
+    """Where a concept sits on the concept index, in display order."""
+
+    FOUNDATIONS = "foundations"
+    OPTIMISATION = "optimisation"
+    EVALUATION = "evaluation"
+    FEATURES = "features"
+
+
+CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
+    ConceptArea.FOUNDATIONS: "Maths & NumPy foundations",
+    ConceptArea.OPTIMISATION: "Loss & optimisation",
+    ConceptArea.EVALUATION: "Evaluation & generalisation",
+    ConceptArea.FEATURES: "Features & regularisation",
+}
+
+
+def code_module(concept_id: str, library: CodeLibrary) -> str:
+    """The name a concept's code is shown, downloaded and imported as (`normal_equation_numpy`).
+
+    Never plain `numpy`: run from its folder, a file named `numpy.py` would shadow NumPy itself.
+    """
+    return f"{concept_id.replace('-', '_')}_{library.value}"
+
+
+class CodeUse(_Frozen):
+    """Names one concept's code imports from a prerequisite's code (ADR 0016)."""
+
+    concept: str
+    names: tuple[str, ...]
+
 
 class ConceptCode(_Frozen):
     """A short, runnable implementation of a concept on random data.
@@ -87,11 +132,13 @@ class ConceptCode(_Frozen):
     library: CodeLibrary
     source: str
     annotations: dict[str, Annotation] = {}
+    uses: tuple[CodeUse, ...] = ()
 
 
 class ConceptFrontmatter(_Frozen):
     title: str
     summary: str
+    area: ConceptArea
     prerequisites: tuple[str, ...] = ()
 
 
@@ -105,12 +152,12 @@ class AlgorithmContent(_Frozen):
     id: str = Field(pattern=_ALGO_ID)
     meta: AlgorithmFrontmatter
     body: str
-    resources: tuple[Resource, ...]
+    resources: tuple[ResourceLink, ...]
 
 
 class Concept(_Frozen):
     id: str = Field(pattern=_SLUG)
     meta: ConceptFrontmatter
     body: str
-    resources: tuple[Resource, ...]
+    resources: tuple[ResourceLink, ...]
     code: tuple[ConceptCode, ...] = ()

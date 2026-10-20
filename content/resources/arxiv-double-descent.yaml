@@ -1,0 +1,8 @@
+type: paper
+title: Reconciling modern machine learning practice and the bias-variance trade-off
+url: https://arxiv.org/abs/1812.11118
+author: Mikhail Belkin, Daniel Hsu, Siyuan Ma, Soumik Mandal
+level: advanced
+why: The "double descent" paper; shows when test error falls again past the point of interpolating the training data.
+source: curated
+checked: 2026-10-20

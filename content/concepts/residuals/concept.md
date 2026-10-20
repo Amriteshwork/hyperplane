@@ -1,6 +1,8 @@
 ---
 title: Residuals
 summary: The error left over for each row, true value minus prediction; the best diagnostic you have.
+area: evaluation
+prerequisites: [numpy-basics]
 ---
 
 A **residual** is $e_i = y_i - \hat{y}_i$. Plotting residuals against the predictions is the

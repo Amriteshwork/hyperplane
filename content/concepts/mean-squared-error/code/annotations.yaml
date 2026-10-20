@@ -1,5 +1,23 @@
 # Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
 numpy:
+  mse: &mse
+    span: block
+    short: "Square each error and average them. Later concepts import this function instead of rewriting it."
+    deep: |
+      $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat y_i)^2$$
+
+      Squaring makes every error positive and punishes big misses more than small ones.
+      Because it's defined once here, concepts that build on MSE (overfitting, R²,
+      cross-validation…) import it, so you read the formula once and reuse it.
+    concepts: [loss-function]
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `mse` without running the demo."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When another file does
+      `from mean_squared_error_numpy import mse`, Python loads the function and skips this
+      block, so importing stays quiet and fast.
+
   data: &data
     span: block
     short: "Random features, a target built from known weights, and a slightly-wrong model."
@@ -8,24 +26,21 @@ numpy:
       The target uses the weights `[2, -1, 0.5]` plus noise; the "model" uses
       `[1.8, -0.9, 0.6]`, close but not equal, so its errors are small but not zero.
 
-  mse: &mse
+  rmse: &rmse
     span: block
-    short: "Square each error, average them: that's MSE. Its square root, RMSE, is in y's units."
+    short: "MSE is in squared units; its square root, RMSE, is back in y's units."
     deep: |
-      $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat y_i)^2$$
-
       MSE is in *squared* units (if `y` is in metres, MSE is in m²), which makes it hard to
       read. **RMSE** $= \sqrt{\text{MSE}}$ is back in the target's units: roughly "a typical
       prediction is off by this much", with big errors weighted more.
-    concepts: [loss-function]
 
   formula:
     span: block
-    short: "The vectorised NumPy line equals the textbook sum, written out with a loop."
+    short: "The vectorised function equals the textbook sum, written out with a loop."
     deep: |
-      `np.mean(errors**2)` and `sum(e * e for e in errors) / len(y)` compute the same
-      thing; NumPy just does it in compiled code, which is much faster for large arrays.
-      Writing both once is a good habit for checking you translated a formula correctly.
+      `np.mean((y - y_pred) ** 2)` and the explicit sum compute the same thing; NumPy just
+      does it in compiled code, which is much faster for large arrays. Writing both once is
+      a good habit for checking you translated a formula correctly.
 
   baseline: &baseline
     span: block
@@ -39,14 +54,21 @@ numpy:
     concepts: [r-squared]
 
 pytorch:
-  data: *data
   mse: *mse
+  demo:
+    <<: *demo
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When another file does
+      `from mean_squared_error_pytorch import mse`, Python loads the function and skips this
+      block, so importing stays quiet and fast.
+  data: *data
+  rmse: *rmse
   builtin:
     span: block
     short: "`F.mse_loss`, the loss networks are trained with, gives the same number."
     deep: |
       `torch.nn.functional.mse_loss(prediction, target)` is the standard regression loss in
-      PyTorch. Matching it against our formula shows it's the same MSE you'd compute by
+      PyTorch. Matching it against our function shows it's the same MSE you'd compute by
       hand; its default `reduction="mean"` is the $\frac{1}{n}$.
   baseline:
     <<: *baseline

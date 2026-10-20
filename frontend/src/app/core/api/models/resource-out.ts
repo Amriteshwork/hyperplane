@@ -7,6 +7,7 @@ export interface ResourceOut {
   author: string | null;
   duration_min: number | null;
   level: Level;
+  note: string;
   title: string;
   type: ResourceType;
   url: string;

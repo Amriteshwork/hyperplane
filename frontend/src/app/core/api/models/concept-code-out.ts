@@ -3,6 +3,7 @@
 
 import { CodeAnnotationOut } from '../models/code-annotation-out';
 import { CodeLibrary } from '../models/code-library';
+import { ConceptCodeUseOut } from '../models/concept-code-use-out';
 
 /**
  * A from-scratch implementation of a concept on random data.
@@ -13,4 +14,5 @@ export interface ConceptCodeOut {
   filename: string;
   library: CodeLibrary;
   title: string;
+  uses: Array<ConceptCodeUseOut>;
 }

@@ -1,0 +1,8 @@
+type: blog
+title: "NumPy: the absolute basics for beginners"
+url: https://numpy.org/doc/stable/user/absolute_beginners.html
+author: NumPy documentation
+level: beginner
+why: "The official, carefully maintained introduction to NumPy arrays."
+source: curated
+checked: 2026-10-20

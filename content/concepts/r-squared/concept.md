@@ -1,6 +1,7 @@
 ---
 title: R² (coefficient of determination)
 summary: The share of the target's variance a model explains, compared with predicting the mean.
+area: evaluation
 prerequisites: [mean-squared-error]
 ---
 

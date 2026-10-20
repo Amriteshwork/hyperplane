@@ -1,4 +1,9 @@
-- google-mlcc-dividing-datasets
-- mlu-explain-train-test-validation
-- statquest-cross-validation
-- arxiv-cross-validation-what-does-it-estimate
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-dividing-datasets
+  note: "Why and how to divide data into training, validation and test sets, and the pitfalls of doing it badly."
+- id: mlu-explain-train-test-validation
+  note: "Interactive walk-through of what each split is for."
+- id: statquest-cross-validation
+  note: "Shows the limits of a single split and how cross-validation goes further."
+- id: arxiv-cross-validation-what-does-it-estimate
+  note: "Advanced: what a held-out score actually estimates."

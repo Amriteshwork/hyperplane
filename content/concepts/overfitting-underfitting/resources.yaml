@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-overfitting
+  note: "Plain-language definitions of overfitting, underfitting and generalisation, with loss curves that reveal each."
+- id: sklearn-underfitting-overfitting
+  note: "The same experiment as this page's code, plotted: degree 1 underfits, 4 fits, 15 overfits."
+- id: statquest-bias-and-variance
+  note: "Connects underfitting to bias and overfitting to variance, the language of the next concept."

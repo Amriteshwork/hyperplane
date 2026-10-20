@@ -1,9 +1,22 @@
 """Content queries: the learning catalog joined with the registered packs."""
 
+import io
+import zipfile
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from app.content.catalog import ContentCatalog, UnknownContentError
-from app.content.models import CODE_LIBRARY_TITLES, Concept, ConceptCode, Family, Resource
+from app.content.models import (
+    CODE_LIBRARY_PACKAGES,
+    CODE_LIBRARY_TITLES,
+    CONCEPT_AREA_TITLES,
+    CodeLibrary,
+    Concept,
+    ConceptCode,
+    Family,
+    ResourceLink,
+    code_module,
+)
 from app.core.errors import NotFoundError
 from app.ml.base import AlgorithmPack
 from app.ml.codegen import CodegenContext, RenderedCode, render, strip_anchors
@@ -14,9 +27,12 @@ from app.schemas.content import (
     CodeAnnotationOut,
     CodeOut,
     CodeVariantOut,
+    ConceptAreaOut,
     ConceptCodeOut,
+    ConceptCodeUseOut,
     ConceptOut,
     ConceptRefOut,
+    ConceptSummaryOut,
     FamilyAlgorithmOut,
     FamilyOut,
     ResourceOut,
@@ -31,6 +47,18 @@ _EXAMPLE = {
     "test_size": 0.2,
     "seed": 42,
 }
+
+
+#: Fixed timestamp so the same content always zips to the same bytes.
+_ZIP_DATE = (2026, 1, 1, 0, 0, 0)
+
+
+@dataclass(frozen=True)
+class CodeBundle:
+    """A zip of concept code with everything it imports, ready to unzip and run."""
+
+    filename: str
+    content: bytes
 
 
 class ContentService:
@@ -54,6 +82,9 @@ class ContentService:
             difficulty=pack.spec.difficulty,
             overview=content.body,
             concepts=self._concept_refs(pack.spec.concepts),
+            learning_path=self._concept_refs(
+                [c.id for c in self._catalog.reading_order(pack.spec.concepts)]
+            ),
             resources=_resources(content.resources),
             params_schema=pack.params_model.model_json_schema(),
             code_variants=[
@@ -73,6 +104,28 @@ class ContentService:
         )
         return self._code(variant, template.title, render(template, context), "example")
 
+    def list_concept_areas(self) -> Sequence[ConceptAreaOut]:
+        """Every concept by area (areas in enum order), each after what it needs."""
+        index = self._catalog.concept_index()
+        return [
+            ConceptAreaOut(
+                id=area,
+                title=CONCEPT_AREA_TITLES[area],
+                concepts=[
+                    ConceptSummaryOut(
+                        id=c.id,
+                        title=c.meta.title,
+                        summary=c.meta.summary,
+                        algorithms=self._algorithms_using(c.id),
+                    )
+                    for c in index
+                    if c.meta.area is area
+                ],
+            )
+            for area in CONCEPT_AREA_TITLES
+            if any(c.meta.area is area for c in index)
+        ]
+
     def get_concept(self, concept_id: str) -> ConceptOut:
         concept = self._concept(concept_id)
         return ConceptOut(
@@ -81,18 +134,51 @@ class ContentService:
             summary=concept.meta.summary,
             body=concept.body,
             prerequisites=self._concept_refs(concept.meta.prerequisites),
+            learning_path=self._concept_refs(
+                [c.id for c in self._catalog.learning_path(concept.id)]
+            ),
             resources=_resources(concept.resources),
-            algorithms=[
-                AlgorithmRefOut(id=p.spec.id, name=p.spec.name)
-                for p in self._registry
-                if concept_id in p.spec.concepts
-            ],
+            algorithms=self._algorithms_using(concept_id),
             code=[self._concept_code(concept.id, c) for c in concept.code],
         )
 
+    def get_concept_code_bundle(self, concept_id: str, library: CodeLibrary) -> CodeBundle:
+        """The code shown on the page plus every file it imports, in one folder (ADR 0016)."""
+        try:
+            files = self._catalog.code_with_dependencies(concept_id, library)
+        except UnknownContentError:
+            raise NotFoundError(f"No {library} code for concept {concept_id!r}.") from None
+        shown = [(self._concept(i), self._concept_code(i, code)) for i, code in files]
+        (concept, main), *dependencies = shown
+        readme = "\n".join(
+            [
+                f"# {concept.meta.title} ({main.title})",
+                "",
+                f"From Hyperplane: /concepts/{concept.id}",
+                "",
+                f"Run it from this folder (needs `pip install {CODE_LIBRARY_PACKAGES[library]}`):",
+                "",
+                f"    python {main.filename}",
+                "",
+                "Files:",
+                "",
+                f"- {main.filename}: {concept.meta.title}",
+                *(f"- {f.filename}: {c.meta.title}, which it builds on" for c, f in dependencies),
+                "",
+            ]
+        )
+        folder = code_module(concept_id, library)
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for name, text in [("README.md", readme), *((f.filename, f.code) for _, f in shown)]:
+                info = zipfile.ZipInfo(f"{folder}/{name}", date_time=_ZIP_DATE)
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                archive.writestr(info, text)
+        return CodeBundle(filename=f"{folder}.zip", content=buffer.getvalue())
+
     def _concept_code(self, concept_id: str, code: ConceptCode) -> ConceptCodeOut:
-        # Never `numpy.py`: run from its folder, it would shadow NumPy itself.
-        filename = f"{concept_id.replace('-', '_')}_{code.library}.py"
+        filename = f"{code_module(concept_id, code.library)}.py"
         rendered = strip_anchors(code.source, code.annotations, filename=filename)
         return ConceptCodeOut(
             library=code.library,
@@ -100,6 +186,14 @@ class ContentService:
             filename=filename,
             code=rendered.code,
             annotations=self._annotations(rendered),
+            uses=[
+                ConceptCodeUseOut(
+                    concept=self._concept_refs([use.concept])[0],
+                    filename=f"{code_module(use.concept, code.library)}.py",
+                    names=list(use.names),
+                )
+                for use in code.uses
+            ],
         )
 
     def _code(self, variant: str, title: str, rendered: RenderedCode, source: str) -> CodeOut:
@@ -151,6 +245,13 @@ class ContentService:
         except UnknownContentError:
             return None
 
+    def _algorithms_using(self, concept_id: str) -> list[AlgorithmRefOut]:
+        return [
+            AlgorithmRefOut(id=p.spec.id, name=p.spec.name)
+            for p in self._registry
+            if concept_id in p.spec.concepts
+        ]
+
     def _concept_refs(self, ids: Sequence[str]) -> list[ConceptRefOut]:
         return [ConceptRefOut(id=i, title=self._concept(i).meta.title) for i in ids]
 
@@ -167,16 +268,17 @@ class ContentService:
             raise NotFoundError(f"Unknown concept {concept_id!r}.") from None
 
 
-def _resources(resources: Sequence[Resource]) -> list[ResourceOut]:
+def _resources(links: Sequence[ResourceLink]) -> list[ResourceOut]:
     return [
         ResourceOut(
-            type=r.type,
-            title=r.title,
-            url=r.url,
-            author=r.author,
-            level=r.level,
-            duration_min=r.duration_min,
-            why=r.why,
+            type=link.resource.type,
+            title=link.resource.title,
+            url=link.resource.url,
+            author=link.resource.author,
+            level=link.resource.level,
+            duration_min=link.resource.duration_min,
+            why=link.resource.why,
+            note=link.note,
         )
-        for r in resources
+        for link in links
     ]

@@ -1,0 +1,9 @@
+type: course
+title: "Machine Learning Crash Course: Overfitting"
+url: https://developers.google.com/machine-learning/crash-course/overfitting/overfitting
+author: Google for Developers
+level: beginner
+duration_min: 15
+why: Plain-language definitions of overfitting, underfitting and generalisation, with loss curves and exercises.
+source: curated
+checked: 2026-10-20

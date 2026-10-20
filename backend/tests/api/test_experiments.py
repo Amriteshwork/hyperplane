@@ -150,7 +150,11 @@ def test_training_options_list_targets_algorithms_and_features(
 
     targets = {t["column"]: t for t in options["targets"]}
     assert targets["y"]["task_type"] == "regression"
-    assert targets["y"]["algorithms"] == [{"id": "linear_regression", "name": "Linear Regression"}]
+    assert targets["y"]["algorithms"] == [
+        {"id": "linear_regression", "name": "Linear Regression"},
+        {"id": "polynomial_regression", "name": "Polynomial Regression"},
+        {"id": "ridge", "name": "Ridge"},
+    ]
     assert targets["colour"]["algorithms"] == []  # binary: nothing can train it yet
     assert {f["column"]: f["role"] for f in options["features"]} == {
         "x1": "numeric",

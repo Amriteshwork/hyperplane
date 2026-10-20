@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mathsisfun-probability
+  note: "The basics from scratch: outcomes, events and probability as a share of equally likely outcomes."
+- id: mathsisfun-standard-deviation
+  note: "Variance and standard deviation computed step by step, including why the sample version divides by n − 1."
+- id: mathsisfun-normal-distribution
+  note: "The bell curve, the 68–95–99.7 rule and standardising values into z-scores."
+- id: statquest-normal-distribution
+  note: "What the mean and standard deviation do to the shape of the normal curve, and how to read its height."
+- id: seeing-theory
+  note: "Interactive visualisations of probability, distributions and the central limit theorem to play with."
+- id: mml-book
+  note: "Chapter 6 (Probability and Distributions) covers random variables, expectations and the Gaussian formally."

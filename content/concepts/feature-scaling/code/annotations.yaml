@@ -1,0 +1,50 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "Two equally important features, then the second one is re-expressed in units 1000× larger."
+    deep: |
+      Dividing a column by 1000 changes nothing about the information it carries. Least
+      squares would simply learn a 1000× larger weight and predict exactly the same. A
+      penalised model is a different story.
+
+  ridge: &ridge
+    span: block
+    short: "Ridge regression with α = 10, scored on the held-out rows."
+    deep: |
+      The penalty $\alpha \sum_j w_j^2$ looks only at the weights' sizes, not at the units
+      behind them.
+    concepts: [l2-regularization]
+
+  standardise: &standardise
+    span: block
+    short: "Rescale every column to mean 0, std 1, using statistics from the training rows only."
+    deep: |
+      $$z = \frac{x - \mu_\text{train}}{\sigma_\text{train}}$$
+
+      The test rows are transformed with the *training* mean and standard deviation. They
+      must be treated exactly like new data, which we wouldn't have when fitting.
+    concepts: [train-test-split]
+
+  compare: &compare
+    span: block
+    short: "Fit the same Ridge model on raw and on standardised features."
+    deep: |
+      Same data, same model, same α. The only difference is the units the features are
+      expressed in.
+
+  checks: &checks
+    span: block
+    short: "Unscaled, the penalty wipes out the rescaled feature; scaled, both get equal weight."
+    deep: |
+      To use the kilometre feature, Ridge would need a weight of about 2000, and the penalty
+      $\alpha \cdot 2000^2$ is far too expensive, so it gives up on that feature and loses half
+      the signal. After standardising, both features need a weight of about 2 and are
+      treated alike.
+
+pytorch:
+  data: *data
+  ridge: *ridge
+  standardise: *standardise
+  compare: *compare
+  checks: *checks

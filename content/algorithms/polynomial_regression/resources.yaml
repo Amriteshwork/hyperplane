@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: sklearn-underfitting-overfitting
+  note: "The exact experiment behind this page: polynomials of degree 1, 4 and 15 on the same data, with code you can rerun."
+- id: sklearn-polynomial-features
+  note: "How PolynomialFeatures builds the new columns, including interaction-only terms and their order."
+- id: wikipedia-polynomial-regression
+  note: "The maths view: why a curved fit is still linear regression, via the Vandermonde design matrix."
+- id: statquest-bias-and-variance
+  note: "Explains why raising the degree first helps and then hurts, which is how you should choose it."
+- id: islr-linear-regression
+  note: "Chapter 3 covers the linear-regression machinery polynomial regression reuses; its later chapters extend it to curves."
+- id: arxiv-double-descent
+  note: "Advanced: why very flexible models can do well again past the point of fitting every training point."

@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-l2-regularization
+  note: "Introduces penalising complexity with the simplest case, L2, and the rate that controls it."
+- id: sklearn-ridge-coefficients
+  note: "See regularisation act on a real model: coefficients shrink smoothly as the penalty grows."
+- id: statquest-ridge-regression
+  note: "A visual explanation of why a penalty that adds bias can still reduce test error."

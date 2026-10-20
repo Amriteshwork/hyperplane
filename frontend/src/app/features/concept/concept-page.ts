@@ -20,23 +20,42 @@ import { ConceptStore } from './concept.store';
           <ol class="flex items-center gap-1.5">
             <li><a routerLink="/learn" class="hover:text-foreground hover:underline">Learn</a></li>
             <li aria-hidden="true">/</li>
-            <li>Concepts</li>
+            <li>
+              <a routerLink="/concepts" class="hover:text-foreground hover:underline">Concepts</a>
+            </li>
           </ol>
         </nav>
         <h1 class="mt-3 text-3xl font-semibold tracking-tight">{{ concept.title }}</h1>
         <p class="mt-2 max-w-prose text-muted-foreground">{{ concept.summary }}</p>
 
-        @if (concept.prerequisites.length) {
-          <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
-            <span class="text-muted-foreground">Read first:</span>
-            @for (prerequisite of concept.prerequisites; track prerequisite.id) {
-              <a
-                class="rounded-full border px-2.5 py-0.5 text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
-                [routerLink]="['/concepts', prerequisite.id]"
-                >{{ prerequisite.title }}</a
-              >
-            }
-          </div>
+        @if (concept.learning_path.length) {
+          <nav class="mt-4 max-w-3xl text-sm" aria-labelledby="learning-path">
+            <h2 id="learning-path" class="text-muted-foreground">
+              Learning path: everything this builds on, in order
+            </h2>
+            <ol class="mt-2 flex flex-wrap items-center gap-2">
+              @for (step of concept.learning_path; track step.id; let i = $index) {
+                <li>
+                  <a
+                    class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                    [routerLink]="['/concepts', step.id]"
+                  >
+                    <span class="text-muted-foreground" aria-hidden="true">{{ i + 1 }}</span>
+                    {{ step.title }}
+                  </a>
+                </li>
+              }
+              <li>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-0.5 text-xs text-primary-foreground"
+                  aria-current="page"
+                >
+                  <span aria-hidden="true">{{ concept.learning_path.length + 1 }}</span>
+                  {{ concept.title }}
+                </span>
+              </li>
+            </ol>
+          </nav>
         }
 
         <!-- Prose stays at reading width; the code below uses the full page. -->
@@ -49,7 +68,7 @@ import { ConceptStore } from './concept.store';
               The idea in a few lines, on random data, with checks that it works. Copy it into a
               notebook and change the numbers.
             </p>
-            <app-concept-code class="mt-4 block" [code]="concept.code" />
+            <app-concept-code class="mt-4 block" [conceptId]="concept.id" [code]="concept.code" />
           </section>
         }
 

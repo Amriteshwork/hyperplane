@@ -1,0 +1,58 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `mse` from the Mean squared error concept rather than rewriting it."
+    deep: |
+      Each fold is scored with mean squared error, so we import the function defined
+      there; the page links to its file. Download it next to this one to run it.
+    concepts: [mean-squared-error]
+
+  data: &data
+    span: block
+    short: "50 features but only 5 matter, 60 training rows, and a large untouched test set."
+    deep: |
+      With 60 rows for 50 features, unpenalised least squares nearly memorises the training
+      data, so the choice of α matters a lot. The 340 test rows play the part of the future:
+      we look at them exactly once, at the end.
+
+      `ridge` has no intercept because the data has none.
+    concepts: [l2-regularization]
+
+  folds: &folds
+    span: block
+    short: "Shuffle the training rows and cut them into 5 folds of 12."
+    deep: |
+      Every α is scored on these *same* folds, so differences in score come from α, not
+      from a luckier split.
+
+  cv: &cv
+    span: block
+    short: "For each α: fit on 4 folds, score on the 5th, rotate, and average the 5 scores."
+    deep: |
+      Only training rows are used here. Each fold takes one turn as the validation set, so
+      every row helps both to fit (4 times) and to score (once).
+
+      The average is the cross-validated estimate of how that α would do on new data.
+
+  final: &final
+    span: block
+    short: "Keep the α with the lowest CV error, refit on all training rows, then test once."
+    deep: |
+      Refitting on all 60 rows uses the data the folds held back. Only now is the test set
+      used, to check the choice, together with the no-penalty baseline for comparison.
+    concepts: [train-test-split]
+
+  checks: &checks
+    span: block
+    short: "Every row was validated once, CV picked a moderate α, and it beats no penalty on the test set."
+    deep: |
+      CV chose α without ever seeing the test rows, and the choice held up on them. That's
+      the whole point: an honest final score, *and* a tuned model.
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  folds: *folds
+  cv: *cv
+  final: *final
+  checks: *checks

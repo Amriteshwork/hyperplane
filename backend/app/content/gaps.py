@@ -36,12 +36,9 @@ def content_gaps(catalog: ContentCatalog, algorithm_ids: list[str]) -> list[Gap]
     """Gap policy (ARCHITECTURE §8): each concept needs a beginner read, a video and code."""
     gaps: list[Gap] = []
     for concept in catalog.concepts():
-        reads = [
-            r
-            for r in concept.resources
-            if r.type is ResourceType.BLOG and r.level is Level.BEGINNER
-        ]
-        videos = [r for r in concept.resources if r.type is ResourceType.VIDEO]
+        resources = [link.resource for link in concept.resources]
+        reads = [r for r in resources if r.type is ResourceType.BLOG and r.level is Level.BEGINNER]
+        videos = [r for r in resources if r.type is ResourceType.VIDEO]
         if not reads:
             gaps.append(Gap(f"concepts/{concept.id}", "needs a beginner blog/post"))
         if not videos:

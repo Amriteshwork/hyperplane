@@ -1,0 +1,50 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "13 noisy points on a sine curve, and a polynomial with enough weights to hit every one."
+    deep: |
+      Twelve powers of $x$ plus an intercept give 13 weights for 13 training rows: unpenalised,
+      the model can pass exactly through every point, noise included. The 200 test points show
+      what that costs.
+
+      The columns are standardised (with training statistics) so a single penalty is fair to
+      all of them.
+    concepts: [feature-expansion, feature-scaling, overfitting-underfitting]
+
+  fit: &fit
+    span: block
+    short: "Minimise squared error + λ‖w‖², with the intercept left out of the penalty."
+    deep: |
+      Centring the columns and the target lets us solve for the weights alone,
+
+      $$w = (X_c^\top X_c + \lambda I)^{-1} X_c^\top y_c ,$$
+
+      then recover the intercept from the means. We return the test error and the size of
+      the weights $\lVert w \rVert$.
+    concepts: [l2-regularization, normal-equation]
+
+  sweep: &sweep
+    span: block
+    short: "Fit the same model with penalties from almost nothing (10⁻⁸) to very strong (100)."
+    deep: |
+      λ is usually searched on a log scale, a factor of 10 at a time: its effect depends on
+      orders of magnitude, not small changes.
+
+  checks: &checks
+    span: block
+    short: "Weights shrink as λ grows, and a moderate λ beats both extremes on the test set."
+    deep: |
+      - **λ ≈ 0**: huge weights (hundreds), a wiggly curve, poor test error: overfitting.
+      - **Moderate λ**: small weights, a smooth curve, test error near the noise floor
+        ($0.2^2 = 0.04$).
+      - **λ = 100**: weights squashed to almost nothing, the curve flattens: underfitting.
+
+      Same model, same features. Only the penalty changed.
+    concepts: [bias-variance, overfitting-underfitting]
+
+pytorch:
+  data: *data
+  fit: *fit
+  sweep: *sweep
+  checks: *checks

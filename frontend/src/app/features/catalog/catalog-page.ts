@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -7,7 +8,7 @@ import { FamilySection } from './family-section';
 
 @Component({
   selector: 'app-catalog-page',
-  imports: [FamilySection, EmptyState, HlmButton],
+  imports: [RouterLink, FamilySection, EmptyState, HlmButton],
   providers: [CatalogStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -15,7 +16,9 @@ import { FamilySection } from './family-section';
       <h1 class="text-3xl font-semibold tracking-tight">Learn</h1>
       <p class="mt-3 max-w-prose text-muted-foreground">
         Algorithms grouped by family, from the simplest intuition to the most complex. Each page has
-        the theory, the key concepts, and the exact code, explained line by line.
+        the theory, the key concepts, and the exact code, explained line by line. Or
+        <a routerLink="/concepts" class="underline hover:text-foreground">browse every concept</a>,
+        from the maths up.
       </p>
 
       <div class="mt-10 grid gap-12" aria-live="polite" [attr.aria-busy]="store.loading()">

@@ -1,0 +1,59 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `mse` from the Mean squared error concept rather than rewriting it."
+    deep: |
+      Every score on this page is a mean squared error, so we import the function defined
+      there; the page links to its file. Download it next to this one to run it.
+    concepts: [mean-squared-error]
+
+  data: &data
+    span: block
+    short: "A sine curve plus noise: 20 evenly spaced training rows and 200 random test rows."
+    deep: |
+      Only 20 training rows makes a flexible model's job of memorising them easy. The test
+      rows come from the same range, so a bad test score means overfitting, not
+      extrapolation. Noise with standard deviation 0.2 sets the floor: no model can beat a
+      test MSE of about $0.2^2 = 0.04$.
+    concepts: [train-test-split]
+
+  fit: &fit
+    span: block
+    short: "Fit a polynomial of the given degree on the training rows; return train and test MSE."
+    deep: |
+      `vander` builds the columns $1, x, x^2, \dots, x^d$ in one call (the Vandermonde
+      matrix), then least squares fits them, exactly as in polynomial regression. The test
+      rows are only used to *score*, never to fit.
+    concepts: [feature-expansion, mean-squared-error]
+
+  sweep: &sweep
+    span: block
+    short: "Compare a straight line (degree 1), a modest curve (4), and a very wiggly one (15)."
+    deep: |
+      Degree 15 has 16 coefficients for 20 training points: almost enough to pass through
+      every one of them, noise included.
+
+  checks: &checks
+    span: block
+    short: "Degree 1 underfits, degree 4 is near the noise floor, degree 15 overfits."
+    deep: |
+      - **Degree 1**: high error on both sets. It's too rigid to follow the sine.
+      - **Degree 4**: test error close to the noise level, the best we can hope for.
+      - **Degree 15**: the *lowest* training error and a much *higher* test error. The extra
+        flexibility was spent on the noise.
+
+      The training column alone would have picked degree 15, which is why we always judge
+      on held-out data.
+    concepts: [overfitting-underfitting, bias-variance]
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  fit:
+    <<: *fit
+    deep: |
+      `torch.linalg.vander` builds the columns $1, x, x^2, \dots, x^d$ in one call (the
+      Vandermonde matrix), then least squares fits them, exactly as in polynomial
+      regression. The test rows are only used to *score*, never to fit.
+  sweep: *sweep
+  checks: *checks

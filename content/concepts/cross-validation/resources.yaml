@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-cross-validation
+  note: "Starts from a single train/test split and shows why rotating the held-out part gives a fairer score: k-fold in six minutes."
+- id: sklearn-cross-validation
+  note: "The reference for k-fold and its variants (stratified, grouped, time-series), with diagrams of each split."
+- id: mlu-explain-train-test-validation
+  note: "Why tuning needs a validation set separate from the test set, the problem cross-validation solves."
+- id: arxiv-cross-validation-what-does-it-estimate
+  note: "Advanced: what a cross-validated score really measures, and why its naive error bars are too narrow."

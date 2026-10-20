@@ -1,2 +1,5 @@
-- statology-linear-regression-assumptions
-- zedstatistics-regression-assumptions
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statology-linear-regression-assumptions
+  note: "Lists each assumption with how to check it and what to do when it fails."
+- id: zedstatistics-regression-assumptions
+  note: "Explains each assumption with residual plots, so you know what a violation looks like."

@@ -1,4 +1,9 @@
-- google-mlcc-gradient-descent
-- statquest-gradient-descent
-- 3blue1brown-gradient-descent
-- arxiv-gradient-descent-overview
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-gradient-descent
+  note: "How gradient descent iteratively finds a line's weights, with the learning rate and convergence explained."
+- id: statquest-gradient-descent
+  note: "Takes one step at a time by hand: derivative, step size, update, until the idea feels mechanical."
+- id: 3blue1brown-gradient-descent
+  note: "The geometric picture: rolling downhill on a loss surface, and how the same idea trains neural networks."
+- id: arxiv-gradient-descent-overview
+  note: "Advanced: the variants built on this page's idea (momentum, Adam and others) and when each helps."

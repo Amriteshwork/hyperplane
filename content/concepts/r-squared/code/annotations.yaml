@@ -1,5 +1,12 @@
 # Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
 numpy:
+  reuse: &reuse
+    short: "Reuse `mse` from the Mean squared error concept rather than rewriting it."
+    deep: |
+      R² is a ratio of two mean squared errors, so we import the function defined there;
+      the page links to its file. Download it next to this one to run it.
+    concepts: [mean-squared-error]
+
   data: &data
     span: block
     short: "300 random rows; the target is a linear signal (variance 6.25) plus noise (variance 1)."
@@ -15,7 +22,8 @@ numpy:
       $$R^2 = 1 - \frac{\sum_i (y_i - \hat y_i)^2}{\sum_i (y_i - \bar y)^2} = 1 - \frac{SS_\text{res}}{SS_\text{tot}}$$
 
       It's a *relative* score: the fraction of the mean-baseline's error that the model
-      removed. 1 is perfect, 0 is no better than the mean.
+      removed. 1 is perfect, 0 is no better than the mean. Dividing both sums by $n$
+      changes nothing, so the code writes it as a ratio of two MSEs.
     concepts: [mean-squared-error, residuals]
 
   fit: &fit
@@ -46,6 +54,7 @@ numpy:
       $R^2 = \text{corr}(y, \hat y)^2$, which is where the name comes from.
 
 pytorch:
+  reuse: *reuse
   data: *data
   formula: *formula
   fit: *fit

@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, JsonValue
 
-from app.content.models import CodeLibrary, Level, ResourceType
+from app.content.models import CodeLibrary, ConceptArea, Level, ResourceType
 from app.ml.types import TaskType
 
 
@@ -15,7 +15,10 @@ class ResourceOut(BaseModel):
     author: str | None
     level: Level
     duration_min: int | None
+    #: Why the resource is worth the learner's time, on any page.
     why: str
+    #: What it teaches on this page (ADR 0016).
+    note: str
 
 
 class ConceptRefOut(BaseModel):
@@ -61,6 +64,8 @@ class AlgorithmOut(BaseModel):
     #: `overview.md` body (Markdown + KaTeX).
     overview: str
     concepts: list[ConceptRefOut]
+    #: `concepts` plus everything they build on, each after what it needs (ADR 0016).
+    learning_path: list[ConceptRefOut]
     resources: list[ResourceOut]
     #: JSON Schema of the hyperparameters (Pydantic), rendered by the frontend form.
     params_schema: dict[str, JsonValue]
@@ -87,6 +92,30 @@ class CodeOut(BaseModel):
     source: Literal["example", "run"]
 
 
+class ConceptSummaryOut(BaseModel):
+    id: str
+    title: str
+    summary: str
+    algorithms: list[AlgorithmRefOut]
+
+
+class ConceptAreaOut(BaseModel):
+    """A group on the concept index; concepts come each after what it needs."""
+
+    id: ConceptArea
+    title: str
+    concepts: list[ConceptSummaryOut]
+
+
+class ConceptCodeUseOut(BaseModel):
+    """Names this code imports from a prerequisite concept's code (ADR 0016)."""
+
+    concept: ConceptRefOut
+    #: The imported file, e.g. `normal_equation_numpy.py`.
+    filename: str
+    names: list[str]
+
+
 class ConceptCodeOut(BaseModel):
     """A from-scratch implementation of a concept on random data."""
 
@@ -95,6 +124,7 @@ class ConceptCodeOut(BaseModel):
     filename: str
     code: str
     annotations: list[CodeAnnotationOut]
+    uses: list[ConceptCodeUseOut]
 
 
 class ConceptOut(BaseModel):
@@ -103,6 +133,8 @@ class ConceptOut(BaseModel):
     summary: str
     body: str
     prerequisites: list[ConceptRefOut]
+    #: Every prerequisite, transitively, each after everything it needs (ADR 0016).
+    learning_path: list[ConceptRefOut]
     resources: list[ResourceOut]
     algorithms: list[AlgorithmRefOut]
     code: list[ConceptCodeOut]

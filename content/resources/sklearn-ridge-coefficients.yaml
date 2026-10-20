@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Ridge coefficients as a function of the L2 regularization"
+url: https://scikit-learn.org/stable/auto_examples/linear_model/plot_ridge_coeffs.html
+author: scikit-learn developers
+level: beginner
+duration_min: 10
+why: Plots every coefficient shrinking as alpha grows, with a plain-language guide to reading the plots.
+source: curated
+checked: 2026-10-20

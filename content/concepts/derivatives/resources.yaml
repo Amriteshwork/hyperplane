@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mathsisfun-derivatives
+  note: "The slope-of-a-tiny-step idea behind the derivative, worked through for x² with the basic rules."
+- id: 3blue1brown-essence-of-calculus
+  note: "What calculus is about, built visually from the area of a circle: a gentle start if derivatives are new."
+- id: 3blue1brown-derivative-paradox
+  note: "What 'instantaneous rate of change' really means, and why the tiny-step definition makes sense."
+- id: khutoryansky-gradients
+  note: "Partial derivatives and the gradient animated in 3-D: why the gradient points uphill."
+- id: mml-book
+  note: "Chapter 5 (Vector Calculus) covers partial derivatives, gradients of matrices and the chain rule used in backpropagation."

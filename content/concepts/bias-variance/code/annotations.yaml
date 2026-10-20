@@ -1,0 +1,45 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  setup: &setup
+    span: block
+    short: "Fixed test points and the true curve, sin(3x), that every training set is drawn from."
+    deep: |
+      Bias and variance are properties of a *way of training*, not of one fitted model. To
+      measure them we keep the test points fixed and know the true function $f(x)$, which
+      real data never gives us. That's why this is a simulation.
+
+  refit: &refit
+    span: block
+    short: "Draw 300 fresh noisy training sets, fit a polynomial to each, and predict the test points."
+    deep: |
+      Each row of the result is one model's predictions. Looking down a column shows how
+      much the prediction at that point depends on *which* 40 rows we happened to train on.
+    concepts: [feature-expansion, normal-equation]
+
+  decompose: &decompose
+    span: block
+    short: "Bias² = (average prediction − truth)²; variance = spread of predictions around their average."
+    deep: |
+      At each test point $x$:
+
+      $$\text{bias}^2 = \big(\mathbb{E}[\hat f(x)] - f(x)\big)^2, \qquad \text{variance} = \operatorname{Var}\big[\hat f(x)\big]$$
+
+      averaged over the 50 points. Their sum plus the noise ($0.3^2 = 0.09$) is the expected
+      test MSE.
+
+  checks: &checks
+    span: block
+    short: "The line has high bias, degree 8 has high variance, and degree 3 has the lowest total."
+    deep: |
+      - **Degree 1**: its average prediction is still a line, so it misses the sine the same
+        way every time. That is bias, and more data won't fix it.
+      - **Degree 8**: on average almost exactly right, but each fit wiggles differently. That
+        is variance, and more data (or regularisation) shrinks it.
+      - **Degree 3**: flexible enough for the sine, rigid enough to ignore the noise.
+    concepts: [overfitting-underfitting]
+
+pytorch:
+  setup: *setup
+  refit: *refit
+  decompose: *decompose
+  checks: *checks

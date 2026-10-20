@@ -1,0 +1,227 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas for tables, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same building blocks as Linear Regression, plus one: **`PolynomialFeatures`**, which
+      creates the new columns (squares, products, …) that let a linear model bend.
+
+      Only what the script uses is imported, so the list doubles as a table of contents.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` is
+      the **target vector**.
+
+      A row without a target value can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      This matters even more here than for a straight line: a flexible polynomial can chase
+      the noise in its training rows, and only held-out rows reveal it.
+
+      `test_size` is the fraction held out (e.g. 0.2 = 20%). `random_state` fixes the shuffle,
+      so the split is identical every run.
+    concepts: [train-test-split, overfitting-underfitting]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values and standardise features before they are multiplied together."
+    deep: |
+      - **Imputation** replaces missing numbers with the column median and missing categories
+        with the most frequent value.
+      - **Standardisation** (mean 0, standard deviation 1) matters for polynomials: a feature
+        in the thousands has a square in the millions and a cube in the billions. Scaled
+        features keep every power in a similar range, so the least-squares solve stays
+        numerically accurate.
+      - **One-hot encoding** turns a category into 0/1 columns.
+
+      Everything here is learned **from the training set only**, so no information leaks
+      from the test set.
+
+  expand:
+    span: block
+    short: "Turn each row's features into all their products up to the chosen degree."
+    deep: |
+      With two features and `degree=2`, $[x_1, x_2]$ becomes
+
+      $$[x_1,\ x_2,\ x_1^2,\ x_1 x_2,\ x_2^2]$$
+
+      `interaction_only=True` keeps only products of *different* features ($x_1 x_2$).
+      `include_bias=False` leaves out a column of ones, because `LinearRegression` already
+      learns the intercept.
+
+      $p$ features at degree $d$ give $\binom{p+d}{d} - 1$ columns, which grows fast: 10
+      features at degree 3 is already 285.
+    concepts: [feature-expansion]
+
+  model:
+    span: block
+    short: "Ordinary least squares on the expanded columns, chained after preprocessing."
+    deep: |
+      The model is still **linear in its coefficients**, just over the new columns:
+
+      $$\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_1^2 + \beta_4 x_1 x_2 + \beta_5 x_2^2$$
+
+      That is why it is fitted exactly like Linear Regression. The curve comes from the
+      features, not from the fitting method.
+
+      The `Pipeline` glues preprocessing, expansion and regression into one object, so new
+      data always goes through the same steps in the same order.
+    concepts: [feature-expansion, normal-equation]
+
+  fit:
+    short: "Preprocess, expand, and solve least squares on the training set."
+    deep: |
+      `fit` runs each step in order on `X_train`, then finds the coefficients $\beta$ that
+      minimise the **mean squared error** over the expanded columns:
+
+      $$\min_\beta \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+
+      As with plain OLS there is an exact solution, with no iterations and no learning rate.
+    concepts: [mean-squared-error, normal-equation]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and report R², RMSE and MAE."
+    deep: |
+      - **R²**: the share of the target's variance the model explains. 1 is perfect, 0 is no
+        better than always predicting the mean, and it can be negative.
+      - **RMSE**: the typical error, in the target's own units; it punishes large misses.
+      - **MAE**: the average absolute error, less sensitive to outliers than RMSE.
+
+      Compare these with a Linear Regression run on the same data: the extra terms are only
+      worth it if the *test* scores improve.
+    concepts: [r-squared, mean-squared-error, residuals]
+
+  overfit:
+    span: block
+    short: "Score the training rows too: a large gap between train and test R² signals overfitting."
+    deep: |
+      Adding terms can only lower the training error, so training R² always rises with the
+      degree. Test R² rises while the model learns real curvature, then falls once it starts
+      fitting noise.
+
+      - Both low: **underfitting** (too simple, high bias). Try a higher degree.
+      - Train high, test much lower: **overfitting** (too flexible, high variance). Lower the
+        degree, add data, or regularise with Ridge.
+    concepts: [overfitting-underfitting, bias-variance]
+
+  coefficients:
+    span: block
+    short: "List the learned weight of each term, largest effect first (top 20)."
+    deep: |
+      Term names show what each column is: `age^2` is a square, `age bmi` a product of two
+      (standardised) features.
+
+      Read them with care. Powers of the same feature are strongly correlated, so their
+      coefficients share credit and often have large, opposite signs. Judge the model by its
+      predictions and residuals, not by individual coefficients.
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + expansion + model) to model.joblib."
+    deep: |
+      New data must be scaled and expanded exactly as the training data was, so the whole
+      pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  imports:
+    span: block
+    short: "NumPy for the linear algebra, and itertools to list which features to multiply."
+    deep: |
+      Polynomial regression is two simple steps: build new columns, then solve least squares.
+      `itertools` enumerates the column combinations; NumPy does the rest.
+
+  expand:
+    span: block
+    short: "Build one new column for every combination of up to `degree` features."
+    deep: |
+      `combinations_with_replacement(range(p), d)` lists every multiset of $d$ feature
+      indices: for $p = 2, d = 2$ that is `(0, 0), (0, 1), (1, 1)`, i.e.
+      $x_1^2,\ x_1 x_2,\ x_2^2$. Plain `combinations` never repeats an index, which gives the
+      interaction-only terms.
+
+      Looping $d$ from 1 to `degree` reproduces scikit-learn's column order exactly, which the
+      tests check.
+    concepts: [feature-expansion]
+
+  term:
+    short: "Multiply the chosen columns together, element-wise, to make one new feature."
+    deep: |
+      For the term `(0, 0, 1)` this computes $x_1 \cdot x_1 \cdot x_2 = x_1^2 x_2$ for every row
+      at once.
+
+  class:
+    span: block
+    short: "A minimal model with the same fit/predict interface and attributes as scikit-learn."
+    deep: |
+      Mirroring scikit-learn's names (`coef_`, `intercept_`) lets you compare the two
+      implementations number for number: the test suite checks they agree.
+
+  fit:
+    span: block
+    short: "Expand the features, add a column of ones, and solve least squares once."
+    deep: |
+      After expansion this is exactly Linear Regression's fit: with design matrix $A$,
+
+      $$\theta = \arg\min_\theta \lVert A\theta - y \rVert^2$$
+
+      solved by `np.linalg.lstsq` (via SVD), which stays accurate even though powers of the
+      same feature are highly correlated.
+    concepts: [normal-equation, mean-squared-error]
+
+  predict:
+    span: block
+    short: "Expand new rows the same way, then take the weighted sum plus the intercept."
+    deep: |
+      The expansion is part of the model: forgetting it at prediction time is a classic bug,
+      which is why the platform saves expansion and regression in one pipeline.
+
+  degree-sweep:
+    span: block
+    short: "Fit every degree on the same split and record train and test error: the U-shaped curve."
+    deep: |
+      This is the bias–variance trade-off in a dozen lines:
+
+      - **Low degree**: both errors high. The model is too rigid to follow the curve
+        (high bias, underfitting).
+      - **Right degree**: test error at its minimum.
+      - **High degree**: training error keeps falling while test error climbs. The model
+        wiggles through the noise (high variance, overfitting).
+
+      Choosing the degree by the *test* error (or better, cross-validation) is how you find
+      the sweet spot.
+    concepts: [bias-variance, overfitting-underfitting, train-test-split]
+
+  errors:
+    short: "Mean squared error on the training rows and on the held-out rows, for this degree."
+    deep: |
+      Training MSE can only go down as the degree rises, because each model can imitate every
+      lower-degree one. Test MSE has no such guarantee, which is what makes it honest.
+    concepts: [mean-squared-error]

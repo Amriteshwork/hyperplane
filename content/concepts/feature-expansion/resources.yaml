@@ -1,0 +1,5 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: sklearn-polynomial-features
+  note: "How powers and interaction terms are generated in practice, and how many columns a given degree creates."
+- id: wikipedia-polynomial-regression
+  note: "Why adding x², x³, … keeps the model linear in its coefficients, so least squares still applies."

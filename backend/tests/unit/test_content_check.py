@@ -10,7 +10,7 @@ NO_PACKS = AlgorithmRegistry()
 OVERVIEW = "---\ntitle: LR\nsummary: s\ndifficulty: 1\n---\n" + "".join(
     f"## {section}\n\ntext\n\n" for section in OVERVIEW_SECTIONS
 )
-CONCEPT = "---\ntitle: MSE\nsummary: s\n---\nBody.\n"
+CONCEPT = "---\ntitle: MSE\nsummary: s\narea: optimisation\n---\nBody.\n"
 FAMILY = (
     "---\ntitle: Linear\nsummary: s\norder: 1\n"
     "algorithms: [{id: linear_regression, name: LR}]\n---\nBody.\n"

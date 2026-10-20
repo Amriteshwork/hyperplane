@@ -1,0 +1,49 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    span: block
+    short: "Reuse MSE and the normal equation from earlier concepts instead of rewriting them."
+    deep: |
+      Feature expansion adds nothing new to fitting: it's the same least squares, on more
+      columns. So we import `least_squares` (from Normal equation) and `mse` (from Mean
+      squared error); the page links to both files. Download them next to this one to run it.
+    concepts: [normal-equation, mean-squared-error]
+
+  data: &data
+    span: block
+    short: "200 random points on the parabola y = 1 + 2x − 3x², plus a little noise."
+    deep: |
+      The true relationship is curved, so no straight line can describe it. The noise has
+      standard deviation 0.3, so the best any model can do is an MSE of about $0.3^2 = 0.09$.
+
+  fit: &fit
+    span: block
+    short: "Ordinary least squares on whatever feature columns we pass in."
+    deep: |
+      `least_squares` never changes. Only the columns we hand it do, which is the whole
+      idea of feature expansion: the curve comes from the features, not the method.
+    concepts: [normal-equation, mean-squared-error]
+
+  compare: &compare
+    span: block
+    short: "Fit once with x alone, once with x and x², and compare the errors."
+    deep: |
+      With columns $[1, x, x^2]$ the model is $\hat y = \beta_0 + \beta_1 x + \beta_2 x^2$:
+      a parabola in $x$, but still a weighted sum of columns, so least squares solves it
+      exactly.
+
+  checks: &checks
+    span: block
+    short: "The line's error is over 10× larger; the expanded model recovers 1, 2, −3."
+    deep: |
+      - The straight line **underfits**: its error is dominated by the curve it can't follow.
+      - With $x^2$ added, the coefficients land within 0.1 of the truth, and the remaining
+        error is just the noise we added.
+    concepts: [overfitting-underfitting]
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  fit: *fit
+  compare: *compare
+  checks: *checks

@@ -1,6 +1,13 @@
-- mlu-explain-linear-regression
-- statquest-linear-regression
-- google-mlcc-linear-regression
-- islr-linear-regression
-- arxiv-regression-analysis-tutorial
-- arxiv-ridgeless-least-squares
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlu-explain-linear-regression
+  note: "Drag points and watch the fitted line and its squared errors update: the intuition for the whole algorithm in one picture."
+- id: statquest-linear-regression
+  note: "Walks through fitting a line by least squares, then R² and the p-value, so you see how the fit is judged as well as found."
+- id: google-mlcc-linear-regression
+  note: "A short, structured lesson on the model's equation, weights and bias, with exercises to check yourself."
+- id: islr-linear-regression
+  note: "Chapter 3 is the deep reference: estimating coefficients, their accuracy, and what goes wrong with real data."
+- id: arxiv-regression-analysis-tutorial
+  note: "Places linear regression at the start of a path that leads to modern models; read it once the basics feel solid."
+- id: arxiv-ridgeless-least-squares
+  note: "For the curious: what least squares does when there are more features than rows, and why test error can fall again."

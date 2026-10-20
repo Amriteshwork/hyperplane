@@ -3,26 +3,34 @@
 import torch
 import torch.nn.functional as F
 
-# @a:data
-torch.manual_seed(0)
-X = torch.randn(200, 3)  # 200 rows, 3 random features
-y = X @ torch.tensor([2.0, -1.0, 0.5]) + 0.3 * torch.randn(200)
-y_pred = X @ torch.tensor([1.8, -0.9, 0.6])  # a model with slightly wrong weights
 
 # @a:mse
-errors = y - y_pred
-mse = (errors**2).mean()
-rmse = mse.sqrt()  # back in the target's units, so easier to read
-print(f"MSE  = {mse:.4f}")
-print(f"RMSE = {rmse:.4f}")
+def mse(y, y_pred):
+    """(1/n) Σ (yᵢ − ŷᵢ)². Later concepts reuse it: `from mean_squared_error_pytorch import mse`."""
+    return ((y - y_pred) ** 2).mean()
 
-# @a:builtin
-# The built-in loss used to train networks is the same number.
-assert torch.isclose(mse, F.mse_loss(y_pred, y))
 
-# @a:baseline
-# Predicting the mean for every row scores MSE = variance of y: the baseline to beat.
-baseline = ((y - y.mean()) ** 2).mean()
-print(f"baseline (always predict the mean) = {baseline:.4f}")
-assert torch.isclose(baseline, y.var(correction=0))
-assert mse < baseline
+# @a:demo
+if __name__ == "__main__":
+    # @a:data
+    torch.manual_seed(0)
+    X = torch.randn(200, 3)  # 200 rows, 3 random features
+    y = X @ torch.tensor([2.0, -1.0, 0.5]) + 0.3 * torch.randn(200)
+    y_pred = X @ torch.tensor([1.8, -0.9, 0.6])  # a model with slightly wrong weights
+
+    # @a:rmse
+    error = mse(y, y_pred)
+    rmse = error.sqrt()  # back in the target's units, so easier to read
+    print(f"MSE  = {error:.4f}")
+    print(f"RMSE = {rmse:.4f}")
+
+    # @a:builtin
+    # The built-in loss used to train networks is the same number.
+    assert torch.isclose(error, F.mse_loss(y_pred, y))
+
+    # @a:baseline
+    # Predicting the mean for every row scores MSE = variance of y: the baseline to beat.
+    baseline = mse(y, torch.full_like(y, y.mean().item()))
+    print(f"baseline (always predict the mean) = {baseline:.4f}")
+    assert torch.isclose(baseline, y.var(correction=0))
+    assert error < baseline

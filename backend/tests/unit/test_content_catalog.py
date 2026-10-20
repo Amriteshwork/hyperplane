@@ -6,7 +6,9 @@ from app.content.catalog import ContentCatalog, ContentError, UnknownContentErro
 from app.content.gaps import content_gaps, missing_sections
 from app.content.models import CodeLibrary
 
-CONCEPT = "---\ntitle: MSE\nsummary: Squared error.\nprerequisites: [loss]\n---\n\n# Body\n"
+CONCEPT = "---\ntitle: MSE\nsummary: Squared error.\narea: optimisation\nprerequisites: [loss]\n---\n\n# Body\n"
+LOSS = "---\ntitle: Loss\nsummary: How wrong.\narea: optimisation\n---\n"
+LINKS = "[{id: mse-video, note: The squared-error picture.}]"
 RESOURCE = """
 type: video
 title: MSE explained
@@ -23,9 +25,11 @@ def write(path: Path, text: str) -> None:
     path.write_text(text)
 
 
-def write_mse(root: Path, resource_ids: str = "[mse-video]") -> None:
+def write_mse(root: Path, links: str = LINKS) -> None:
+    write(root / "concepts" / "loss" / "concept.md", LOSS)
+    write(root / "concepts" / "loss" / "resources.yaml", "[]")
     write(root / "concepts" / "mse" / "concept.md", CONCEPT)
-    write(root / "concepts" / "mse" / "resources.yaml", resource_ids)
+    write(root / "concepts" / "mse" / "resources.yaml", links)
     write(root / "resources" / "mse-video.yaml", RESOURCE)
 
 
@@ -38,9 +42,11 @@ def test_loads_concepts_with_frontmatter_and_shared_resources(tmp_path: Path) ->
     assert concept.meta.title == "MSE"
     assert concept.meta.prerequisites == ("loss",)
     assert concept.body == "# Body\n"
-    assert concept.resources[0].id == "mse-video"
-    assert concept.resources[0].title == "MSE explained"
-    assert catalog.resources() == [concept.resources[0]]
+    [link] = concept.resources
+    assert link.resource.id == "mse-video"
+    assert link.resource.title == "MSE explained"
+    assert link.note == "The squared-error picture."
+    assert catalog.resources() == [link.resource]
 
 
 @pytest.mark.parametrize(
@@ -48,9 +54,26 @@ def test_loads_concepts_with_frontmatter_and_shared_resources(tmp_path: Path) ->
     [
         ("concepts/mse/concept.md", "no frontmatter", "frontmatter"),
         ("concepts/mse/concept.md", "---\ntitle: X\n---\n", "invalid frontmatter"),
+        (
+            "concepts/mse/concept.md",
+            "---\ntitle: M\nsummary: s\narea: astrology\n---\n",
+            "invalid frontmatter",
+        ),
         ("concepts/mse/resources.yaml", "- type: podcast\n", "invalid resources"),
-        ("concepts/mse/resources.yaml", "[missing]", "unknown resources"),
-        ("concepts/mse/resources.yaml", "[mse-video, mse-video]", "duplicate"),
+        ("concepts/mse/resources.yaml", "[mse-video]", "invalid resources"),  # no note
+        ("concepts/mse/resources.yaml", "[{id: mse-video, note: ''}]", "invalid resources"),
+        ("concepts/mse/resources.yaml", "[{id: missing, note: n}]", "unknown resources"),
+        ("concepts/mse/resources.yaml", f"[{LINKS[1:-1]}, {LINKS[1:-1]}]", "duplicate"),
+        (
+            "concepts/mse/concept.md",
+            "---\ntitle: M\nsummary: s\narea: evaluation\nprerequisites: [x]\n---\n",
+            "unknown",
+        ),
+        (
+            "concepts/loss/concept.md",
+            "---\ntitle: L\nsummary: s\narea: evaluation\nprerequisites: [mse]\n---\n",
+            "cycle",
+        ),
         ("resources/mse-video.yaml", "type: podcast\n", "invalid resource"),
         ("resources/mse-video.yaml", "- a list\n", "mapping"),
     ],
@@ -113,6 +136,39 @@ def test_concept_code_annotation_mismatches_fail(
         ContentCatalog.load(tmp_path)
 
 
+def write_code_chain(root: Path) -> None:
+    """vec ← mat ← solve, and solve also imports vec directly."""
+    for concept, prerequisites, source in [
+        ("vec", "[]", "def dot(u, v):\n    return 0\n"),
+        (
+            "mat",
+            "[vec]",
+            "from vec_numpy import dot\n\n\ndef matmul(a, b):\n    return dot(a, b)\n",
+        ),
+        (
+            "solve",
+            "[mat]",
+            "from mat_numpy import matmul\nfrom vec_numpy import dot\n\nx = matmul(1, dot(2, 3))\n",
+        ),
+    ]:
+        meta = f"---\ntitle: {concept}\nsummary: s\narea: foundations\nprerequisites: {prerequisites}\n---\n"
+        write(root / "concepts" / concept / "concept.md", meta)
+        write(root / "concepts" / concept / "resources.yaml", "[]")
+        write(root / "concepts" / concept / "code" / "numpy.py", source)
+
+
+def test_code_with_dependencies_follows_imports_transitively_once_each(tmp_path: Path) -> None:
+    write_code_chain(tmp_path)
+    catalog = ContentCatalog.load(tmp_path)
+
+    files = catalog.code_with_dependencies("solve", CodeLibrary.NUMPY)
+
+    assert [concept for concept, _ in files] == ["solve", "mat", "vec"]
+    assert [c for c, _ in catalog.code_with_dependencies("vec", CodeLibrary.NUMPY)] == ["vec"]
+    with pytest.raises(UnknownContentError, match="no pytorch code"):
+        catalog.code_with_dependencies("solve", CodeLibrary.PYTORCH)
+
+
 def test_concept_code_must_be_a_known_library(tmp_path: Path) -> None:
     write_mse(tmp_path)
     write(tmp_path / "concepts" / "mse" / "code" / "jax.py", "import jax\n")
@@ -132,7 +188,7 @@ def test_gaps_and_sections(tmp_path: Path) -> None:
 
     gaps = content_gaps(ContentCatalog.load(tmp_path), [])
 
-    assert [g.message for g in gaps] == [  # the video is there
+    assert [g.message for g in gaps if g.item == "concepts/mse"] == [  # the video is there
         "needs a beginner blog/post",
         "needs a NumPy implementation",
         "needs a PyTorch implementation",

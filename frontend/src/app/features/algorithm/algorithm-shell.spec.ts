@@ -16,6 +16,10 @@ const algorithm: AlgorithmOut = {
   difficulty: 1,
   overview: '## Intuition\n\nDraw the **best** line.',
   concepts: [{ id: 'normal-equation', title: 'Normal equation' }],
+  learning_path: [
+    { id: 'vectors', title: 'Vectors and the dot product' },
+    { id: 'normal-equation', title: 'Normal equation' },
+  ],
   resources: [],
   params_schema: {},
   code_variants: [
@@ -90,6 +94,7 @@ describe('Algorithm page', () => {
       level: 'intermediate',
       duration_min: null,
       why: 'Standard survey.',
+      note: 'The survey this algorithm builds on.',
     } as const;
     const body: AlgorithmOut = {
       ...algorithm,
@@ -117,6 +122,21 @@ describe('Algorithm page', () => {
   it('shows an empty state when there are no curated resources', async () => {
     const harness = await open('/learn/algorithms/linear_regression/resources');
     expect(harness.routeNativeElement?.textContent).toContain('Curated resources coming soon');
+  });
+
+  it('lists the learning path in order, marking its key concepts', async () => {
+    const harness = await open('/learn/algorithms/linear_regression/concepts');
+    const el = harness.routeNativeElement as HTMLElement;
+    const steps = [...el.querySelectorAll('ol[aria-label="Learning path"] li')];
+
+    expect(steps.map((li) => li.querySelector('a')?.getAttribute('href'))).toEqual([
+      '/concepts/vectors',
+      '/concepts/normal-equation',
+    ]);
+    expect(steps.map((li) => !!li.querySelector('[data-testid="key-concept"]'))).toEqual([
+      false,
+      true,
+    ]);
   });
 
   it('renders the explained code for a variant', async () => {

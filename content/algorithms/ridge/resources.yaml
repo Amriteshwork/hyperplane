@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-ridge-regression
+  note: "Shows visually how the penalty trades a little bias for less variance, and why Ridge helps when rows are few."
+- id: sklearn-ridge-coefficients
+  note: "Plots every coefficient shrinking as alpha grows, which is exactly what tuning alpha does to your model."
+- id: google-mlcc-l2-regularization
+  note: "A short lesson on the L2 penalty and the regularisation rate, with check-yourself questions."
+- id: arxiv-ridge-lecture-notes
+  note: "The full theory: Ridge's bias, variance, its Bayesian view and how to choose the penalty."
+- id: arxiv-ridgeless-least-squares
+  note: "What happens as alpha goes to zero with more features than rows, the setting where Ridge matters most."

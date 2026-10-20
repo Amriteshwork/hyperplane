@@ -20,6 +20,13 @@ export const routes: Routes = [
       import('./features/algorithm/algorithm.routes').then((m) => m.ALGORITHM_ROUTES),
   },
   {
+    path: 'concepts',
+    pathMatch: 'full',
+    title: 'Concepts · Hyperplane',
+    loadChildren: () =>
+      import('./features/concept-index/concept-index.routes').then((m) => m.CONCEPT_INDEX_ROUTES),
+  },
+  {
     path: 'concepts/:conceptId',
     title: 'Concept · Hyperplane',
     loadChildren: () => import('./features/concept/concept.routes').then((m) => m.CONCEPT_ROUTES),

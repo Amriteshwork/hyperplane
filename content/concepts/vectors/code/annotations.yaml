@@ -1,0 +1,68 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  dot: &dot
+    span: block
+    short: "The dot product: multiply matching entries and add. Matrix multiplication imports this."
+    deep: |
+      $$u \cdot v = \sum_i u_i v_i$$
+
+      `u * v` multiplies element-wise (vectorised); the sum adds the products. Matrix
+      multiplication, next, is nothing but many of these dot products, so it reuses this
+      function.
+    concepts: [numpy-basics]
+
+  norm: &norm
+    span: block
+    short: "A vector's length is the square root of its dot product with itself."
+    deep: |
+      $$\lVert v \rVert = \sqrt{v \cdot v} = \sqrt{v_1^2 + \dots + v_n^2}$$
+
+      In 2-D this is Pythagoras. The same formula measures the size of an error vector or
+      of a model's weights in any number of dimensions.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `dot` and `norm` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run; an `import` skips this block.
+
+  examples: &examples
+    span: block
+    short: "(3, 4) has length 5; rotating it 90° gives a vector whose dot product with it is 0."
+    deep: |
+      A dot product of zero means **perpendicular**: the vectors share no direction at all.
+      `u · u` equals the squared length, 25.
+
+  angle: &angle
+    span: block
+    short: "Dividing the dot product by both lengths gives cos θ, the angle between the vectors."
+    deep: |
+      $$\cos\theta = \frac{u \cdot v}{\lVert u \rVert\,\lVert v \rVert}$$
+
+      This is **cosine similarity**: 1 for the same direction, 0 for perpendicular, −1 for
+      opposite, whatever the vectors' lengths. It's how embeddings are compared.
+
+  prediction: &prediction
+    span: block
+    short: "A linear model's prediction is the dot product of its weights with the features."
+    deep: |
+      $\hat y = w \cdot x = 1.5 \cdot 2 - 2 \cdot 1 + 4 \cdot 0.5 = 3$. Every linear
+      model on this site, from linear regression to a neural network's first layer, starts
+      with this operation.
+
+  checks: &checks
+    span: block
+    short: "On random 100-D vectors, our functions match NumPy's and obey Cauchy–Schwarz."
+    deep: |
+      The **Cauchy–Schwarz inequality** $|u \cdot v| \le \lVert u \rVert\,\lVert v \rVert$
+      is why $\cos\theta$ always lies between −1 and 1.
+
+pytorch:
+  dot: *dot
+  norm: *norm
+  demo: *demo
+  examples: *examples
+  angle: *angle
+  prediction: *prediction
+  checks:
+    <<: *checks
+    short: "On random 100-D vectors, our functions match PyTorch's and obey Cauchy–Schwarz."

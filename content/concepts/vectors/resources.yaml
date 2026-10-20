@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mathsisfun-dot-product
+  note: "Both ways to compute the dot product (sum of products, and lengths times cos θ) with worked examples."
+- id: 3blue1brown-vectors
+  note: "What a vector is, from the three viewpoints of physics, computer science and maths, with addition and scaling animated."
+- id: 3blue1brown-dot-products
+  note: "Why the sum-of-products formula measures how much two vectors point the same way."
+- id: mml-book
+  note: "Chapter 3 (Analytic Geometry) covers norms, inner products, lengths and angles with full rigour."

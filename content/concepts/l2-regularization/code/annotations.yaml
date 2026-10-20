@@ -1,0 +1,66 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse plain least squares from the Normal equation concept, to compare against Ridge."
+    deep: |
+      Ridge is the normal equation with $\alpha$ added to the diagonal. Importing
+      `least_squares` puts the two solves side by side: compare its one line with the
+      Ridge line below. The page links to its file; download it next to this one to run it.
+    concepts: [normal-equation]
+
+  data: &data
+    span: block
+    short: "Two features that are almost copies of each other; the target depends on what they share."
+    deep: |
+      $x_2 = x_1 + $ tiny noise, and $y = 3x_1 +$ noise. Any split $w_1 + w_2 \approx 3$
+      predicts about equally well, so the data can't say how to divide the credit. This is
+      **multicollinearity** in its purest form.
+
+  ols: &ols
+    short: "Plain least squares (the normal equation): picks whichever split fits this sample's noise best."
+    deep: |
+      With nearly collinear columns, tiny noise differences decide the split, so OLS often
+      returns large weights of opposite sign that still add up to about 3.
+    concepts: [normal-equation]
+
+  ridge: &ridge
+    span: block
+    short: "Ridge: the same equations with α added to the diagonal of XᵀX."
+    deep: |
+      Among all splits that fit about equally well, the penalty $\alpha (w_1^2 + w_2^2)$ is
+      smallest when the two are equal, so Ridge returns $w_1 \approx w_2 \approx 1.5$.
+
+  conditioning: &conditioning
+    span: block
+    short: "The condition number measures how sensitive the solve is to noise. α shrinks it a lot."
+    deep: |
+      The condition number is the ratio of the largest to the smallest eigenvalue of
+      $X^\top X$. Near-collinear features make the smallest eigenvalue almost 0, so the ratio
+      explodes. Adding $\alpha I$ lifts every eigenvalue by $\alpha$, which caps the ratio.
+
+  resample: &resample
+    span: block
+    short: "Refit both models on 50 bootstrap samples and measure how much w₁ moves."
+    deep: |
+      A bootstrap sample draws $n$ rows *with replacement*: a slightly different dataset
+      from the same source. A model whose weights jump around between such samples has
+      high **variance**.
+    concepts: [bias-variance]
+
+  checks: &checks
+    span: block
+    short: "OLS's split swings wildly between samples; Ridge's is equal, stable and sums to 3."
+    deep: |
+      - OLS's $w_1$ spreads over several units across samples; Ridge's barely moves.
+      - Ridge's two weights are equal and add up to the true effect (shrunk a little: that's
+        the bias it accepts).
+      - Its weight vector is smaller and its system far better conditioned.
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  ols: *ols
+  ridge: *ridge
+  conditioning: *conditioning
+  resample: *resample
+  checks: *checks

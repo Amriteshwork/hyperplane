@@ -1,2 +1,5 @@
-- google-mlcc-loss
-- ibm-what-is-a-loss-function
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-loss
+  note: "Defines loss and compares common choices (L1, MSE) on a worked example."
+- id: ibm-what-is-a-loss-function
+  note: "A short overview of what a loss function is for and how training uses it."

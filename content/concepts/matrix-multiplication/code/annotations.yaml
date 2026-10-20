@@ -1,0 +1,65 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `dot` from the Vectors concept: a matrix product is a grid of dot products."
+    deep: |
+      Each entry of $AB$ is one dot product, so we import the function from Vectors instead
+      of writing the sum again. The page links to its file; download it next to this one to
+      run it.
+    concepts: [vectors]
+
+  matmul: &matmul
+    span: block
+    short: "Fill entry (i, j) with the dot product of row i of A and column j of B."
+    deep: |
+      $$(AB)_{ij} = \sum_k A_{ik} B_{kj}$$
+
+      An $m \times n$ matrix times an $n \times p$ matrix gives $m \times p$: the inner sizes
+      ($n$) must match, which the `assert` checks. Two Python loops make the definition
+      visible; real code uses `A @ B`, which does the same in optimised compiled code.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `matmul` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run; an `import` skips this block.
+
+  example: &example
+    span: block
+    short: "A 3 × 2 times a 2 × 3 matrix gives 3 × 3; our loop agrees with the built-in `@`."
+    deep: |
+      Top-left entry: row 0 of A is $(1, 2)$, column 0 of B is $(1, 2)$, so the entry is
+      $1 \cdot 1 + 2 \cdot 2 = 5$.
+
+  predictions: &predictions
+    span: block
+    short: "X @ w computes every row's prediction at once: one dot product per example."
+    deep: |
+      With 5 examples as rows and the weights as a column, the product is a $5 \times 1$
+      column of predictions. This is exactly how a linear model predicts a whole dataset.
+    concepts: [vectors]
+
+  rules: &rules
+    span: block
+    short: "Order matters (AB ≠ BA), transposing reverses the order, and the identity changes nothing."
+    deep: |
+      - $AB$ here is $3 \times 3$ but $BA$ is $2 \times 2$: not even the same shape.
+      - $(AB)^\top = B^\top A^\top$, a rule used constantly when deriving gradients.
+      - $AI = A$: the identity matrix is the "1" of matrix multiplication.
+
+  gram: &gram
+    span: block
+    short: "XᵀX, the matrix at the heart of the normal equation, is symmetric; its diagonal holds squared column lengths."
+    deep: |
+      Entry $(j, k)$ of $X^\top X$ is the dot product of feature column $j$ with feature
+      column $k$: it measures how features move together. You'll meet it again in the
+      normal equation and in Ridge regression.
+    concepts: [normal-equation]
+
+pytorch:
+  reuse: *reuse
+  matmul: *matmul
+  demo: *demo
+  example: *example
+  predictions: *predictions
+  rules: *rules
+  gram: *gram

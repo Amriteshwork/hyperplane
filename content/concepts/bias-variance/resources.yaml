@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlu-explain-bias-variance
+  note: "Interactive: raise model complexity and watch bias fall while variance rises, the trade-off on this page made visible."
+- id: sklearn-underfitting-overfitting
+  note: "A concrete case of high bias (degree 1) and high variance (degree 15), with runnable code."
+- id: statquest-bias-and-variance
+  note: "A short visual explanation of both terms and why the best model sits between too simple and too flexible."
+- id: arxiv-double-descent
+  note: "Where the classic U-shaped picture breaks: very large models whose test error falls again."

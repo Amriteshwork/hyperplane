@@ -1,0 +1,9 @@
+type: course
+title: "Machine Learning Crash Course: L2 regularization"
+url: https://developers.google.com/machine-learning/crash-course/overfitting/regularization
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: A worked example of the L2 penalty and how the regularisation rate trades fit against weight size.
+source: curated
+checked: 2026-10-20

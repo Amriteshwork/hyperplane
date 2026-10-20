@@ -1,2 +1,5 @@
-- khan-r-squared-intuition
-- statquest-r-squared
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: khan-r-squared-intuition
+  note: "Builds R² from the variation around the mean and around the line, with a worked example."
+- id: statquest-r-squared
+  note: "Derives R² from 'variation around the mean vs around the fit', so the formula sticks."

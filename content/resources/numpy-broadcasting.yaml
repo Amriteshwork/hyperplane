@@ -1,0 +1,8 @@
+type: blog
+title: Broadcasting
+url: https://numpy.org/doc/stable/user/basics.broadcasting.html
+author: NumPy documentation
+level: intermediate
+why: "The authoritative statement of NumPy's broadcasting rules, with diagrams."
+source: curated
+checked: 2026-10-20

@@ -1,6 +1,8 @@
 ---
 title: Train/test split
 summary: Hold out data the model never sees during training, to measure how it does on new data.
+area: evaluation
+prerequisites: [numpy-basics]
 ---
 
 A model can memorise its training data, so its score on that data is optimistic. Splitting

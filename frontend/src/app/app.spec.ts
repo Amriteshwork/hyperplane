@@ -20,7 +20,7 @@ describe('App shell', () => {
     const navLabels = [...el.querySelectorAll('nav[aria-label="Primary"] a')].map((a) =>
       a.textContent?.trim(),
     );
-    expect(navLabels).toEqual(['Learn', 'Lab', 'Runs']);
+    expect(navLabels).toEqual(['Learn', 'Concepts', 'Lab', 'Runs']);
     expect(el.querySelector('a[href="#main"]')?.textContent?.trim()).toBe('Skip to content');
     expect(el.querySelector('footer')).not.toBeNull();
   });

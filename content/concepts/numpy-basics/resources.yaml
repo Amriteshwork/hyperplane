@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: numpy-absolute-beginners
+  note: "The official starting point: creating arrays, shapes, indexing and basic maths, with small examples to try."
+- id: numpy-broadcasting
+  note: "The exact rules NumPy follows when shapes differ, with diagrams, for when broadcasting surprises you."
+- id: freecodecamp-numpy-tutorial
+  note: "A one-hour walkthrough of arrays, indexing, maths and statistics functions, if you prefer video."

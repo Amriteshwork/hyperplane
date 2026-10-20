@@ -1,7 +1,8 @@
 ---
 title: Gradient descent
 summary: Minimise a loss by repeatedly stepping the parameters downhill along its gradient.
-prerequisites: [loss-function]
+area: optimisation
+prerequisites: [loss-function, derivatives]
 ---
 
 The gradient of the loss points in the direction in which the loss increases fastest.

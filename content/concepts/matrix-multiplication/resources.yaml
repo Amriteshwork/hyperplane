@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mathsisfun-matrix-multiplying
+  note: "Step-by-step 'row times column' multiplication with worked examples, and why the order matters."
+- id: 3blue1brown-linear-transformations
+  note: "A matrix as a transformation of space, and a matrix–vector product as where a vector lands."
+- id: 3blue1brown-matrix-multiplication
+  note: "Why multiplying two matrices means applying one transformation after the other, so order matters."
+- id: mml-book
+  note: "Chapter 2 (Linear Algebra) covers matrices, products, transposes and inverses formally."

@@ -1,0 +1,8 @@
+type: video
+title: "Machine Learning Fundamentals: Bias and Variance"
+url: https://www.youtube.com/watch?v=EuBBz3bI-aA
+author: StatQuest with Josh Starmer
+level: beginner
+why: A short visual explanation of bias, variance and why the best model sits between too simple and too flexible.
+source: curated
+checked: 2026-10-20
