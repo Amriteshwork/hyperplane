@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, JsonValue
 
-from app.content.models import Level, ResourceType
+from app.content.models import CodeLibrary, Level, ResourceType
 from app.ml.types import TaskType
 
 
@@ -87,6 +87,16 @@ class CodeOut(BaseModel):
     source: Literal["example", "run"]
 
 
+class ConceptCodeOut(BaseModel):
+    """A from-scratch implementation of a concept on random data."""
+
+    library: CodeLibrary
+    title: str
+    filename: str
+    code: str
+    annotations: list[CodeAnnotationOut]
+
+
 class ConceptOut(BaseModel):
     id: str
     title: str
@@ -95,3 +105,4 @@ class ConceptOut(BaseModel):
     prerequisites: list[ConceptRefOut]
     resources: list[ResourceOut]
     algorithms: list[AlgorithmRefOut]
+    code: list[ConceptCodeOut]

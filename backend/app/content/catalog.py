@@ -11,15 +11,22 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from app.content.models import (
     AlgorithmContent,
     AlgorithmFrontmatter,
+    CodeLibrary,
     Concept,
+    ConceptCode,
     ConceptFrontmatter,
     Family,
     FamilyFrontmatter,
     Resource,
 )
+from app.ml.base import Annotation
+from app.ml.codegen import AnchorMismatchError, strip_anchors
 
 _FRONTMATTER = re.compile(r"\A---\n(?P<meta>.*?)\n---\n?(?P<body>.*)\Z", re.DOTALL)
 _RESOURCE_IDS = TypeAdapter(tuple[str, ...])
+_CODE_ANNOTATIONS = TypeAdapter(dict[CodeLibrary, dict[str, Annotation]])
+CODE_ANNOTATIONS_FILE = "annotations.yaml"
+_IGNORED = {".DS_Store", "__pycache__"}
 
 
 class ContentError(ValueError):
@@ -69,6 +76,7 @@ class ContentCatalog:
                 id=folder.name,
                 **_parts(folder / "concept.md", ConceptFrontmatter),
                 resources=_resource_refs(folder / "resources.yaml", resources),
+                code=_concept_code(folder / "code"),
             )
             for folder in _folders(root / "concepts")
         ]
@@ -152,6 +160,43 @@ def _resource_refs(path: Path, index: dict[str, Resource]) -> tuple[Resource, ..
     if len(set(ids)) != len(ids):
         raise ContentError(f"{path}: duplicate resource ids")
     return tuple(index[i] for i in ids)
+
+
+def _concept_code(folder: Path) -> tuple[ConceptCode, ...]:
+    """A concept's optional `code/<library>.py` files, in `CodeLibrary` order.
+
+    `code/annotations.yaml` has one section per library; anchors and entries must match 1:1.
+    """
+    if not folder.is_dir():
+        return ()
+    annotations = _code_annotations(folder / CODE_ANNOTATIONS_FILE)
+    libraries = {library.value: library for library in CodeLibrary}
+    code: dict[CodeLibrary, ConceptCode] = {}
+    for path in sorted(p for p in folder.iterdir() if p.name not in _IGNORED):
+        if path.name == CODE_ANNOTATIONS_FILE:
+            continue
+        if path.suffix != ".py" or path.stem not in libraries:
+            raise ContentError(f"{path}: expected one of {[f'{name}.py' for name in libraries]}")
+        library = libraries[path.stem]
+        code[library] = ConceptCode(
+            library=library, source=_read(path), annotations=annotations.get(library, {})
+        )
+        try:
+            strip_anchors(code[library].source, code[library].annotations, filename=str(path))
+        except AnchorMismatchError as exc:
+            raise ContentError(str(exc)) from exc
+    if orphaned := sorted(set(annotations) - set(code)):
+        raise ContentError(f"{folder / CODE_ANNOTATIONS_FILE}: sections without code {orphaned}")
+    return tuple(code[library] for library in CodeLibrary if library in code)
+
+
+def _code_annotations(path: Path) -> dict[CodeLibrary, dict[str, Annotation]]:
+    if not path.is_file():
+        return {}
+    try:
+        return _CODE_ANNOTATIONS.validate_python(yaml.safe_load(_read(path)) or {})
+    except (yaml.YAMLError, ValidationError) as exc:
+        raise ContentError(f"{path}: invalid annotations: {exc}") from exc
 
 
 def _read(path: Path) -> str:

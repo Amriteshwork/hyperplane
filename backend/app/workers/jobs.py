@@ -17,3 +17,14 @@ def profile_dataset(dataset_id: str) -> None:
 async def _profile_dataset(dataset_id: UUID) -> None:
     async with container().profiling_service() as service:
         await service.run(dataset_id)
+
+
+def train_run(run_id: str) -> None:
+    """Train a queued run, store its model and report, and publish progress."""
+    with structlog.contextvars.bound_contextvars(job="train_run", run_id=run_id):
+        asyncio.run(_train_run(UUID(run_id)))
+
+
+async def _train_run(run_id: UUID) -> None:
+    async with container().training_service() as service:
+        await service.run(run_id)

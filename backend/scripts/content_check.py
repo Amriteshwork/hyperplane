@@ -1,8 +1,8 @@
 """Validate content/ (ARCHITECTURE §8) and report the content backlog.
 
 Errors (exit 1): bad layout, invalid frontmatter/resources, unknown resource ids, missing overview
-sections, packs without content or with unknown concepts. Warnings: unreferenced resources and
-curation gaps (the backlog).
+sections, packs without content, unknown concepts (packs, prerequisites, code annotations) and
+code anchors without annotations. Warnings: unreferenced resources and curation gaps (the backlog).
 
 Usage: uv run python -m scripts.content_check [--content-dir PATH] [--backlog FILE.md]
 """
@@ -114,6 +114,17 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
                         f"unknown prerequisite {prerequisite!r}",
                     )
                 )
+        for code in concept.code:
+            for anchor, annotation in code.annotations.items():
+                for linked in annotation.concepts:
+                    if not catalog.has_concept(linked):
+                        issues.append(
+                            Issue(
+                                Level.ERROR,
+                                root / "concepts" / concept.id / "code" / "annotations.yaml",
+                                f"{code.library}.{anchor}: unknown concept {linked!r}",
+                            )
+                        )
 
     used = {r.id for a in catalog.algorithms() for r in a.resources}
     used |= {r.id for c in catalog.concepts() for r in c.resources}

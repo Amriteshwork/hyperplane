@@ -14,6 +14,7 @@ const concept: ConceptOut = {
   prerequisites: [{ id: 'mean-squared-error', title: 'Mean squared error (MSE)' }],
   resources: [],
   algorithms: [{ id: 'linear_regression', name: 'Linear Regression' }],
+  code: [],
 };
 
 async function open(body: ConceptOut) {
@@ -44,6 +45,54 @@ describe('ConceptPage', () => {
     expect(el.querySelector('.math')).not.toBeNull();
     expect(el.textContent).toContain('Curated resources coming soon');
     expect(el.querySelector('#papers')).toBeNull();
+    expect(el.querySelector('#from-scratch')).toBeNull(); // no code, no section
+  });
+
+  it('shows the from-scratch code one library at a time, with its explanations', async () => {
+    const el = await open({
+      ...concept,
+      code: [
+        {
+          library: 'numpy',
+          title: 'NumPy',
+          filename: 'normal_equation_numpy.py',
+          code: 'import numpy as np\nbeta = np.linalg.solve(A, b)\n',
+          annotations: [
+            {
+              anchor: 'solve',
+              start_line: 2,
+              end_line: 2,
+              short: 'Solve the normal equation.',
+              deep: 'In depth.',
+              concepts: [{ id: 'mean-squared-error', title: 'Mean squared error (MSE)' }],
+            },
+          ],
+        },
+        {
+          library: 'pytorch',
+          title: 'PyTorch',
+          filename: 'normal_equation_pytorch.py',
+          code: 'import torch\n',
+          annotations: [],
+        },
+      ],
+    });
+    const tabs = [...el.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const panel = () => el.querySelector('[role="tabpanel"]')!;
+
+    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false']);
+    expect(panel().textContent).toContain('normal_equation_numpy.py');
+    panel().querySelector<HTMLButtonElement>('[data-anchor="solve"]')!.click();
+    await settle();
+    expect(panel().querySelector('aside')?.textContent).toContain('Solve the normal equation.');
+
+    tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await settle();
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(panel().textContent).toContain('normal_equation_pytorch.py');
+    expect(panel().getAttribute('aria-labelledby')).toBe('concept-code-tab-pytorch');
+    expect(panel().querySelector('aside')).toBeNull(); // nothing to explain beside it
   });
 
   it('lists papers in their own section, apart from other resources', async () => {

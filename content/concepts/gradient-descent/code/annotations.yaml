@@ -1,0 +1,97 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "Standardised random features and a target with intercept 4 and weights [2, −3]."
+    deep: |
+      Features with mean 0 and variance 1 make the loss surface a round bowl, so a single
+      learning rate works well in every direction. With features on very different scales
+      the bowl is a long narrow valley and gradient descent zig-zags slowly.
+
+  init: &init
+    span: block
+    short: "Start from all-zero parameters and pick a learning rate η."
+    deep: |
+      Any starting point works for linear regression, because its loss has a single
+      minimum. The learning rate $\eta$ is the step size: try `0.5` (still converges) or
+      `1.5` (blows up) to see why it matters.
+
+  loop:
+    span: block
+    short: "Each step: predict, measure the error, compute the MSE."
+    deep: |
+      `error` is prediction minus truth for every row at once; squaring and averaging it
+      gives the loss we are walking downhill on.
+    concepts: [mean-squared-error, loss-function]
+
+  gradient:
+    span: block
+    short: "The gradient of MSE: which way each parameter should move to raise the loss fastest."
+    deep: |
+      Differentiating $L = \frac{1}{n}\sum (Xw + b - y)^2$:
+
+      $$\nabla_w L = \frac{2}{n} X^\top (Xw + b - y) \qquad \frac{\partial L}{\partial b} = \frac{2}{n}\sum (Xw + b - y)$$
+
+      Each feature's gradient is the average error weighted by that feature: if errors are
+      large where the feature is large, its weight needs to change.
+
+  update:
+    span: block
+    short: "Step against the gradient: θ ← θ − η∇L. The loss drops, then levels off."
+    deep: |
+      $$\theta \leftarrow \theta - \eta \, \nabla_\theta L(\theta)$$
+
+      Near the minimum the gradient shrinks, so steps shrink too, which is why the printed
+      loss stops changing: it has reached the noise floor (≈ 0.5² = 0.25), the error no
+      linear model can remove.
+
+  compare: &compare
+    span: block
+    short: "Gradient descent lands on the normal-equation answer, just more slowly."
+    deep: |
+      For linear regression both methods minimise the same convex loss, so they meet at the
+      same point. Gradient descent earns its keep elsewhere: it works for models with no
+      closed-form solution (logistic regression, neural networks) and, in its stochastic
+      form, on data too large to fit in memory.
+    concepts: [normal-equation]
+
+pytorch:
+  data: *data
+  init:
+    <<: *init
+    short: "Zero-initialised parameters with `requires_grad=True`, so PyTorch tracks them."
+    deep: |
+      `requires_grad=True` tells autograd to record every operation on `w` and `b`, so it
+      can differentiate the loss with respect to them later. Any starting point works for
+      linear regression, because its loss has a single minimum.
+
+      The learning rate $\eta$ is the step size: try `0.5` or `1.5` to see why it matters.
+  loop:
+    span: block
+    short: "Each step: predict, then compute the MSE, the number autograd will differentiate."
+    deep: |
+      Building `loss` from `w` and `b` also builds a graph of operations behind the
+      scenes. That graph is what `backward()` walks through next.
+    concepts: [mean-squared-error, loss-function]
+  backward:
+    span: block
+    short: "`backward()` computes ∂loss/∂w and ∂loss/∂b for us and stores them in `.grad`."
+    deep: |
+      This is **autograd**: instead of deriving
+      $\nabla_w L = \frac{2}{n} X^\top (Xw + b - y)$ by hand (as the NumPy version does),
+      PyTorch applies the chain rule through the recorded graph. The same line works for a
+      model with millions of parameters.
+  update:
+    span: block
+    short: "Step against the gradient without tracking it, then reset the gradients to zero."
+    deep: |
+      $$\theta \leftarrow \theta - \eta \, \nabla_\theta L(\theta)$$
+
+      - `torch.no_grad()`: the update is bookkeeping, not part of the model, so autograd
+        must not record it.
+      - `grad.zero_()`: PyTorch **adds** new gradients to `.grad`; without resetting, every
+        step would use the sum of all previous gradients.
+
+      `torch.optim.SGD` packages exactly these lines as `optimizer.step()` and
+      `optimizer.zero_grad()`.
+  compare: *compare

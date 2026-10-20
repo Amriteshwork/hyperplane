@@ -12,6 +12,8 @@ content/
     concept.md                 short explanation; frontmatter: title, prerequisites[]
     resources.yaml
     posts/*.md                 our own posts, when good external material doesn't exist
+    code/numpy.py, pytorch.py  the concept from scratch on random data (see below)
+    code/annotations.yaml      explanations for their `# @a:<anchor>` comments
   families/<family_id>.md      one page per family (e.g. linear-models.md)
   resources/<resource_id>.yaml one file per curated link, shared by any page (ADR 0014)
 ```
@@ -63,6 +65,37 @@ why: "One line on why this is worth the learner's time."
 source: curated               # curated | own
 checked: 2026-10-20           # last link check
 ```
+
+## Concept code
+
+`code/<library>.py` implements the concept from scratch, one file per library in
+`CodeLibrary` (`numpy`, `pytorch`). Each file:
+
+- runs on its own: seeded random data, no files, no network;
+- prints what to look at, and `assert`s its result (e.g. against `np.linalg.lstsq`), so a
+  passing run means the code is right;
+- stays short (≈ 20–45 lines) and comments say *why*.
+
+Explain blocks exactly like a pack's templates (ADR 0006): put `# @a:<anchor>` above a block
+and give it an entry in `code/annotations.yaml`, under the library's section. Anchors and
+entries must match 1:1; `concepts` link to other concept pages. Identical entries can be
+shared with a YAML alias:
+
+```yaml
+numpy:
+  solve: &solve
+    span: block            # up to the next anchor; default `line`
+    short: "One sentence."
+    deep: |
+      Markdown with $math$.
+    concepts: [mean-squared-error]
+pytorch:
+  solve: *solve
+```
+
+Tests run every NumPy file. PyTorch files are compile-checked, and run too wherever torch is
+installed (it isn't a project dependency). A missing library is a backlog gap. Pages show the
+files as `<concept_id>_<library>.py`: a file named `numpy.py` would shadow NumPy when run.
 
 ## Rules
 

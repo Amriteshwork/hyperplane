@@ -1,0 +1,74 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "30 noisy points from a sine curve, with a fixed seed so the split is reproducible."
+    deep: |
+      The dataset is deliberately small: overfitting is easiest to see when a flexible
+      model has few rows to memorise. Fixing the seed fixes both the data *and* the split,
+      so rerunning prints the same numbers.
+
+  split: &split
+    span: block
+    short: "Shuffle the row numbers, take the first 30% as test rows and the rest as training."
+    deep: |
+      Shuffling first matters: if the file were sorted (by date, by target…), the last rows
+      would differ systematically from the rest. We split **row indices**, not data, so the
+      same indices can select from `x` and `y` consistently.
+
+  check: &check
+    span: block
+    short: "9 test rows, 21 training rows, and no row in both."
+    deep: |
+      A row in both sets would let the model be graded on something it studied, which
+      inflates the test score. The `assert` guards the one property the split must have.
+
+  score:
+    span: block
+    short: "MSE of a fitted polynomial on a chosen set of rows."
+    deep: |
+      `np.polyval` evaluates the polynomial at each `x`; comparing with `y` on the given
+      rows gives the error on those rows only.
+    concepts: [mean-squared-error]
+
+  fit: &fit
+    span: block
+    short: "Fit polynomials of degree 1, 3 and 12 on the training rows; score on train and test."
+    deep: |
+      Only the training rows are passed to the fit. The test rows are used for scoring
+      alone: they stand in for the new data the model will meet after deployment.
+
+  verdict: &verdict
+    span: block
+    short: "Training error always falls with complexity; test error exposes the overfit model."
+    deep: |
+      Degree 12 has the lowest **training** error, because it bends through almost every
+      point, noise included. Its **test** error is far worse than degree 3's: it learned
+      the noise, not the curve. Without a held-out set you would pick the wrong model.
+
+pytorch:
+  data:
+    <<: *data
+    deep: |
+      The dataset is deliberately small: overfitting is easiest to see when a flexible
+      model has few rows to memorise. One `torch.Generator` seeds everything, so rerunning
+      prints the same data, the same split and the same numbers.
+  split: *split
+  check: *check
+  random-split:
+    span: block
+    short: "For network training, `random_split` does the same split on a `Dataset`."
+    deep: |
+      `TensorDataset` pairs the rows of `x` and `y`; `random_split` shuffles and cuts it
+      with fractions `[0.7, 0.3]`. The two parts are then usually wrapped in `DataLoader`s
+      for batching. Passing the same `generator` keeps it reproducible.
+  features:
+    span: block
+    short: "Build the columns 1, x, x², …: polynomial regression is linear regression on them."
+    deep: |
+      A degree-$d$ polynomial $\beta_0 + \beta_1 x + \dots + \beta_d x^d$ is *linear in its
+      coefficients*, so we can fit it with ordinary least squares on these columns. `mse`
+      then scores a coefficient vector on the chosen rows.
+    concepts: [normal-equation, mean-squared-error]
+  fit: *fit
+  verdict: *verdict

@@ -18,10 +18,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.config import Settings
 from app.db.models import SessionRow
 from app.db.repositories.sql_datasets import SqlDatasetRepository
+from app.db.repositories.sql_runs import SqlRunRepository
 from app.db.repositories.sql_sessions import SqlSessionRepository
 from app.domain.datasets import Dataset, DatasetSource, DatasetStatus, FileFormat
+from app.domain.experiments import Experiment, Run, RunStatus
 from app.domain.sessions import Session
 from app.ingest.parquet import to_parquet_bytes
+from app.ml.algorithms.linear_regression import PACK
+from app.ml.preprocessing import PreprocessingConfig
+from app.ml.training import TrainingConfig, train
+from app.ml.types import TaskType
 from app.services.profiling_service import ProfilingService
 from tests.fakes.storage import InMemoryStorage
 
@@ -106,3 +112,57 @@ async def test_datasets_round_trip_and_profiling(db: AsyncSession) -> None:
 
     with pytest.raises(LookupError):
         await repo.update(replace(dataset, id=uuid4()))
+
+
+async def test_experiments_and_runs_round_trip(db: AsyncSession) -> None:
+    await SqlSessionRepository(db).add(
+        Session(id=db.info["session_id"], created_at=NOW, last_seen=NOW)
+    )
+    dataset = _dataset(db.info["session_id"])
+    await SqlDatasetRepository(db).add(dataset)
+    repo = SqlRunRepository(db)
+    experiment = Experiment(
+        id=uuid4(),
+        dataset_id=dataset.id,
+        target="y",
+        task_type=TaskType.REGRESSION,
+        preprocessing=PreprocessingConfig(numeric=("x",), categorical=("c",)),
+        test_size=0.25,
+        seed=3,
+        created_at=NOW,
+    )
+    await repo.add_experiment(experiment)
+    assert await repo.get_experiment(experiment.id) == experiment
+
+    run = Run(
+        id=uuid4(),
+        experiment_id=experiment.id,
+        algorithm_id="linear_regression",
+        algorithm_version="scikit-learn test",
+        params={"fit_intercept": True, "positive": False},
+        status=RunStatus.QUEUED,
+        created_at=NOW,
+    )
+    await repo.add_run(run)
+    assert await repo.get_run(run.id) == run
+
+    df = pd.DataFrame({"x": range(20), "c": ["a", "b"] * 10, "y": [i * 2.0 for i in range(20)]})
+    config = TrainingConfig(
+        target="y",
+        task_type=TaskType.REGRESSION,
+        preprocessing=experiment.preprocessing,
+        test_size=0.25,
+        seed=3,
+        params=run.params,
+    )
+    finished = replace(
+        run,
+        status=RunStatus.SUCCEEDED,
+        started_at=NOW,
+        finished_at=NOW,
+        report=train(df, config, PACK).report,
+        artifact_key="runs/x/model.joblib",
+        env={"python": "3.14"},
+    )
+    await repo.update_run(finished)
+    assert await repo.get_run(run.id) == finished

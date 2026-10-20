@@ -4,6 +4,7 @@ import pytest
 
 from app.content.catalog import ContentCatalog, ContentError, UnknownContentError
 from app.content.gaps import content_gaps, missing_sections
+from app.content.models import CodeLibrary
 
 CONCEPT = "---\ntitle: MSE\nsummary: Squared error.\nprerequisites: [loss]\n---\n\n# Body\n"
 RESOURCE = """
@@ -61,6 +62,64 @@ def test_malformed_files_fail_loudly(tmp_path: Path, file: str, text: str, match
         ContentCatalog.load(tmp_path)
 
 
+def test_concept_code_loads_in_library_order(tmp_path: Path) -> None:
+    write_mse(tmp_path)
+    write(tmp_path / "concepts" / "mse" / "code" / "pytorch.py", "import torch\n")
+    write(tmp_path / "concepts" / "mse" / "code" / "numpy.py", "import numpy\n")
+
+    code = ContentCatalog.load(tmp_path).concept("mse").code
+
+    assert [(c.library, c.source) for c in code] == [
+        (CodeLibrary.NUMPY, "import numpy\n"),
+        (CodeLibrary.PYTORCH, "import torch\n"),
+    ]
+
+
+ANNOTATIONS = """
+numpy:
+  fit:
+    short: Fit it.
+    deep: Fit it, in depth.
+"""
+
+
+def test_concept_code_annotations_match_their_anchors(tmp_path: Path) -> None:
+    write_mse(tmp_path)
+    code = tmp_path / "concepts" / "mse" / "code"
+    write(code / "numpy.py", "import numpy\n# @a:fit\nbeta = 1\n")
+    write(code / "annotations.yaml", ANNOTATIONS)
+
+    (numpy,) = ContentCatalog.load(tmp_path).concept("mse").code
+
+    assert numpy.annotations["fit"].short == "Fit it."
+
+
+@pytest.mark.parametrize(
+    ("source", "annotations", "match"),
+    [
+        ("# @a:fit\nbeta = 1\n# @a:extra\nb = 2\n", ANNOTATIONS, "without annotations"),
+        ("beta = 1\n", ANNOTATIONS, "without anchors"),
+        ("# @a:fit\nbeta = 1\n", ANNOTATIONS + "pytorch: {}\n", "sections without code"),
+        ("beta = 1\n", "jax: {}\n", "invalid annotations"),
+    ],
+)
+def test_concept_code_annotation_mismatches_fail(
+    tmp_path: Path, source: str, annotations: str, match: str
+) -> None:
+    write_mse(tmp_path)
+    write(tmp_path / "concepts" / "mse" / "code" / "numpy.py", source)
+    write(tmp_path / "concepts" / "mse" / "code" / "annotations.yaml", annotations)
+    with pytest.raises(ContentError, match=match):
+        ContentCatalog.load(tmp_path)
+
+
+def test_concept_code_must_be_a_known_library(tmp_path: Path) -> None:
+    write_mse(tmp_path)
+    write(tmp_path / "concepts" / "mse" / "code" / "jax.py", "import jax\n")
+    with pytest.raises(ContentError, match="expected one of"):
+        ContentCatalog.load(tmp_path)
+
+
 def test_missing_root_is_empty_and_unknown_ids_raise(tmp_path: Path) -> None:
     catalog = ContentCatalog.load(tmp_path / "nope")
     assert catalog.families() == []
@@ -73,5 +132,9 @@ def test_gaps_and_sections(tmp_path: Path) -> None:
 
     gaps = content_gaps(ContentCatalog.load(tmp_path), [])
 
-    assert [g.message for g in gaps] == ["needs a beginner blog/post"]  # the video is there
+    assert [g.message for g in gaps] == [  # the video is there
+        "needs a beginner blog/post",
+        "needs a NumPy implementation",
+        "needs a PyTorch implementation",
+    ]
     assert "Math" in missing_sections("## Intuition\n")

@@ -3,10 +3,10 @@
 from collections.abc import Sequence
 
 from app.content.catalog import ContentCatalog, UnknownContentError
-from app.content.models import Concept, Family, Resource
+from app.content.models import CODE_LIBRARY_TITLES, Concept, ConceptCode, Family, Resource
 from app.core.errors import NotFoundError
 from app.ml.base import AlgorithmPack
-from app.ml.codegen import CodegenContext, RenderedCode, render
+from app.ml.codegen import CodegenContext, RenderedCode, render, strip_anchors
 from app.ml.registry import AlgorithmRegistry, UnknownAlgorithmError
 from app.schemas.content import (
     AlgorithmOut,
@@ -14,6 +14,7 @@ from app.schemas.content import (
     CodeAnnotationOut,
     CodeOut,
     CodeVariantOut,
+    ConceptCodeOut,
     ConceptOut,
     ConceptRefOut,
     FamilyAlgorithmOut,
@@ -86,6 +87,19 @@ class ContentService:
                 for p in self._registry
                 if concept_id in p.spec.concepts
             ],
+            code=[self._concept_code(concept.id, c) for c in concept.code],
+        )
+
+    def _concept_code(self, concept_id: str, code: ConceptCode) -> ConceptCodeOut:
+        # Never `numpy.py`: run from its folder, it would shadow NumPy itself.
+        filename = f"{concept_id.replace('-', '_')}_{code.library}.py"
+        rendered = strip_anchors(code.source, code.annotations, filename=filename)
+        return ConceptCodeOut(
+            library=code.library,
+            title=CODE_LIBRARY_TITLES[code.library],
+            filename=filename,
+            code=rendered.code,
+            annotations=self._annotations(rendered),
         )
 
     def _code(self, variant: str, title: str, rendered: RenderedCode, source: str) -> CodeOut:
@@ -96,19 +110,22 @@ class ContentService:
                 "filename": rendered.filename,
                 "code": rendered.code,
                 "source": source,
-                "annotations": [
-                    CodeAnnotationOut(
-                        anchor=s.anchor,
-                        start_line=s.start_line,
-                        end_line=s.end_line,
-                        short=s.annotation.short,
-                        deep=s.annotation.deep,
-                        concepts=self._concept_refs(s.annotation.concepts),
-                    )
-                    for s in rendered.spans
-                ],
+                "annotations": self._annotations(rendered),
             }
         )
+
+    def _annotations(self, rendered: RenderedCode) -> list[CodeAnnotationOut]:
+        return [
+            CodeAnnotationOut(
+                anchor=s.anchor,
+                start_line=s.start_line,
+                end_line=s.end_line,
+                short=s.annotation.short,
+                deep=s.annotation.deep,
+                concepts=self._concept_refs(s.annotation.concepts),
+            )
+            for s in rendered.spans
+        ]
 
     def _family(self, family: Family) -> FamilyOut:
         entries = []

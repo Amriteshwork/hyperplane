@@ -9,13 +9,16 @@ from redis import Redis
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.clock import SystemClock
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.repositories.sql_datasets import SqlDatasetRepository
+from app.db.repositories.sql_runs import SqlRunRepository
 from app.jobs.base import EventPublisher
 from app.jobs.redis_events import RedisEventPublisher
 from app.ml.registry import AlgorithmRegistry
 from app.services.profiling_service import ProfilingService
+from app.services.training_service import TrainingService
 from app.storage.base import StorageBackend
 from app.storage.registry import build_storage
 
@@ -32,6 +35,18 @@ class WorkerContainer:
     async def profiling_service(self) -> AsyncIterator[ProfilingService]:
         async with self.session_factory() as db:
             yield ProfilingService(SqlDatasetRepository(db), self.storage)
+
+    @asynccontextmanager
+    async def training_service(self) -> AsyncIterator[TrainingService]:
+        async with self.session_factory() as db:
+            yield TrainingService(
+                SqlDatasetRepository(db),
+                SqlRunRepository(db),
+                self.storage,
+                self.registry,
+                self.events,
+                SystemClock(),
+            )
 
 
 def build_worker_container(settings: Settings) -> WorkerContainer:

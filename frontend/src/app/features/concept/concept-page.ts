@@ -6,14 +6,15 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { MarkdownView } from '../../shared/ui/markdown-view/markdown-view';
 import { ResourceList } from '../../shared/ui/resource-list/resource-list';
+import { ConceptCode } from './concept-code';
 import { ConceptStore } from './concept.store';
 
 @Component({
   selector: 'app-concept-page',
-  imports: [RouterLink, HlmButton, EmptyState, MarkdownView, ResourceList],
+  imports: [RouterLink, HlmButton, ConceptCode, EmptyState, MarkdownView, ResourceList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="mx-auto max-w-4xl px-4 py-8 sm:py-12">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       @if (store.concept(); as concept) {
         <nav aria-label="Breadcrumb" class="text-sm text-muted-foreground">
           <ol class="flex items-center gap-1.5">
@@ -38,7 +39,19 @@ import { ConceptStore } from './concept.store';
           </div>
         }
 
-        <app-markdown-view class="mt-8 block" [content]="concept.body" />
+        <!-- Prose stays at reading width; the code below uses the full page. -->
+        <app-markdown-view class="mt-8 block max-w-3xl" [content]="concept.body" />
+
+        @if (concept.code.length) {
+          <section class="mt-10" aria-labelledby="from-scratch">
+            <h2 id="from-scratch" class="text-lg font-semibold">Build it from scratch</h2>
+            <p class="mt-1 max-w-prose text-sm text-muted-foreground">
+              The idea in a few lines, on random data, with checks that it works. Copy it into a
+              notebook and change the numbers.
+            </p>
+            <app-concept-code class="mt-4 block" [code]="concept.code" />
+          </section>
+        }
 
         @if (concept.algorithms.length) {
           <section class="mt-10" aria-labelledby="used-by">

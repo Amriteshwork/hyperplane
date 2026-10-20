@@ -5,6 +5,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.ml.base import Annotation
+
 _SLUG = r"^[a-z0-9]+(-[a-z0-9]+)*$"
 _ALGO_ID = r"^[a-z][a-z0-9_]*$"
 
@@ -62,6 +64,31 @@ class AlgorithmFrontmatter(_Frozen):
     difficulty: int = Field(ge=1, le=5)
 
 
+class CodeLibrary(StrEnum):
+    """Libraries a concept is implemented in from scratch: `code/<library>.py`, in display order."""
+
+    NUMPY = "numpy"
+    PYTORCH = "pytorch"
+
+
+CODE_LIBRARY_TITLES: dict[CodeLibrary, str] = {
+    CodeLibrary.NUMPY: "NumPy",
+    CodeLibrary.PYTORCH: "PyTorch",
+}
+
+
+class ConceptCode(_Frozen):
+    """A short, runnable implementation of a concept on random data.
+
+    `source` keeps its `# @a:<anchor>` comments; `annotations` explain them, exactly like a
+    pack's templates (ADR 0006).
+    """
+
+    library: CodeLibrary
+    source: str
+    annotations: dict[str, Annotation] = {}
+
+
 class ConceptFrontmatter(_Frozen):
     title: str
     summary: str
@@ -86,3 +113,4 @@ class Concept(_Frozen):
     meta: ConceptFrontmatter
     body: str
     resources: tuple[Resource, ...]
+    code: tuple[ConceptCode, ...] = ()

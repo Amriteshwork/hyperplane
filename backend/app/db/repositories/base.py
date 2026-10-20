@@ -5,6 +5,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.domain.datasets import Dataset
+from app.domain.experiments import Experiment, Run
 from app.domain.sessions import Session
 
 
@@ -29,4 +30,16 @@ class DatasetRepository(Protocol):
 
 
 class RunRepository(Protocol):
-    """Persistence for experiments and their runs. Methods arrive with the training pipeline."""
+    """Persistence for experiments and their runs."""
+
+    async def add_experiment(self, experiment: Experiment) -> None: ...
+
+    async def get_experiment(self, experiment_id: UUID) -> Experiment | None: ...
+
+    async def add_run(self, run: Run) -> None: ...
+
+    async def get_run(self, run_id: UUID) -> Run | None: ...
+
+    async def update_run(self, run: Run) -> None:
+        """Persist every field of an existing run."""
+        ...

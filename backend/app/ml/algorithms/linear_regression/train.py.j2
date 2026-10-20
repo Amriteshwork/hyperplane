@@ -24,7 +24,7 @@ TEST_SIZE = {{ test_size | py }}
 SEED = {{ seed | py }}
 
 # @a:load
-df = pd.read_csv(DATA_FILE)
+df = pd.read_csv(DATA_FILE).dropna(subset=[TARGET])
 X = df[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
 y = df[TARGET]
 

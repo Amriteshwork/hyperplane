@@ -25,11 +25,14 @@ train:
 
   load:
     span: block
-    short: "Read the CSV, then separate the features (X) from the target we predict (y)."
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
     deep: |
       By convention `X` is the **feature matrix** (one row per example, one column per
       feature) and `y` is the **target vector**. The model learns a function $f$ such that
       $f(X) \approx y$.
+
+      A row without a target value can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in later, during preprocessing.
 
       Selecting columns explicitly (instead of "everything except the target") guarantees the
       same features are used here and in the Lab, even if the file has extra columns.

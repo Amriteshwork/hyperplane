@@ -36,6 +36,17 @@ dev = [
     "ruff>=0.17.1",
     "types-pyyaml>=6.0.12.20260906",
 ]
+# Runs the PyTorch concept snippets in content/ (tests skip them without it). Not in the image.
+torch = ["torch>=2.14.1"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+# CPU wheels: the snippets are tiny, and CUDA builds are gigabytes.
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.ruff]
 line-length = 100
@@ -61,8 +72,8 @@ module = ["boto3", "boto3.*", "botocore", "botocore.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-# No inline types; pandas-stubs / pyarrow-stubs would be new dependencies.
-module = ["pandas", "pandas.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*"]
+# No inline types; pandas-stubs / pyarrow-stubs would be new dependencies (joblib ships none).
+module = ["joblib", "pandas", "pandas.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

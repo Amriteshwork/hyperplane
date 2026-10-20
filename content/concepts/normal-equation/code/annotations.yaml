@@ -1,0 +1,41 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "500 random rows, known true coefficients, and a column of 1s for the intercept."
+    deep: |
+      Because we choose `true_beta`, we can check the answer. The column of ones is the
+      standard trick for the intercept: $\beta_0 \cdot 1$ is added to every prediction, so
+      the intercept becomes just another coefficient in
+
+      $$y = X\beta + \varepsilon$$
+
+  solve: &solve
+    span: block
+    short: "Solve (XᵀX)β = Xᵀy: the coefficients that minimise squared error, in one step."
+    deep: |
+      Setting the gradient of the MSE to zero gives the **normal equation**:
+
+      $$X^\top X \,\beta = X^\top y \quad\Rightarrow\quad \beta = (X^\top X)^{-1} X^\top y$$
+
+      In code, never form the inverse: `solve` finds $\beta$ from the system directly,
+      which is faster and loses less precision. The estimate lands within a few thousandths
+      of the truth; the gap is the noise.
+    concepts: [mean-squared-error, gradient-descent]
+
+  lstsq: &lstsq
+    span: block
+    short: "`lstsq` gets the same answer more robustly; libraries use it (or QR) in practice."
+    deep: |
+      $X^\top X$ squares the condition number of $X$, so with nearly collinear features
+      the normal equation becomes numerically fragile, and with exactly collinear ones
+      $X^\top X$ can't be inverted at all. `lstsq` works on $X$ itself (via SVD) and still
+      returns the minimum-norm solution. scikit-learn's `LinearRegression` does the same.
+    concepts: [linear-regression-assumptions]
+
+pytorch:
+  data:
+    <<: *data
+    short: "500 random float64 rows, known true coefficients, and a column of 1s."
+  solve: *solve
+  lstsq: *lstsq

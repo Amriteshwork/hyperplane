@@ -49,7 +49,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
       - name: Install
-        run: uv sync --locked
+        run: uv sync --locked --group torch
       - name: Ruff
         run: uv run ruff check . && uv run ruff format --check .
       - name: Mypy

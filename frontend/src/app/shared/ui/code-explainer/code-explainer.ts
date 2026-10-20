@@ -69,7 +69,7 @@ let nextExplainerId = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './code-explainer.css',
   template: `
-    <div class="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+    <div class="grid gap-4 lg:items-start" [class]="columns()">
       <section
         class="min-w-0 overflow-hidden rounded-lg border bg-card"
         [attr.aria-label]="filename()"
@@ -109,94 +109,94 @@ let nextExplainerId = 0;
         </div>
       </section>
 
-      <aside
-        class="panel rounded-lg border bg-card p-4 max-lg:sticky max-lg:bottom-2 max-lg:max-h-[45vh] max-lg:overflow-y-auto max-lg:shadow-lg lg:sticky lg:top-20"
-        aria-live="polite"
-        [id]="panelId"
-      >
-        @if (selected(); as annotation) {
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+      @if (annotations().length) {
+        <aside
+          class="panel rounded-lg border bg-card p-4 max-lg:sticky max-lg:bottom-2 max-lg:max-h-[45vh] max-lg:overflow-y-auto max-lg:shadow-lg lg:sticky lg:top-20"
+          aria-live="polite"
+          [id]="panelId"
+        >
+          @if (selected(); as annotation) {
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  aria-label="Close explanation"
+                  (click)="selectedId.set(null)"
+                >
+                  <ng-icon name="lucideX" aria-hidden="true" />
+                </button>
+                {{ lineRange(annotation) }}
+              </p>
+              <div
+                class="inline-flex rounded-md border p-0.5"
+                role="group"
+                aria-label="Explanation depth"
+              >
+                @for (option of depths; track option) {
+                  <button
+                    type="button"
+                    class="rounded px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground aria-pressed:bg-muted aria-pressed:text-foreground"
+                    [attr.aria-pressed]="depth() === option"
+                    (click)="depth.set(option)"
+                  >
+                    {{ option }}
+                  </button>
+                }
+              </div>
+            </div>
+            <app-markdown-view
+              class="mt-3 block"
+              [content]="depth() === 'short' ? annotation.short : annotation.deep"
+            />
+            @if (annotation.concepts.length) {
+              <ul class="mt-4 flex flex-wrap gap-2" aria-label="Related concepts">
+                @for (concept of annotation.concepts; track concept.id) {
+                  <li>
+                    <a
+                      class="inline-flex rounded-full border px-2.5 py-0.5 text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                      [routerLink]="[conceptBasePath(), concept.id]"
+                    >
+                      {{ concept.title }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+            <div class="mt-4 flex justify-between gap-2 border-t pt-3">
               <button
                 hlmBtn
                 variant="ghost"
-                size="icon-sm"
+                size="sm"
                 type="button"
-                aria-label="Close explanation"
-                (click)="selectedId.set(null)"
+                [disabled]="!previous()"
+                (click)="step(-1)"
               >
-                <ng-icon name="lucideX" aria-hidden="true" />
+                <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Previous
               </button>
-              {{ lineRange(annotation) }}
-            </p>
-            <div
-              class="inline-flex rounded-md border p-0.5"
-              role="group"
-              aria-label="Explanation depth"
-            >
-              @for (option of depths; track option) {
-                <button
-                  type="button"
-                  class="rounded px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground aria-pressed:bg-muted aria-pressed:text-foreground"
-                  [attr.aria-pressed]="depth() === option"
-                  (click)="depth.set(option)"
-                >
-                  {{ option }}
-                </button>
-              }
+              <button
+                hlmBtn
+                variant="ghost"
+                size="sm"
+                type="button"
+                [disabled]="!next()"
+                (click)="step(1)"
+              >
+                Next <ng-icon name="lucideChevronRight" aria-hidden="true" />
+              </button>
             </div>
-          </div>
-          <app-markdown-view
-            class="mt-3 block"
-            [content]="depth() === 'short' ? annotation.short : annotation.deep"
-          />
-          @if (annotation.concepts.length) {
-            <ul class="mt-4 flex flex-wrap gap-2" aria-label="Related concepts">
-              @for (concept of annotation.concepts; track concept.id) {
-                <li>
-                  <a
-                    class="inline-flex rounded-full border px-2.5 py-0.5 text-xs hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
-                    [routerLink]="[conceptBasePath(), concept.id]"
-                  >
-                    {{ concept.title }}
-                  </a>
-                </li>
-              }
-            </ul>
+          } @else {
+            <p class="text-sm text-muted-foreground">
+              Select a highlighted block of code to see what it does and why.
+            </p>
+            <button hlmBtn variant="outline" size="sm" type="button" class="mt-3" (click)="step(1)">
+              Start from the top
+            </button>
           }
-          <div class="mt-4 flex justify-between gap-2 border-t pt-3">
-            <button
-              hlmBtn
-              variant="ghost"
-              size="sm"
-              type="button"
-              [disabled]="!previous()"
-              (click)="step(-1)"
-            >
-              <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Previous
-            </button>
-            <button
-              hlmBtn
-              variant="ghost"
-              size="sm"
-              type="button"
-              [disabled]="!next()"
-              (click)="step(1)"
-            >
-              Next <ng-icon name="lucideChevronRight" aria-hidden="true" />
-            </button>
-          </div>
-        } @else if (annotations().length) {
-          <p class="text-sm text-muted-foreground">
-            Select a highlighted block of code to see what it does and why.
-          </p>
-          <button hlmBtn variant="outline" size="sm" type="button" class="mt-3" (click)="step(1)">
-            Start from the top
-          </button>
-        } @else {
-          <p class="text-sm text-muted-foreground">No explanations for this code yet.</p>
-        }
-      </aside>
+        </aside>
+      }
     </div>
 
     <ng-template #lineList let-segment>
@@ -236,6 +236,10 @@ export class CodeExplainer {
     loader: ({ params }) => highlightLines(params.code, params.lang),
   });
 
+  /** Plain code (no annotations) gets the full width: there's nothing to explain beside it. */
+  protected readonly columns = computed(() =>
+    this.annotations().length ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : '',
+  );
   protected readonly lines = computed<readonly CodeLine[]>(() =>
     this.highlighted.hasValue() ? this.highlighted.value() : plainLines(this.code()),
   );

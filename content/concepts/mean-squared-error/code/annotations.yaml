@@ -1,0 +1,60 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "Random features, a target built from known weights, and a slightly-wrong model."
+    deep: |
+      `X @ w` multiplies each row of features by the weights and sums them: a linear model.
+      The target uses the weights `[2, -1, 0.5]` plus noise; the "model" uses
+      `[1.8, -0.9, 0.6]`, close but not equal, so its errors are small but not zero.
+
+  mse: &mse
+    span: block
+    short: "Square each error, average them: that's MSE. Its square root, RMSE, is in y's units."
+    deep: |
+      $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat y_i)^2$$
+
+      MSE is in *squared* units (if `y` is in metres, MSE is in m²), which makes it hard to
+      read. **RMSE** $= \sqrt{\text{MSE}}$ is back in the target's units: roughly "a typical
+      prediction is off by this much", with big errors weighted more.
+    concepts: [loss-function]
+
+  formula:
+    span: block
+    short: "The vectorised NumPy line equals the textbook sum, written out with a loop."
+    deep: |
+      `np.mean(errors**2)` and `sum(e * e for e in errors) / len(y)` compute the same
+      thing; NumPy just does it in compiled code, which is much faster for large arrays.
+      Writing both once is a good habit for checking you translated a formula correctly.
+
+  baseline: &baseline
+    span: block
+    short: "Predicting the mean every time scores MSE = variance of y: any real model must beat it."
+    deep: |
+      If you predict the constant $\bar y$ for every row, the MSE is
+      $\frac{1}{n}\sum (y_i - \bar y)^2$, which is exactly the variance of `y`. That's the
+      score of a model that learned nothing from the features.
+
+      This baseline is also what **R²** compares against: $R^2 = 1 - \text{MSE}/\text{Var}(y)$.
+    concepts: [r-squared]
+
+pytorch:
+  data: *data
+  mse: *mse
+  builtin:
+    span: block
+    short: "`F.mse_loss`, the loss networks are trained with, gives the same number."
+    deep: |
+      `torch.nn.functional.mse_loss(prediction, target)` is the standard regression loss in
+      PyTorch. Matching it against our formula shows it's the same MSE you'd compute by
+      hand; its default `reduction="mean"` is the $\frac{1}{n}$.
+  baseline:
+    <<: *baseline
+    deep: |
+      If you predict the constant $\bar y$ for every row, the MSE is
+      $\frac{1}{n}\sum (y_i - \bar y)^2$, which is exactly the variance of `y`. That's the
+      score of a model that learned nothing from the features.
+
+      `y.var(correction=0)` divides by $n$ like MSE does; PyTorch's default divides by
+      $n - 1$ (the unbiased sample variance). This baseline is also what **R²** compares
+      against: $R^2 = 1 - \text{MSE}/\text{Var}(y)$.

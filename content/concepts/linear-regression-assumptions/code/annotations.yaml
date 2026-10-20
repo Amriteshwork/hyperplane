@@ -1,0 +1,78 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  setup: &setup
+    span: block
+    short: "A seeded random generator and 1,000 rows: enough for the checks to be stable."
+    deep: |
+      Diagnostics are statistics too: with few rows, the spread ratio and VIF would bounce
+      around by chance. A larger sample makes the contrast between "fine" and "violated"
+      clear.
+
+  fit: &fit
+    span: block
+    short: "Helper: least-squares predictions with an intercept, reused by every check."
+    deep: |
+      Prepending a column of ones adds the intercept; `lstsq` finds the coefficients. Every
+      check below fits a model and then inspects what it left behind.
+    concepts: [normal-equation]
+
+  spread: &spread
+    span: block
+    short: "Compare residual spread for the larger vs the smaller half of predictions."
+    deep: |
+      **Homoscedasticity** means the errors have the same variance everywhere. If it
+      holds, the residual standard deviation is about the same for small and large
+      predictions, so the ratio is ≈ 1. A ratio well above 1 is the numeric version of the
+      "funnel" shape in a residual plot.
+    concepts: [residuals]
+
+  data: &data
+    span: block
+    short: "Two targets on the same x: constant noise (fine) and noise that grows with x (not)."
+    deep: |
+      Noise whose size depends on $x$ is common in practice: prices, incomes and counts
+      vary more when they are larger. The coefficients are still unbiased, but standard
+      errors and confidence intervals become wrong.
+
+  check: &check
+    span: block
+    short: "Constant noise gives a ratio ≈ 1; growing noise gives ≈ 2.5, a clear violation."
+    deep: |
+      Typical fixes: model `log(y)` instead of `y`, use weighted least squares, or report
+      heteroscedasticity-robust standard errors.
+
+  collinear: &collinear
+    span: block
+    short: "Three features, where b is almost a copy of a, and c is independent."
+    deep: |
+      **Multicollinearity**: when features carry the same information, the model can't
+      tell how to split the credit between them. Predictions stay fine, but individual
+      coefficients become unstable and their signs can flip between samples.
+
+  vif: &vif
+    span: block
+    short: "VIF = 1 / (1 − R²) of each feature predicted from the others: hundreds for a and b, 1 for c."
+    deep: |
+      $$\text{VIF}_j = \frac{1}{1 - R_j^2}$$
+
+      where $R_j^2$ comes from regressing feature $j$ on all other features. It says how
+      much the variance of coefficient $j$ is inflated by the overlap. Rules of thumb: above
+      5–10 is a problem. Fixes: drop one of the twins, combine them, or use ridge
+      regression.
+    concepts: [r-squared]
+
+pytorch:
+  setup:
+    <<: *setup
+    short: "A seeded generator, 1,000 rows, and float64 for accurate least squares."
+  fit:
+    <<: *fit
+    deep: |
+      Prepending a column of ones adds the intercept; `torch.linalg.lstsq` finds the
+      coefficients. `reshape(len(y), -1)` lets the helper accept a single feature (a
+      vector) or several (a matrix).
+  spread: *spread
+  data: *data
+  check: *check
+  collinear: *collinear
+  vif: *vif

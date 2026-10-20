@@ -49,6 +49,16 @@ def test_concept_page_links_algorithms_and_prerequisites(client: TestClient) -> 
         {"id": "mean-squared-error", "title": "Mean squared error (MSE)"}
     ]
     assert body["algorithms"] == [{"id": "linear_regression", "name": "Linear Regression"}]
+    assert [(c["library"], c["title"], c["filename"]) for c in body["code"]] == [
+        ("numpy", "NumPy", "normal_equation_numpy.py"),
+        ("pytorch", "PyTorch", "normal_equation_pytorch.py"),
+    ]
+    numpy = body["code"][0]
+    solve = next(a for a in numpy["annotations"] if a["anchor"] == "solve")
+    assert "@a:" not in numpy["code"]
+    span = numpy["code"].splitlines()[solve["start_line"] - 1 : solve["end_line"]]
+    assert any("np.linalg.solve" in line for line in span)
+    assert {"id": "gradient-descent", "title": "Gradient descent"} in solve["concepts"]
 
 
 def test_unknown_ids_are_404_problems(client: TestClient) -> None:

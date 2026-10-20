@@ -11,12 +11,19 @@ from fastapi.testclient import TestClient
 
 from app.core import deps
 from app.core.config import Environment, Settings
-from app.jobs.names import PROFILE_DATASET
+from app.jobs.names import PROFILE_DATASET, TRAIN_RUN
 from app.main import create_app
+from app.ml.registry import AlgorithmRegistry
 from app.services.profiling_service import ProfilingService
+from app.services.training_service import TrainingService
 from tests.fakes.clock import FixedClock
+from tests.fakes.events import InMemoryEventBus
 from tests.fakes.jobs import FakeJobQueue
-from tests.fakes.repositories import InMemoryDatasetRepository, InMemorySessionRepository
+from tests.fakes.repositories import (
+    InMemoryDatasetRepository,
+    InMemoryRunRepository,
+    InMemorySessionRepository,
+)
 from tests.fakes.storage import InMemoryStorage
 
 # Nothing listens on port 1, so real probes fail fast instead of hanging.
@@ -73,14 +80,36 @@ def dataset_repo() -> InMemoryDatasetRepository:
 
 
 @pytest.fixture
-def job_queue(dataset_repo: InMemoryDatasetRepository, storage: InMemoryStorage) -> FakeJobQueue:
-    """Records jobs; `drain()` runs profiling against the same fakes the API uses."""
+def run_repo() -> InMemoryRunRepository:
+    return InMemoryRunRepository()
+
+
+@pytest.fixture
+def event_bus() -> InMemoryEventBus:
+    return InMemoryEventBus()
+
+
+@pytest.fixture
+def job_queue(
+    dataset_repo: InMemoryDatasetRepository,
+    run_repo: InMemoryRunRepository,
+    storage: InMemoryStorage,
+    event_bus: InMemoryEventBus,
+    clock: FixedClock,
+) -> FakeJobQueue:
+    """Records jobs; `drain()` runs profiling and training against the fakes the API uses."""
     queue = FakeJobQueue()
+    registry = AlgorithmRegistry.discover()
 
     def profile(dataset_id: str) -> None:
         asyncio.run(ProfilingService(dataset_repo, storage).run(UUID(dataset_id)))
 
+    def train(run_id: str) -> None:
+        service = TrainingService(dataset_repo, run_repo, storage, registry, event_bus, clock)
+        asyncio.run(service.run(UUID(run_id)))
+
     queue.handlers[PROFILE_DATASET] = profile
+    queue.handlers[TRAIN_RUN] = train
     return queue
 
 
@@ -91,6 +120,8 @@ def app(
     storage: InMemoryStorage,
     session_repo: InMemorySessionRepository,
     dataset_repo: InMemoryDatasetRepository,
+    run_repo: InMemoryRunRepository,
+    event_bus: InMemoryEventBus,
     job_queue: FakeJobQueue,
 ) -> FastAPI:
     """The real app with infrastructure dependencies swapped for in-memory fakes."""
@@ -102,6 +133,8 @@ def app(
             deps.get_blob_reader: lambda: storage,
             deps.get_session_repository: lambda: session_repo,
             deps.get_dataset_repository: lambda: dataset_repo,
+            deps.get_run_repository: lambda: run_repo,
+            deps.get_event_subscriber: lambda: event_bus,
             deps.get_job_queue: lambda: job_queue,
         }
     )

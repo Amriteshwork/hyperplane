@@ -1,0 +1,79 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "Random x values and a target that secretly curves: 1.5x + 0.5x² + noise."
+    deep: |
+      We build the truth ourselves so we know what the model *should* miss. The $0.5x^2$
+      term is a curve that a straight line can't represent; residuals will reveal it.
+
+  fit: &fit
+    span: block
+    short: "Fit a straight line by least squares: a column of 1s (intercept) and x (slope)."
+    deep: |
+      Stacking `[1, x]` into a matrix turns the line $\hat y = \beta_0 + \beta_1 x$ into
+      $\hat y = X\beta$. Least squares picks the $\beta$ with the smallest squared error;
+      `lstsq` solves that directly.
+    concepts: [normal-equation]
+
+  residuals: &residuals
+    span: block
+    short: "Residual = true value − prediction, one number per row."
+    deep: |
+      $$e_i = y_i - \hat y_i$$
+
+      Positive means the model predicted too low, negative too high. They're the raw
+      material of every regression diagnostic: their size gives MSE, their pattern tells
+      you *what* the model is missing.
+    concepts: [mean-squared-error]
+
+  mean: &mean
+    span: block
+    short: "With an intercept, residuals always average to (numerically) zero."
+    deep: |
+      If the residuals averaged, say, +2, raising the intercept by 2 would reduce the
+      error, so least squares would already have done it. That's why the mean is
+      ~$10^{-16}$: zero up to floating-point rounding. A mean of zero therefore says
+      nothing about whether the model is *good*.
+
+  orthogonal: &orthogonal
+    span: block
+    short: "Residuals are uncorrelated with every feature the model used."
+    deep: |
+      Least squares guarantees $X^\top e = 0$: whatever linear trend in `x` was left in the
+      errors, the slope would have absorbed it. So you can never find a pattern in the
+      residuals against a feature *the way the model already uses it*.
+    concepts: [normal-equation]
+
+  pattern: &pattern
+    span: block
+    short: "But residuals still follow x²: the curve the line couldn't fit. That's the diagnostic."
+    deep: |
+      Plot residuals against predictions or features and look for structure. Here they
+      correlate strongly with $x^2$, so the fix is obvious: add an `x**2` feature.
+
+      A healthy residual plot is a shapeless horizontal band around zero. Curves mean a
+      missing non-linearity; a funnel means non-constant variance.
+    concepts: [linear-regression-assumptions]
+
+pytorch:
+  data:
+    <<: *data
+    deep: |
+      We build the truth ourselves so we know what the model *should* miss. The $0.5x^2$
+      term is a curve that a straight line can't represent; residuals will reveal it.
+
+      `dtype=torch.float64` because PyTorch defaults to float32, and the exact checks below
+      need double precision.
+  fit:
+    <<: *fit
+    deep: |
+      Stacking `[1, x]` into a matrix turns the line $\hat y = \beta_0 + \beta_1 x$ into
+      $\hat y = X\beta$. Least squares picks the $\beta$ with the smallest squared error.
+
+      `torch.linalg.lstsq` expects a 2-D right-hand side, hence `unsqueeze(1)` (make `y` a
+      column) and `squeeze(1)` (back to a vector).
+  residuals: *residuals
+  mean: *mean
+  orthogonal: *orthogonal
+  pattern: *pattern

@@ -1,10 +1,12 @@
-import { CodeOut } from '../../core/api/models/code-out';
+import { CodeAnnotationOut } from '../../core/api/models/code-annotation-out';
 import { ResourceOut } from '../../core/api/models/resource-out';
 import { CodeAnnotation } from '../ui/code-explainer/code-explainer';
 import { LearningResource } from '../ui/resource-card/resource-card';
 
 /** API code annotations → the CodeExplainer's input shape. */
-export function toCodeAnnotations(code: CodeOut): CodeAnnotation[] {
+export function toCodeAnnotations(code: {
+  annotations: readonly CodeAnnotationOut[];
+}): CodeAnnotation[] {
   return code.annotations.map((a) => ({
     id: a.anchor,
     startLine: a.start_line,

@@ -1,0 +1,61 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "Random targets plus two sets of predictions: one close to the truth, one far off."
+    deep: |
+      We don't need a real dataset to understand a loss: all a loss sees is a list of true
+      values and a list of predictions. Adding a little noise (`scale=0.1`) to the truth
+      plays a good model; adding a lot (`scale=1.0`) plays a bad one.
+
+      The fixed seed makes the "random" numbers the same on every run, so the printed
+      results are reproducible.
+
+  losses: &losses
+    span: block
+    short: "Two losses: average squared error and average absolute error."
+    deep: |
+      Both turn many per-row errors $y_i - \hat y_i$ into **one number**:
+
+      $$L_2 = \frac{1}{n}\sum_i (y_i - \hat y_i)^2 \qquad L_1 = \frac{1}{n}\sum_i |y_i - \hat y_i|$$
+
+      Squaring makes every error positive and punishes big errors much more than small
+      ones; the absolute value treats all errors in proportion to their size. Training a
+      model means searching for the parameters that make this number as small as possible.
+    concepts: [mean-squared-error]
+
+  compare: &compare
+    span: block
+    short: "Both losses agree: the good predictions score lower than the bad ones."
+    deep: |
+      A loss is only useful if it ranks models the way we would: closer predictions must
+      give a lower number. The `assert` turns that expectation into a check, so the script
+      fails loudly if it ever stops being true.
+
+  outlier: &outlier
+    span: block
+    short: "Push one prediction 10 units off: squared loss jumps ~100×, absolute loss ~2×."
+    deep: |
+      An error of 10 contributes $10^2 = 100$ to the squared loss but only $10$ to the
+      absolute loss. So a model trained with squared loss will bend to reduce rare big
+      errors, while one trained with absolute loss mostly ignores them.
+
+      Neither is "right": choose squared loss when big misses are costly, absolute (or
+      Huber) loss when your data has outliers you don't trust.
+
+pytorch:
+  data:
+    <<: *data
+    short: "Random targets plus two sets of predictions, made with PyTorch's random generator."
+  losses: *losses
+  compare: *compare
+  builtin:
+    span: block
+    short: "PyTorch's built-in `mse_loss` and `l1_loss` compute exactly the same numbers."
+    deep: |
+      In real training code you call `torch.nn.functional.mse_loss` (or `nn.MSELoss()`)
+      instead of writing the formula. Checking that our hand-written version matches shows
+      there is no magic inside: the built-ins are these one-liners, plus speed and options.
+
+      Note the argument order: PyTorch losses take `(prediction, target)`.
+  outlier: *outlier

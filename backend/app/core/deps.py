@@ -19,18 +19,21 @@ from app.content.catalog import ContentCatalog
 from app.core.clock import Clock, SystemClock
 from app.core.config import Settings
 from app.db.probe import DatabaseProbe
-from app.db.repositories.base import DatasetRepository, SessionRepository
+from app.db.repositories.base import DatasetRepository, RunRepository, SessionRepository
 from app.db.repositories.sql_datasets import SqlDatasetRepository
+from app.db.repositories.sql_runs import SqlRunRepository
 from app.db.repositories.sql_sessions import SqlSessionRepository
 from app.db.session import create_engine, create_session_factory
 from app.ingest.readers import TableLimits
-from app.jobs.base import JobQueue
+from app.jobs.base import EventSubscriber, JobQueue
 from app.jobs.probe import RedisProbe
+from app.jobs.redis_events import RedisEventSubscriber
 from app.jobs.rq_queue import RqJobQueue
 from app.ml.registry import AlgorithmRegistry
 from app.samples.catalog import SampleCatalog
 from app.services.content_service import ContentService
 from app.services.dataset_service import DatasetService, UploadPolicy
+from app.services.experiment_service import ExperimentService
 from app.services.health_service import HealthService
 from app.services.session_service import SessionService
 from app.storage.base import BlobReader, StorageBackend
@@ -122,6 +125,13 @@ async def get_db_session(container: ContainerDep) -> AsyncIterator[AsyncSession]
         yield session
 
 
+def get_event_subscriber(container: ContainerDep) -> EventSubscriber:
+    # A stream outlives its run by at most the job timeout (a stuck worker can't hold it open).
+    return RedisEventSubscriber(
+        container.redis, max_seconds=container.settings.job_timeout_seconds + 60
+    )
+
+
 def get_health_service(container: ContainerDep) -> HealthService:
     return HealthService(
         [
@@ -145,7 +155,9 @@ def get_content_service(container: ContainerDep) -> ContentService:
     return ContentService(container.content, container.registry)
 
 
-DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+# Function scope: the session closes when the handler returns, not when the response ends,
+# so streaming responses (SSE) don't hold a database connection.
+DbSession = Annotated[AsyncSession, Depends(get_db_session, scope="function")]
 
 
 def get_session_repository(db: DbSession) -> SessionRepository:
@@ -154,6 +166,10 @@ def get_session_repository(db: DbSession) -> SessionRepository:
 
 def get_dataset_repository(db: DbSession) -> DatasetRepository:
     return SqlDatasetRepository(db)
+
+
+def get_run_repository(db: DbSession) -> RunRepository:
+    return SqlRunRepository(db)
 
 
 def get_session_service(
@@ -176,6 +192,17 @@ def get_dataset_service(
         retention=timedelta(days=settings.retention_days),
     )
     return DatasetService(datasets, storage, queue, clock, policy)
+
+
+def get_experiment_service(
+    datasets: Annotated[DatasetService, Depends(get_dataset_service)],
+    runs: Annotated[RunRepository, Depends(get_run_repository)],
+    registry: Annotated[AlgorithmRegistry, Depends(get_registry)],
+    queue: Annotated[JobQueue, Depends(get_job_queue)],
+    events: Annotated[EventSubscriber, Depends(get_event_subscriber)],
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> ExperimentService:
+    return ExperimentService(datasets, runs, registry, queue, events, clock)
 
 
 SESSION_HEADER = "X-Session-ID"

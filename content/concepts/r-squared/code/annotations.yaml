@@ -1,0 +1,57 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  data: &data
+    span: block
+    short: "300 random rows; the target is a linear signal (variance 6.25) plus noise (variance 1)."
+    deep: |
+      With weights `[1.5, -2.0]` on standard-normal features, the signal's variance is
+      $1.5^2 + 2^2 = 6.25$. Noise adds variance 1 that no model can explain, so the best
+      possible R² is about $6.25 / 7.25 \approx 0.86$.
+
+  formula: &formula
+    span: block
+    short: "R² = 1 − (model's squared error) / (squared error of always predicting the mean)."
+    deep: |
+      $$R^2 = 1 - \frac{\sum_i (y_i - \hat y_i)^2}{\sum_i (y_i - \bar y)^2} = 1 - \frac{SS_\text{res}}{SS_\text{tot}}$$
+
+      It's a *relative* score: the fraction of the mean-baseline's error that the model
+      removed. 1 is perfect, 0 is no better than the mean.
+    concepts: [mean-squared-error, residuals]
+
+  fit: &fit
+    span: block
+    short: "Fit ordinary least squares and predict the training rows."
+    deep: |
+      A column of ones for the intercept, then least squares. (We score on the training
+      rows to keep the example short; in practice, report R² on a held-out test set.)
+    concepts: [normal-equation, train-test-split]
+
+  compare: &compare
+    span: block
+    short: "Score three predictors: the fitted model, the constant mean, and shuffled predictions."
+    deep: |
+      The shuffled predictions have the right *values* but attached to the wrong rows, so
+      they add error instead of removing it.
+
+  checks: &checks
+    span: block
+    short: "The model scores ~0.86, the mean exactly 0, and the shuffle goes negative."
+    deep: |
+      - **≈ 0.86**: matches the signal/noise ratio we built in.
+      - **0**: predicting the mean is the zero point by definition.
+      - **< 0**: R² is *not* a square of anything here; it's negative whenever a model is
+        worse than the mean.
+
+      Only for least squares with an intercept, evaluated on its training data, does
+      $R^2 = \text{corr}(y, \hat y)^2$, which is where the name comes from.
+
+pytorch:
+  data: *data
+  formula: *formula
+  fit: *fit
+  compare:
+    <<: *compare
+    deep: |
+      The shuffled predictions (`y_pred[torch.randperm(n)]`) have the right *values* but
+      attached to the wrong rows, so they add error instead of removing it.
+  checks: *checks

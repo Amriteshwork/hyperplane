@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 from app.content.catalog import ContentCatalog
-from app.content.models import Level, ResourceType
+from app.content.models import CODE_LIBRARY_TITLES, Level, ResourceType
 
 OVERVIEW_SECTIONS = (
     "Intuition",
@@ -33,7 +33,7 @@ def missing_sections(body: str) -> list[str]:
 
 
 def content_gaps(catalog: ContentCatalog, algorithm_ids: list[str]) -> list[Gap]:
-    """Gap policy (ARCHITECTURE §8): each concept needs a beginner read and a video."""
+    """Gap policy (ARCHITECTURE §8): each concept needs a beginner read, a video and code."""
     gaps: list[Gap] = []
     for concept in catalog.concepts():
         reads = [
@@ -46,6 +46,10 @@ def content_gaps(catalog: ContentCatalog, algorithm_ids: list[str]) -> list[Gap]
             gaps.append(Gap(f"concepts/{concept.id}", "needs a beginner blog/post"))
         if not videos:
             gaps.append(Gap(f"concepts/{concept.id}", "needs a video"))
+        written = {c.library for c in concept.code}
+        for library, title in CODE_LIBRARY_TITLES.items():
+            if library not in written:
+                gaps.append(Gap(f"concepts/{concept.id}", f"needs a {title} implementation"))
     for algorithm_id in algorithm_ids:
         if not catalog.algorithm(algorithm_id).resources:
             gaps.append(Gap(f"algorithms/{algorithm_id}", "has no curated resources"))

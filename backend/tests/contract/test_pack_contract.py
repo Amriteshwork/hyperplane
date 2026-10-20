@@ -1,7 +1,6 @@
 """Shared contract every algorithm pack must pass (ARCHITECTURE §4). This suite is our LSP check.
 
-Golden equivalence (rendered script == platform run) joins this suite with the training
-pipeline.
+Golden equivalence (rendered script == platform run) runs every pack in tests/golden.
 """
 
 from pathlib import Path
