@@ -10,6 +10,10 @@ const COEFFICIENT_COLUMNS: readonly TableColumn[] = [
   { label: 'Feature' },
   { label: 'Coefficient', align: 'end' },
 ];
+const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
+  { label: 'Class' },
+  ...COEFFICIENT_COLUMNS,
+];
 
 /** Metrics, evaluation plots and coefficients of a finished run. */
 @Component({
@@ -59,13 +63,17 @@ const COEFFICIENT_COLUMNS: readonly TableColumn[] = [
         <h2 id="coefficients-heading" class="text-lg font-semibold">Coefficients</h2>
         <p class="mt-1 max-w-prose text-sm text-muted-foreground">
           The weight learned for each feature after scaling (or for each power or product of
-          features, written a^2 or a × b), largest effect first. Positive values push the prediction
-          up.
+          features, written a^2 or a × b), largest effect first.
+          @if (perClass()) {
+            Each class has its own weights: positive values raise the log-odds of that class.
+          } @else {
+            Positive values push the prediction up.
+          }
         </p>
         <app-data-table
           class="mt-3 block"
           caption="Learned coefficients"
-          [columns]="coefficientColumns"
+          [columns]="perClass() ? classCoefficientColumns : coefficientColumns"
           [rows]="coefficientRows()"
         />
       </section>
@@ -77,11 +85,19 @@ export class RunResults {
   readonly dark = input(false);
 
   protected readonly coefficientColumns = COEFFICIENT_COLUMNS;
+  protected readonly classCoefficientColumns = CLASS_COEFFICIENT_COLUMNS;
   protected readonly plots = computed(() =>
     this.report().evaluation.plots.map((plot) => ({ ...plot, options: plotOptions(plot) })),
   );
+  /** Classifiers report one weight per class and feature. */
+  protected readonly perClass = computed(() =>
+    (this.report().coefficients ?? []).some((c) => c.target_class != null),
+  );
   protected readonly coefficientRows = computed(() =>
-    (this.report().coefficients ?? []).map((c) => [featureLabel(c.feature), this.format(c.value)]),
+    (this.report().coefficients ?? []).map((c) => {
+      const row = [featureLabel(c.feature), this.format(c.value)];
+      return this.perClass() ? [c.target_class ?? '', ...row] : row;
+    }),
   );
 
   protected format(value: number): string {

@@ -1,0 +1,19 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-logistic-regression
+  note: "Start here: the S-curve, what it predicts, and how it differs from linear regression."
+- id: statquest-logistic-coefficients
+  note: "What the coefficients mean on the log-odds scale, the numbers the Coefficients table shows."
+- id: statquest-logistic-maximum-likelihood
+  note: "How the curve is fitted: maximum likelihood, which is minimising this pack's log-loss."
+- id: google-mlcc-sigmoid
+  note: "A short, interactive lesson on turning a linear score into a probability."
+- id: google-mlcc-log-loss
+  note: "Why logistic regression is trained on log-loss and needs regularisation."
+- id: sklearn-logistic-regression-guide
+  note: "The exact objectives this pack trains (binary and multinomial), with C and class weights."
+- id: sklearn-multinomial-vs-ovr
+  note: "Softmax (what this pack uses for three or more classes) against one-vs-rest, drawn as boundaries."
+- id: jurafsky-slp3-logistic-regression
+  note: "Chapter 4: a careful derivation of logistic regression, cross-entropy and its gradient."
+- id: islr-classification
+  note: "Chapter 4: logistic regression next to other classifiers, with confusion matrices and ROC curves."

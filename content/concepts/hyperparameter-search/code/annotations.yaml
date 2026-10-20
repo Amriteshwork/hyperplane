@@ -1,0 +1,73 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse Elastic Net from Combined penalties and MSE from Mean squared error."
+    deep: |
+      `elastic_net(X, y, alpha, l1_ratio)` is the model being tuned; `mse` scores it. The
+      page links to their files; download them next to this one to run it.
+    concepts: [combined-penalties, mean-squared-error]
+
+  data: &data
+    span: block
+    short: "Two groups of three correlated features carry the signal; 14 more are noise. Only 80 training rows."
+    deep: |
+      Correlated groups make the L1 ratio matter (pure Lasso splits groups badly), and 80
+      rows for 20 features make α matter (too little penalty overfits). So both
+      hyperparameters affect the score, and they interact.
+
+      The folds are drawn once, from the training rows only, so every candidate is scored on
+      exactly the same splits.
+    concepts: [cross-validation]
+
+  cv: &cv
+    span: block
+    short: "Score one setting: train on four folds, validate on the fifth, average over all five."
+    deep: |
+      Each fold centres with *its own* training rows' means, so nothing from the
+      validation fold leaks into the fit. A loose `tol` keeps the search fast: ranking
+      candidates doesn't need every decimal.
+    concepts: [cross-validation, train-test-split]
+
+  grid: &grid
+    span: block
+    short: "Grid search: score every combination of 6 α values (log scale) and 3 L1 ratios."
+    deep: |
+      $6 \times 3 = 18$ settings, each fitted 5 times: 90 fits. Adding a third
+      hyperparameter with 5 values would make it 450. That multiplication is the grid's
+      weakness.
+
+  random: &random
+    span: block
+    short: "Random search: sample 6 settings, α log-uniformly, and keep the best."
+    deep: |
+      A third of the grid's budget, yet it tries 6 different α values *and* 6 different
+      L1 ratios, where the grid only ever tried 3 ratios. When one hyperparameter matters
+      much more than the other, that's what finds good values faster.
+
+      Sampling $\alpha = 10^u$ with $u$ uniform spreads the trials evenly over orders of
+      magnitude.
+
+  final: &final
+    span: block
+    short: "Refit a setting on all training rows and score it once on the untouched test set."
+    deep: |
+      This is the only place the test set is used. We compare CV's favourite with its least
+      favourite setting, and with an almost unpenalised Lasso.
+    concepts: [train-test-split]
+
+  checks: &checks
+    span: block
+    short: "CV's choice wins on the test set, and random search gets within 10% for a third of the cost."
+    deep: |
+      The best CV score itself is slightly optimistic: it is the minimum of many noisy
+      estimates. The test score of the refit model is the honest number to report.
+    concepts: [bias-variance]
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  cv: *cv
+  grid: *grid
+  random: *random
+  final: *final
+  checks: *checks

@@ -100,7 +100,12 @@ class ContentService:
         if template is None:
             raise NotFoundError(f"{algorithm_id!r} has no code variant {variant!r}.")
         context = CodegenContext.model_validate(
-            {**_EXAMPLE, "params": pack.params_model().model_dump(mode="json")}
+            {
+                **_EXAMPLE,
+                # Templates may branch on the task; show the first one the pack supports.
+                "task_type": min(pack.spec.task_types),
+                "params": pack.params_model().model_dump(mode="json"),
+            }
         )
         return self._code(variant, template.title, render(template, context), "example")
 

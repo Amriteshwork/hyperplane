@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Decision Boundaries of Multinomial and One-vs-Rest Logistic Regression"
+url: https://scikit-learn.org/stable/auto_examples/linear_model/plot_logistic_multinomial.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 10
+why: "Draws three-class decision boundaries for softmax and one-vs-rest logistic regression, and explains why softmax is preferred."
+source: curated
+checked: 2026-10-20

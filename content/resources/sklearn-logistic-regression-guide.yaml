@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Logistic regression"
+url: https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+author: scikit-learn developers
+level: intermediate
+duration_min: 20
+why: "The exact binary and multinomial objectives scikit-learn minimises, how C and class weights enter them, and the solvers."
+source: curated
+checked: 2026-10-20

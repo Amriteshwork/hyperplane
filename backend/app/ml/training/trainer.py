@@ -18,9 +18,17 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-from app.ml.base import Buildable, Parameterised, Progress, ProgressFn, ReportsCoefficients
+from app.ml.base import (
+    Buildable,
+    CoefTable,
+    Parameterised,
+    Progress,
+    ProgressFn,
+    ReportsClassCoefficients,
+    ReportsCoefficients,
+)
 from app.ml.codegen import CodegenContext
-from app.ml.evaluation import EVALUATORS, Evaluation
+from app.ml.evaluation import EVALUATORS, Evaluation, Predictions
 from app.ml.preprocessing import PreprocessingConfig, build_preprocessor
 from app.ml.types import TaskType
 
@@ -49,6 +57,8 @@ class Coefficient(BaseModel):
 
     feature: str
     value: float
+    #: The class this weight belongs to (classifiers only).
+    target_class: str | None = None
 
 
 class TrainingReport(BaseModel):
@@ -59,7 +69,7 @@ class TrainingReport(BaseModel):
     n_train: int
     n_test: int
     evaluation: Evaluation
-    #: Largest absolute effect first; empty if the pack doesn't report coefficients.
+    #: Largest absolute effect first (per class, in class order); empty if not reported.
     coefficients: list[Coefficient] = []
 
 
@@ -69,6 +79,8 @@ class TrainingResult:
     report: TrainingReport
     X_test: pd.DataFrame
     predictions: NDArray[Any]
+    #: Class probabilities on `X_test`, for classifiers that have them.
+    probabilities: NDArray[Any] | None = None
 
 
 def train(
@@ -96,7 +108,12 @@ def train(
 
     report(2)
     predictions = pipeline.predict(X_test)
-    evaluation = EVALUATORS[config.task_type](y_test, predictions)
+    # Pipelines expose predict_proba / classes_ only when the model does (regressors don't).
+    probabilities = pipeline.predict_proba(X_test) if hasattr(pipeline, "predict_proba") else None
+    classes = tuple(getattr(pipeline, "classes_", ()))
+    evaluation = EVALUATORS[config.task_type](
+        Predictions(y_test, predictions, probabilities, classes)
+    )
     return TrainingResult(
         pipeline=pipeline,
         report=TrainingReport(
@@ -107,6 +124,7 @@ def train(
         ),
         X_test=X_test,
         predictions=predictions,
+        probabilities=probabilities,
     )
 
 
@@ -115,6 +133,7 @@ def codegen_context(config: TrainingConfig, data_file: str) -> CodegenContext:
     return CodegenContext(
         data_file=data_file,
         target=config.target,
+        task_type=config.task_type,
         numeric_features=list(config.preprocessing.numeric),
         categorical_features=list(config.preprocessing.categorical),
         test_size=config.test_size,
@@ -157,9 +176,20 @@ def _reporter(progress: ProgressFn | None) -> Callable[[int], None]:
 
 
 def _coefficients(pack: Trainable, pipeline: Pipeline) -> list[Coefficient]:
-    if not isinstance(pack, ReportsCoefficients):
-        return []
     names = [str(n) for n in pipeline.named_steps["preprocess"].get_feature_names_out()]
-    table = pack.coefficients(pipeline.named_steps["model"], names)
-    ranked = sorted(table.items(), key=lambda item: abs(item[1]), reverse=True)
-    return [Coefficient(feature=name, value=value) for name, value in ranked]
+    model = pipeline.named_steps["model"]
+    if isinstance(pack, ReportsClassCoefficients):
+        return [
+            Coefficient(feature=name, value=value, target_class=label)
+            for label, table in pack.class_coefficients(model, names).items()
+            for name, value in _ranked(table)
+        ]
+    if isinstance(pack, ReportsCoefficients):
+        return [
+            Coefficient(feature=n, value=v) for n, v in _ranked(pack.coefficients(model, names))
+        ]
+    return []
+
+
+def _ranked(table: CoefTable) -> list[tuple[str, float]]:
+    return sorted(table.items(), key=lambda item: abs(item[1]), reverse=True)

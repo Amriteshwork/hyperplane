@@ -1,0 +1,63 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `fit_logistic` (Decision boundary), `precision_recall_f1` (Classification metrics) and `sigmoid`."
+    deep: |
+      `fit_logistic` accepts a weight per row, which is all class weighting needs. The page
+      links to the files; download them next to this one to run it.
+    concepts: [decision-boundary, classification-metrics, sigmoid]
+
+  balanced: &balanced
+    span: block
+    short: "Weight each row by n / (classes × its class's size): rare classes count more."
+    deep: |
+      With 5% positives, each positive gets weight $\frac{1}{2 \times 0.05} = 10$ and each
+      negative $\frac{1}{2 \times 0.95} \approx 0.53$, so both classes contribute equally
+      to the loss. This is scikit-learn's `class_weight="balanced"`.
+
+  demo: &demo
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so importing
+      `balanced_weights` skips this block.
+
+  data: &data
+    span: block
+    short: "4000 rows, only 5% positive, and the classes overlap a lot."
+    deep: |
+      Positives are shifted by 1.2 standard deviations in each feature: a real signal, but
+      most positives still sit among the negatives, as in fraud or disease data.
+
+  baseline: &baseline
+    span: block
+    short: "Always answering 'no' scores about 95% accuracy and finds none of the positives."
+    deep: |
+      The **accuracy paradox**: on imbalanced data, accuracy rewards ignoring the rare
+      class. Recall, precision, F1 and ROC-AUC don't.
+    concepts: [classification-metrics]
+
+  compare: &compare
+    span: block
+    short: "Fit with and without balanced weights: recall jumps, at the cost of precision and accuracy."
+    deep: |
+      Unweighted, the loss is dominated by the 95% negatives, so the model rarely says
+      "yes". Weighted, a missed positive costs as much as 19 false alarms, so it says "yes"
+      far more often. Neither is "right": it depends on what each mistake costs.
+
+  threshold: &threshold
+    span: block
+    short: "Weighting mostly shifts the intercept, so lowering the plain model's threshold does nearly the same."
+    deep: |
+      The intercept moves by about $\log(\text{weight ratio}) = \log 19 \approx 2.9$, the
+      slopes barely change. A cheaper alternative is therefore to keep the plain model, with
+      its better-calibrated probabilities, and choose a lower threshold.
+    concepts: [decision-boundary, logarithms-exponentials]
+
+pytorch:
+  reuse: *reuse
+  balanced: *balanced
+  demo: *demo
+  data: *data
+  baseline: *baseline
+  compare: *compare
+  threshold: *threshold

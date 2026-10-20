@@ -1,0 +1,60 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  logsumexp: &logsumexp
+    span: block
+    short: "log(Σ eᶻ) computed safely: pull the largest term out so every exponent is ≤ 0."
+    deep: |
+      $$\log\sum_k e^{z_k} = m + \log\sum_k e^{z_k - m}, \qquad m = \max_k z_k .$$
+
+      The identity is exact; it just avoids computing $e^{1000}$. Softmax and the
+      multiclass log-loss are both built on it.
+
+  demo: &demo
+    short: "Runs only when you execute this file; Softmax imports `logsumexp` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When another concept imports
+      `logsumexp`, Python loads the function and skips this block.
+
+  inverse: &inverse
+    span: block
+    short: "exp and log undo each other: log(eˣ) = x, and e^(log x) = x for x > 0."
+    deep: |
+      $e^x$ answers "what do I get by growing at rate 1 for time $x$?"; $\log y$ answers the
+      reverse, "how long to grow to $y$?". $e^x$ is always positive, so $\log$ is only
+      defined for positive numbers, which suits probabilities.
+
+  products: &products
+    span: block
+    short: "A product of thousands of probabilities underflows to 0; the sum of their logs doesn't."
+    deep: |
+      $\log(ab) = \log a + \log b$, so the log of a product is a sum of logs. The
+      likelihood of a dataset is a product of one probability per row, far too small for a
+      float with thousands of rows, while its log is an ordinary number. That's why models
+      are trained on **log**-likelihoods, and why log is monotonic matters: maximising the
+      log maximises the product.
+    concepts: [probability]
+
+  derivative: &derivative
+    span: block
+    short: "eˣ is its own derivative, and log x has derivative 1/x: why gradients through them are simple."
+    deep: |
+      $$\frac{d}{dx}e^x = e^x, \qquad \frac{d}{dx}\log x = \frac{1}{x} .$$
+
+      These two facts make the sigmoid's and the log-loss's derivatives short, which is why
+      logistic regression's gradient ends up so tidy.
+    concepts: [derivatives]
+
+  stable: &stable
+    span: block
+    short: "Naively, e¹⁰⁰⁰ overflows to inf; logsumexp gets the right answer, about 1002.41."
+    deep: |
+      Floats top out near $1.8 \times 10^{308} \approx e^{709}$. Scores of a few hundred
+      are unusual but possible, and one `inf` turns every later number into `nan`.
+
+pytorch:
+  logsumexp: *logsumexp
+  demo: *demo
+  inverse: *inverse
+  products: *products
+  derivative: *derivative
+  stable: *stable

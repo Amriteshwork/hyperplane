@@ -1,0 +1,8 @@
+type: course
+title: "Speech and Language Processing (3rd ed. draft), Chapter 4: Logistic Regression and Text Classification"
+url: https://web.stanford.edu/~jurafsky/slp3/
+author: Dan Jurafsky, James H. Martin
+level: intermediate
+why: "A free, carefully written textbook chapter deriving logistic regression, cross-entropy and its gradient."
+source: curated
+checked: 2026-10-20

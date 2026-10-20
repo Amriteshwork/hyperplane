@@ -1,6 +1,6 @@
 """Experiment/run use cases: validate a training setup, queue the run, report on it."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, replace
 from uuid import UUID, uuid4
 
@@ -42,10 +42,14 @@ class ExperimentService:
         queue: JobQueue,
         events: EventSubscriber,
         clock: Clock,
+        curriculum: Sequence[str] = (),
     ) -> None:
         self._datasets = datasets
         self._runs = runs
         self._registry = registry
+        # The Lab preselects the first option, so list packs in teaching order (OLS first).
+        rank = {algorithm_id: i for i, algorithm_id in enumerate(curriculum)}
+        self._ordered_packs = sorted(registry.list(), key=lambda p: rank.get(p.spec.id, len(rank)))
         self._queue = queue
         self._events = events
         self._clock = clock
@@ -110,7 +114,7 @@ class ExperimentService:
                     reason=candidate.reason,
                     algorithms=[
                         AlgorithmOptionOut(id=pack.spec.id, name=pack.spec.name)
-                        for pack in self._registry.list()
+                        for pack in self._ordered_packs
                         if candidate.task_type in pack.spec.task_types
                         and candidate.task_type in EVALUATORS
                     ],

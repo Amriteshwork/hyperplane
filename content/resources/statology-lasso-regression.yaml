@@ -1,0 +1,8 @@
+type: blog
+title: Introduction to Lasso Regression
+url: https://www.statology.org/lasso-regression/
+author: Zach Bobbitt (Statology)
+level: beginner
+why: A short plain-language introduction to the L1 penalty, how it drops predictors, and when to prefer it over Ridge.
+source: curated
+checked: 2026-10-20

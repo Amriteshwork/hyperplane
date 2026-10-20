@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Metrics and scoring"
+url: https://scikit-learn.org/stable/modules/model_evaluation.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 45
+why: "The reference for every classification metric, including the confusion matrix, precision/recall/F1, log loss and ROC."
+source: curated
+checked: 2026-10-20

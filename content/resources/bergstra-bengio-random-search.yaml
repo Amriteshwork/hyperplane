@@ -1,0 +1,8 @@
+type: paper
+title: Random Search for Hyper-Parameter Optimization
+url: https://www.jmlr.org/papers/v13/bergstra12a.html
+author: James Bergstra, Yoshua Bengio
+level: advanced
+why: The paper showing that random search finds as good settings as a grid with far fewer trials, and why.
+source: curated
+checked: 2026-10-20

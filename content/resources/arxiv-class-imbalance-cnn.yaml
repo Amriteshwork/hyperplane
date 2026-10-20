@@ -1,0 +1,8 @@
+type: paper
+title: "A systematic study of the class imbalance problem in convolutional neural networks"
+url: https://arxiv.org/abs/1710.05381
+author: Mateusz Buda, Atsuto Maki, Maciej A. Mazurowski
+level: advanced
+why: "A controlled comparison of imbalance remedies (oversampling, undersampling, thresholding) on standard image benchmarks."
+source: curated
+checked: 2026-10-20

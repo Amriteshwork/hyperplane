@@ -1,0 +1,8 @@
+type: blog
+title: Feature selection
+url: https://en.wikipedia.org/wiki/Feature_selection
+author: Wikipedia
+level: intermediate
+why: An overview of filter, wrapper and embedded methods, subset selection and the criteria used to compare subsets.
+source: curated
+checked: 2026-10-20

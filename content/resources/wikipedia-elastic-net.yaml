@@ -1,0 +1,8 @@
+type: blog
+title: Elastic net regularization
+url: https://en.wikipedia.org/wiki/Elastic_net_regularization
+author: Wikipedia
+level: intermediate
+why: A compact statement of the combined penalty and of the Lasso limitations it was designed to fix.
+source: curated
+checked: 2026-10-20

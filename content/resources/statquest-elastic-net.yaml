@@ -1,0 +1,8 @@
+type: video
+title: "Regularization Part 3: Elastic Net Regression"
+url: https://www.youtube.com/watch?v=1dKRdX9bfIo
+author: StatQuest with Josh Starmer
+level: beginner
+why: Combines the Ridge and Lasso penalties in one short video, and explains when the mix beats either alone.
+source: curated
+checked: 2026-10-20

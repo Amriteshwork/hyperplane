@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-lasso-regression
+  note: "Swaps Ridge's squared penalty for the absolute value and shows the consequence: weights that reach zero."
+- id: statology-lasso-regression
+  note: "A short read comparing the absolute and squared penalties, and what each does to the coefficients."
+- id: statquest-ridge-vs-lasso-visualized
+  note: "Watch the L1 loss curve keep its minimum pinned at zero as the penalty grows, while L2's only approaches it."
+- id: wikipedia-lasso
+  note: "The 'Orthonormal covariates' section derives soft thresholding, the update the code on this page uses."
+- id: friedman-glmnet-coordinate-descent
+  note: "Coordinate descent with soft thresholding, as in this page's code, and the tricks that make it fast."

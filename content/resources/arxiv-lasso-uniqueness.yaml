@@ -1,0 +1,8 @@
+type: paper
+title: The Lasso Problem and Uniqueness
+url: https://arxiv.org/abs/1206.0313
+author: Ryan J. Tibshirani
+level: advanced
+why: When the Lasso solution is unique, and what happens with correlated or discrete features when it isn't.
+source: curated
+checked: 2026-10-20

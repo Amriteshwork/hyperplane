@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-imbalanced-datasets
+  note: "Why rare labels are hard to learn, and the downsample-then-upweight remedy."
+- id: analyticsvidhya-class-weights
+  note: "Class weights in logistic regression on a 2%-positive dataset, with the 'balanced' formula this page's code uses."
+- id: saito-rehmsmeier-pr-vs-roc
+  note: "Evidence that precision–recall curves are the honest view of performance on imbalanced data."
+- id: arxiv-class-imbalance-cnn
+  note: "A controlled comparison of oversampling, undersampling and thresholding."

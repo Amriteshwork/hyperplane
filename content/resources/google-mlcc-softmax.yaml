@@ -1,0 +1,9 @@
+type: blog
+title: "Neural networks: Multi-class classification"
+url: https://developers.google.com/machine-learning/crash-course/neural-networks/multi-class
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "One-vs-all against softmax for several classes, with the softmax equation."
+source: curated
+checked: 2026-10-20

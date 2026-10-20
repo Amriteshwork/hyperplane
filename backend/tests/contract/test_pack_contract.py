@@ -3,6 +3,7 @@
 Golden equivalence (rendered script == platform run) runs every pack in tests/golden.
 """
 
+from itertools import product
 from pathlib import Path
 
 import pandas as pd
@@ -13,7 +14,13 @@ from sklearn.pipeline import make_pipeline
 from app.content.catalog import ContentCatalog
 from app.content.gaps import missing_sections
 from app.core.config import get_settings
-from app.ml.base import AlgorithmPack, Capability, ReportsCoefficients, ReportsFeatureImportance
+from app.ml.base import (
+    AlgorithmPack,
+    Capability,
+    ReportsClassCoefficients,
+    ReportsCoefficients,
+    ReportsFeatureImportance,
+)
 from app.ml.codegen import CodegenContext, find_anchors, render
 from app.ml.registry import AlgorithmRegistry
 from app.samples.catalog import SampleCatalog
@@ -43,6 +50,7 @@ def test_spec_links_to_existing_content(pack: AlgorithmPack) -> None:
 def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     supports = pack.spec.supports
     assert (Capability.COEFFICIENTS in supports) == isinstance(pack, ReportsCoefficients)
+    assert (Capability.CLASS_COEFFICIENTS in supports) == isinstance(pack, ReportsClassCoefficients)
     assert (Capability.FEATURE_IMPORTANCE in supports) == isinstance(pack, ReportsFeatureImportance)
 
 
@@ -75,16 +83,21 @@ def test_defaults_train_on_every_matching_sample(pack: AlgorithmPack) -> None:
 def test_anchors_and_annotations_match(pack: AlgorithmPack) -> None:
     templates = pack.templates()
     assert {"train", "scratch"} <= set(templates)
-    context = CodegenContext(
-        data_file="data.csv",
-        target="y",
-        numeric_features=["a", "b"],
-        categorical_features=["c"],
-        test_size=0.2,
-        seed=0,
-        params=pack.params_model().model_dump(mode="json"),
-    )
-    for name, template in templates.items():
+    # A template may branch on the task type; every branch must keep the anchors in sync.
+    contexts = [
+        CodegenContext(
+            data_file="data.csv",
+            target="y",
+            task_type=task,
+            numeric_features=["a", "b"],
+            categorical_features=["c"],
+            test_size=0.2,
+            seed=0,
+            params=pack.params_model().model_dump(mode="json"),
+        )
+        for task in sorted(pack.spec.task_types)
+    ]
+    for (name, template), context in product(templates.items(), contexts):
         anchors = find_anchors(template.source)
         assert sorted(anchors) == sorted(template.annotations), name
         rendered = render(template, context)  # raises on any mismatch after rendering

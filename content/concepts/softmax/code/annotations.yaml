@@ -1,0 +1,54 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `logsumexp` (Logarithms & exponentials) and `sigmoid` (Sigmoid), to compare against."
+    deep: |
+      The page links to their files; download them next to this one to run it.
+    concepts: [logarithms-exponentials, sigmoid]
+
+  softmax: &softmax
+    span: block
+    short: "softmax(z)ₖ = eᶻᵏ / Σⱼ eᶻʲ, computed as exp(z − logsumexp(z)) so nothing overflows."
+    deep: |
+      Dividing by the sum is subtracting its log, $z_k - \log\sum_j e^{z_j}$ (the
+      **log-softmax**), and `logsumexp` computes that log safely. Exponentiating
+      afterwards gives probabilities that are positive and sum to 1.
+
+  demo: &demo
+    short: "Runs only when you execute this file; nothing here is imported elsewhere yet."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so importing `softmax` from
+      another file skips this block.
+
+  scores: &scores
+    span: block
+    short: "Three rows of class scores, including one with scores near 1000."
+    deep: |
+      The scores (often called **logits**) can be any real numbers. The last row would
+      overflow a naive implementation.
+
+  checks: &checks
+    span: block
+    short: "Positive, sums to 1, keeps the ranking, and only the differences between scores matter."
+    deep: |
+      Adding the same number to every score changes nothing, since $e^{z_k + c} = e^c e^{z_k}$
+      and $e^c$ cancels. That's why one class's scores can be fixed at 0 without losing
+      anything, and why multiclass coefficients are only meaningful relative to each other.
+
+  two-classes: &two-classes
+    span: block
+    short: "With two classes and scores (0, z), softmax gives exactly the sigmoid of z."
+    deep: |
+      $$\frac{e^z}{e^0 + e^z} = \frac{1}{1 + e^{-z}} = \sigma(z) .$$
+
+      Softmax is the multiclass sigmoid, so multinomial logistic regression with two
+      classes is ordinary logistic regression.
+    concepts: [sigmoid]
+
+pytorch:
+  reuse: *reuse
+  softmax: *softmax
+  demo: *demo
+  scores: *scores
+  checks: *checks
+  two-classes: *two-classes

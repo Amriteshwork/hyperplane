@@ -17,6 +17,15 @@ describe('schemaFields', () => {
     });
   });
 
+  it('reads a one-value Literal (`const`) as an enum, so it renders as a choice', () => {
+    const [field] = schemaFields({
+      properties: {
+        class_weight: { anyOf: [{ const: 'balanced', type: 'string' }, { type: 'null' }] },
+      },
+    });
+    expect(field).toMatchObject({ enum: ['balanced'], nullable: true, type: 'string' });
+  });
+
   it('collects declared defaults only', () => {
     expect(
       schemaDefaults({ properties: { a: { type: 'integer', default: 3 }, b: { type: 'string' } } }),

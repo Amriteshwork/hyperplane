@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-odds-log-odds
+  note: "Odds, log-odds and why the log makes them symmetric: the scale the sigmoid converts from."
+- id: google-mlcc-sigmoid
+  note: "A short lesson on turning a linear output into a probability with the sigmoid."
+- id: wikipedia-logistic-function
+  note: "The 'Mathematical properties' section has the symmetry, the logit inverse and σ' = σ(1 − σ)."

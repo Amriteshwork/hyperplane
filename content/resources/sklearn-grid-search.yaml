@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Tuning the hyper-parameters of an estimator"
+url: https://scikit-learn.org/stable/modules/grid_search.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 30
+why: The reference for grid search, randomised search and successive halving, with practical tips on searching well.
+source: curated
+checked: 2026-10-20

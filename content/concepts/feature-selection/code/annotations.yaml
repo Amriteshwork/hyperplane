@@ -1,0 +1,73 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse the Lasso, MSE and least squares from earlier concepts."
+    deep: |
+      - `lasso` (L1 regularisation) does the selecting.
+      - `mse` (Mean squared error) scores each fold.
+      - `least_squares` (Normal equation) refits without a penalty, for the relaxed Lasso
+        and the all-features baseline.
+
+      The page links to each file; download them next to this one to run it.
+    concepts: [l1-regularization, mean-squared-error, normal-equation]
+
+  data: &data
+    span: block
+    short: "30 features, of which only the first 5 matter, and just 60 training rows."
+    deep: |
+      With two training rows per feature, least squares can fit the noise using the 25
+      useless features, so it should generalise badly. The 340 test rows are held back
+      for the final, honest comparison.
+
+  fit: &fit
+    span: block
+    short: "Fit the Lasso on some rows: centre with those rows' means, solve, recover the intercept."
+    deep: |
+      Centring uses only the rows being trained on. Using the means of all rows would leak
+      information from the validation fold into training.
+
+  cv: &cv
+    span: block
+    short: "Choose α by 5-fold cross-validation on the training rows only."
+    deep: |
+      Choosing α *is* choosing the features, so it must not see the test set. Each α is
+      trained on four folds and scored on the fifth, five times; the α with the lowest
+      average validation MSE wins.
+    concepts: [cross-validation, train-test-split]
+
+  select: &select
+    span: block
+    short: "Refit on all training rows with the chosen α; the non-zero weights are the selected features."
+    deep: |
+      This is **embedded** selection: no separate search over subsets, the penalty did it
+      while fitting. Expect all five useful features plus a few noise features that happened
+      to correlate with the target in these 60 rows.
+    concepts: [sparsity]
+
+  relaxed: &relaxed
+    span: block
+    short: "Compare on the test set: the Lasso, OLS refit on its features (relaxed), and OLS on all 30."
+    deep: |
+      The **relaxed Lasso** keeps Lasso's choice of features but refits them with plain least
+      squares, undoing the shrinkage on the kept weights. That helps when the selection is
+      clean, and can hurt when noise features slipped in, since their weights grow too.
+
+      Both beat least squares on all 30 features, which spends its few rows fitting noise.
+    concepts: [bias-variance, normal-equation]
+
+  checks: &checks
+    span: block
+    short: "Every useful feature survives, most useless ones are dropped, and the smaller models win."
+    deep: |
+      Lasso's selection is good but not perfect: a few false positives are normal, and with
+      correlated features the kept set can change from sample to sample. Treat it as "these
+      features are enough", not "only these features matter".
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  fit: *fit
+  cv: *cv
+  select: *select
+  relaxed: *relaxed
+  checks: *checks

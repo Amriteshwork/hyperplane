@@ -1,0 +1,8 @@
+type: blog
+title: "Softmax function"
+url: https://en.wikipedia.org/wiki/Softmax_function
+author: Wikipedia
+level: intermediate
+why: "Softmax as a smooth arg max, its gradients, and the 'subtract the max' trick for numerical stability."
+source: curated
+checked: 2026-10-20

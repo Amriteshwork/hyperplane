@@ -87,7 +87,8 @@ function toField(
     description: raw.description ?? inner.description ?? null,
     type: firstType(inner.type),
     format: inner.format ?? null,
-    enum: inner.enum ?? null,
+    // A one-value `Literal` is emitted as `const`: a choice of one (plus None, if nullable).
+    enum: inner.enum ?? (inner.const !== undefined ? [inner.const] : null),
     required,
     nullable,
     default: raw.default,

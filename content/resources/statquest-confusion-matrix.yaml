@@ -1,0 +1,8 @@
+type: video
+title: "Machine Learning Fundamentals: The Confusion Matrix"
+url: https://www.youtube.com/watch?v=Kdsp6soqA7o
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Builds the confusion matrix from scratch and shows how to compare models with it."
+source: curated
+checked: 2026-10-20

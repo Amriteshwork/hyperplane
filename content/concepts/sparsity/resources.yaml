@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-ridge-vs-lasso-visualized
+  note: "Shows why the L1 loss has its minimum exactly at zero over a whole range of penalties."
+- id: statology-lasso-regression
+  note: "Explains in plain words how Lasso shrinks weak predictors all the way to zero, and when that helps."
+- id: sklearn-lasso-paths
+  note: "The Lasso path on real data: coefficients joining the model one by one as alpha falls."
+- id: wikipedia-lasso
+  note: "Its 'Geometric interpretation' section draws the diamond and the circle described on this page."
+- id: sklearn-l1-sparse-signals
+  note: "Recovers a known sparse signal and measures how many of the true zeros each model finds."

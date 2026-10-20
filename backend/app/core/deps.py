@@ -201,8 +201,10 @@ def get_experiment_service(
     queue: Annotated[JobQueue, Depends(get_job_queue)],
     events: Annotated[EventSubscriber, Depends(get_event_subscriber)],
     clock: Annotated[Clock, Depends(get_clock)],
+    container: ContainerDep,
 ) -> ExperimentService:
-    return ExperimentService(datasets, runs, registry, queue, events, clock)
+    curriculum = container.content.curriculum()
+    return ExperimentService(datasets, runs, registry, queue, events, clock, curriculum)
 
 
 SESSION_HEADER = "X-Session-ID"

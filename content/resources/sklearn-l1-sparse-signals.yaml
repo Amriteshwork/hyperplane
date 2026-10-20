@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: L1-based models for Sparse Signals"
+url: https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_and_elasticnet.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 15
+why: Recovers a known sparse signal with Lasso, ARD and Elastic Net, and shows where Lasso struggles with correlated features.
+source: curated
+checked: 2026-10-20

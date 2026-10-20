@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-logistic-maximum-likelihood
+  note: "How the best S-curve is chosen by maximum likelihood: log-loss is its negative log."
+- id: google-mlcc-log-loss
+  note: "The log-loss formula and why squared loss doesn't suit a sigmoid's output."
+- id: wikipedia-cross-entropy
+  note: "The 'Cross-entropy loss function and logistic regression' section derives the gradient Xᵀ(p − y)."
+- id: jurafsky-slp3-logistic-regression
+  note: "Chapter 4 derives the cross-entropy loss and its gradient carefully, step by step."

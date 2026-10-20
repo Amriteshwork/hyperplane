@@ -1,0 +1,8 @@
+type: paper
+title: "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets"
+url: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432
+author: Takaya Saito, Marc Rehmsmeier
+level: advanced
+why: "An open-access study of why ROC can look reassuring on imbalanced data while precision-recall tells the truth."
+source: curated
+checked: 2026-10-20

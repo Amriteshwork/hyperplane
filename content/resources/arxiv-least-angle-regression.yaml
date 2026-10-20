@@ -1,0 +1,8 @@
+type: paper
+title: Least Angle Regression
+url: https://arxiv.org/abs/math/0406456
+author: Bradley Efron, Trevor Hastie, Iain Johnstone, Robert Tibshirani
+level: advanced
+why: The LARS algorithm, which traces the whole Lasso path as features enter one at a time.
+source: curated
+checked: 2026-10-20

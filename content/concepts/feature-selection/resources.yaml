@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlm-choose-feature-selection-method
+  note: "Maps out filter, wrapper and intrinsic (embedded) methods, and which statistics suit which data types."
+- id: statquest-lasso-regression
+  note: "Shows how Lasso removes useless variables while it fits, embedded selection in action."
+- id: sklearn-feature-selection
+  note: "Every selection tool in scikit-learn, with L1-based selection and how to put selection inside a pipeline."
+- id: sklearn-lasso-model-selection
+  note: "Choosing alpha, and with it the selected features, by cross-validation rather than on the test set."
+- id: wikipedia-feature-selection
+  note: "A wider survey of subset search strategies and the criteria used to compare subsets."

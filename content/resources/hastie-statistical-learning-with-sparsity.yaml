@@ -1,0 +1,8 @@
+type: course
+title: "Statistical Learning with Sparsity: The Lasso and Generalizations"
+url: https://hastie.su.domains/StatLearnSparsity/
+author: Trevor Hastie, Robert Tibshirani, Martin Wainwright
+level: advanced
+why: The book on the Lasso by the people who developed it, free as a PDF for personal use.
+source: curated
+checked: 2026-10-20

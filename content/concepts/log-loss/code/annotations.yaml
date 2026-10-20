@@ -1,0 +1,72 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `sigmoid` from the Sigmoid concept to turn scores into probabilities."
+    deep: |
+      The page links to its file; download it next to this one to run it.
+    concepts: [sigmoid]
+
+  log-loss: &log-loss
+    span: block
+    short: "Average −log(probability given to the true label): 0 when certain and right, ∞ when certain and wrong."
+    deep: |
+      For a row with label $y \in \{0, 1\}$ and predicted $p = P(y = 1)$, the loss is
+      $-\log p$ if $y = 1$ and $-\log(1 - p)$ if $y = 0$, written in one line as
+      $-[y\log p + (1-y)\log(1-p)]$.
+
+      Clipping $p$ away from exactly 0 and 1 keeps one hopeless row from making the
+      average infinite.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `log_loss` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When Decision boundary imports
+      `log_loss`, Python loads the function and skips this block.
+
+  confidence: &confidence
+    span: block
+    short: "Compare log-loss with squared error as the prediction for a true 1 gets worse."
+    deep: |
+      Squared error never exceeds 1 for a probability. Log-loss grows without limit: 0.01
+      for a true 1 costs 4.6, ten times more than 0.6 does. A model is pushed hard never
+      to be confidently wrong.
+
+  likelihood: &likelihood
+    span: block
+    short: "Log-loss is the negative log of the probability of the labels, divided by n."
+    deep: |
+      The chance the model gives to *exactly* these labels is the product of each row's
+      probability for its own label: the **likelihood**. Its log is a sum, so
+
+      $$\text{log-loss} = -\frac{1}{n}\log \prod_i p_i(y_i) .$$
+
+      Minimising log-loss *is* maximum likelihood estimation.
+    concepts: [logarithms-exponentials, probability]
+
+  data: &data
+    span: block
+    short: "Labels drawn from a known logistic model: P(y = 1) = σ(2x₁ − x₂ + 0.5)."
+    deep: |
+      Data from the model itself, so we know what the right weights are. Here it is only
+      used to check the gradient.
+
+  gradient: &gradient
+    span: block
+    short: "The gradient is Xᵀ(p − y)/n, checked numerically: the same shape as MSE's for linear regression."
+    deep: |
+      With $p = \sigma(Xw + b)$, the chain rule gives
+      $\frac{\partial}{\partial w}\text{loss} = \frac{1}{n}X^\top(p - y)$: the sigmoid's
+      derivative $p(1 - p)$ cancels the log's $1/p$ and $1/(1 - p)$. That tidy cancellation
+      is why the sigmoid and log-loss are always used together.
+    concepts: [derivatives, gradient-descent]
+
+pytorch:
+  reuse: *reuse
+  log-loss: *log-loss
+  demo: *demo
+  confidence: *confidence
+  likelihood: *likelihood
+  data: *data
+  gradient:
+    <<: *gradient
+    short: "Autograd's gradient equals the formula Xᵀ(p − y)/n: the same shape as MSE's for linear regression."

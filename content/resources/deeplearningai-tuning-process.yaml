@@ -1,0 +1,8 @@
+type: video
+title: Tuning Process (C2W3L01)
+url: https://www.youtube.com/watch?v=AXDByU3D1hA
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: Why random search beats a grid when some hyperparameters matter more than others, and how to zoom in coarse to fine.
+source: curated
+checked: 2026-10-20

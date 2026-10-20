@@ -1,0 +1,8 @@
+type: video
+title: "Logistic Regression Details Pt 2: Maximum Likelihood"
+url: https://www.youtube.com/watch?v=BfKanl1aSG0
+author: StatQuest with Josh Starmer
+level: beginner
+why: "How the best S-curve is chosen by maximum likelihood, the idea behind the log-loss."
+source: curated
+checked: 2026-10-20

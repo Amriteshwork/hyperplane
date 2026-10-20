@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Feature selection"
+url: https://scikit-learn.org/stable/modules/feature_selection.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 25
+why: The reference for scikit-learn's selection tools, including L1-based selection with SelectFromModel.
+source: curated
+checked: 2026-10-20

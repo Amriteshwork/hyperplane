@@ -1,0 +1,289 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas and NumPy, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same building blocks as Linear Regression, with `Lasso` as the model. A plain
+      `LinearRegression` and `clone` are imported too, only to compare the two at the end.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` is
+      the **target vector**.
+
+      A row without a target value can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The test set is also how you choose α: try a few values and keep the one with the best
+      *test* score. (Choosing many settings on one test set slowly overfits it, which is why
+      cross-validation exists.)
+
+      `test_size` is the fraction held out; `random_state` fixes the shuffle.
+    concepts: [train-test-split, cross-validation]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values and standardise features: the penalty needs them on one scale."
+    deep: |
+      The penalty $\alpha \sum_j |\beta_j|$ treats every coefficient alike, but a
+      coefficient's size depends on its feature's units. Unscaled, a feature measured in
+      large numbers needs only a tiny coefficient, pays almost no penalty and is never
+      dropped; one in small numbers needs a big coefficient and is dropped first.
+      **Which features Lasso keeps would depend on units.**
+
+      Standardising each numeric feature to mean 0 and standard deviation 1 makes the
+      selection about how useful a feature is, not how it was measured.
+
+      Imputation, scaling and one-hot encoding are all learned **from the training set
+      only**, so no information leaks from the test set.
+    concepts: [feature-scaling]
+
+  model:
+    span: block
+    short: "Create the Lasso model with your α, chained after preprocessing."
+    deep: |
+      Lasso minimises the mean squared error **plus** a penalty on the absolute size of the
+      coefficients (scikit-learn's scaling):
+
+      $$\min_\beta \; \frac{1}{2n}\lVert y - X\beta \rVert_2^2 + \alpha \lVert \beta \rVert_1, \qquad \lVert \beta \rVert_1 = \sum_j |\beta_j| .$$
+
+      Unlike Ridge's squared penalty, the absolute value pulls *small* coefficients all the
+      way to **exactly 0**, which removes those features from the model. The intercept is
+      not penalised.
+
+      Because the squared error is divided by $n$, α is in the target's units (squared and
+      halved): the same α is weak for a target in the hundreds and crushing for one around 1.
+    concepts: [l1-regularization, regularization]
+
+  fit:
+    short: "Find the coefficients by coordinate descent: one coefficient at a time, until none moves."
+    deep: |
+      $|\beta_j|$ has a corner at 0, so the loss has no gradient there and no closed-form
+      solution like the normal equation. scikit-learn uses **coordinate descent**: holding
+      all but one coefficient fixed, the best value of that one *does* have a formula (a
+      soft threshold, see the "Under the hood" tab). Sweep over the coefficients, repeat
+      until they stop changing. `max_iter` caps the number of sweeps.
+    concepts: [l1-regularization]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and report R², RMSE and MAE."
+    deep: |
+      - **R²**: the share of the target's variance the model explains.
+      - **RMSE**: the typical error, in the target's own units; it punishes large misses.
+      - **MAE**: the average absolute error, less sensitive to outliers than RMSE.
+
+      Rerun with α 10× larger and 10× smaller and watch two things at once: the test score
+      and how many features survive. Often a much smaller model scores almost as well.
+    concepts: [r-squared, mean-squared-error]
+
+  coefficients:
+    span: block
+    short: "List each feature's learned weight, largest effect first; dropped features show 0."
+    deep: |
+      Each coefficient is the change in the prediction for a one–standard-deviation change
+      in that feature, holding the others fixed, *shrunk* by the penalty.
+
+      A coefficient of exactly `0.0` means the feature is not used at all: Lasso judged that
+      its contribution wasn't worth the penalty.
+
+  sparsity:
+    span: block
+    short: "Count the features Lasso kept, and name the ones it dropped."
+    deep: |
+      This is Lasso's **feature selection**: the zero coefficients are the features you
+      could stop collecting and get (nearly) the same predictions.
+
+      Treat the list with care. With strongly correlated features, Lasso tends to keep one
+      and drop the others, and *which* one can change between samples. A dropped feature
+      isn't necessarily useless, just redundant given the ones kept.
+
+      `n_iter_` is how many coordinate-descent sweeps it took. If it equals `max_iter`, it
+      stopped before converging (scikit-learn also warns): raise `max_iter`.
+    concepts: [sparsity, feature-selection]
+
+  alpha-max:
+    span: block
+    short: "Compute the smallest α that zeroes every coefficient: the top of any sensible α range."
+    deep: |
+      A coefficient stays at 0 as long as its feature's correlation with the residual is
+      at most α. Starting from all-zero coefficients, the residual is the centred target,
+      so every coefficient is 0 once
+
+      $$\alpha \ge \alpha_{\max} = \frac{1}{n}\max_j \left| x_j^\top (y - \bar y) \right| .$$
+
+      Search α on a log grid **below** this value (e.g. $\alpha_{\max}$ down to
+      $\alpha_{\max}/1000$). As α decreases from $\alpha_{\max}$, features enter the model
+      one by one.
+    concepts: [l1-regularization, sparsity]
+
+  compare:
+    span: block
+    short: "Fit plain Linear Regression on the same split to see what dropping features cost."
+    deep: |
+      If Lasso's test R² is close to OLS's while using far fewer features, the dropped ones
+      weren't pulling their weight. If it is clearly worse, α is too large: lower it.
+
+      With many noisy features and few rows, Lasso can even beat OLS, because it stops the
+      model from fitting noise with the irrelevant ones.
+
+      `clone` gives the comparison its own copy of the preprocessing, so the saved Lasso
+      pipeline is untouched.
+    concepts: [bias-variance, feature-selection]
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed and scaled exactly as the training data was, so the whole
+      pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      The dropped features are still *read* (their coefficient is just 0). To stop
+      collecting them, retrain on the kept features only.
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy and loops; no machine-learning library."
+    deep: |
+      Lasso has no one-line solve. The whole algorithm is a loop of cheap one-dimensional
+      updates.
+
+  soft-threshold:
+    span: block
+    short: "Soft thresholding: shrink a number towards 0 by t, and snap it to 0 if it gets there."
+    deep: |
+      $$S(z, t) = \operatorname{sign}(z)\,\max(|z| - t,\ 0)$$
+
+      Values within $t$ of zero become **exactly** zero; everything else moves $t$ closer
+      to zero. This one function is where Lasso's sparsity comes from. Ridge's equivalent,
+      $z / (1 + t)$, shrinks every value but never reaches 0.
+    concepts: [l1-regularization, sparsity]
+
+  class:
+    span: block
+    short: "A minimal model with the same fit/predict interface and attributes as scikit-learn."
+    deep: |
+      Mirroring scikit-learn's names (`coef_`, `intercept_`, `n_iter_`) and its loss lets
+      you compare the two implementations number for number: the test suite checks they
+      agree.
+
+  fit:
+    short: "Fitting is coordinate descent: improve one coefficient at a time, sweep, repeat."
+    deep: |
+      The loss $\frac{1}{2n}\lVert y - X\beta\rVert^2 + \alpha\lVert\beta\rVert_1$ is convex,
+      so repeatedly minimising it along one coordinate at a time can't get stuck: it
+      converges to the global minimum.
+    concepts: [l1-regularization]
+
+  center:
+    span: block
+    short: "Subtract the column means so the intercept can be left out of the penalty."
+    deep: |
+      Penalising the intercept would pull predictions towards 0 for no reason. After
+      centring $X$ and $y$, the best intercept for the centred problem is exactly 0, so we
+      solve for the slopes alone and recover the intercept afterwards.
+
+  init:
+    span: block
+    short: "Start every coefficient at 0, so the residual starts as the (centred) target itself."
+    deep: |
+      `curvature[j]` is $\frac{1}{n}\sum_i x_{ij}^2$, the second derivative of the squared
+      error along coefficient $j$. It is 1 for every standardised column.
+
+      Keeping the **residual** $r = y - X\beta$ up to date is the trick that makes each
+      update cost one pass over a single column instead of a full matrix product.
+
+  sweep:
+    span: block
+    short: "One sweep updates every coefficient once; repeat until the largest change is tiny."
+    deep: |
+      Each update uses the latest values of all the others (cyclic coordinate descent, as
+      scikit-learn does by default). A constant column can't explain anything, so its
+      coefficient stays 0.
+
+  update:
+    span: block
+    short: "Find the best β_j with the others fixed: a least-squares step, then a soft threshold."
+    deep: |
+      With every other coefficient fixed, the loss along $\beta_j$ is a parabola plus
+      $\alpha|\beta_j|$. Without the penalty its minimum would be
+
+      $$\rho_j / c_j, \qquad \rho_j = \tfrac{1}{n} x_j^\top (r + x_j\beta_j), \quad c_j = \tfrac{1}{n}\lVert x_j \rVert^2,$$
+
+      where $r + x_j\beta_j$ is the residual *without* feature $j$'s contribution. The
+      penalty turns that into $\beta_j = S(\rho_j, \alpha)/c_j$: if $|\rho_j| \le \alpha$
+      (feature $j$ explains less than α of what's left) it is set to exactly 0.
+
+      Then the residual is corrected for the change, ready for the next coefficient.
+    concepts: [l1-regularization, derivatives]
+
+  converged:
+    span: block
+    short: "Stop once a whole sweep moved no coefficient by more than tol."
+    deep: |
+      scikit-learn uses a stricter test (the *duality gap*, a bound on how far the loss is
+      from its minimum), but the idea is the same: stop when further sweeps would change
+      nothing that matters. Hitting `max_iter` first means it hasn't converged.
+
+  intercept:
+    span: block
+    short: "Put the means back: the intercept makes the line pass through (x̄, ȳ)."
+    deep: |
+      $\beta_0 = \bar y - \bar x^\top \beta$, so predicting at the average feature values
+      gives the average target, just as in OLS and Ridge.
+
+  predict:
+    span: block
+    short: "A prediction is the weighted sum of the features plus the intercept."
+    deep: |
+      $$\hat{y} = X\beta + \beta_0$$
+
+      Exactly the same formula as Linear Regression. Features with $\beta_j = 0$ simply
+      drop out of the sum.
+
+  alpha-max:
+    span: block
+    short: "The smallest α at which every coefficient is 0: where a sensible α search starts."
+    deep: |
+      At $\beta = 0$ the residual is $y_c$, so $\rho_j = \frac{1}{n}x_j^\top y_c$. Every
+      soft threshold returns 0 exactly when $\alpha \ge \max_j |\rho_j|$, and then $\beta = 0$
+      stays put: that's the solution.
+    concepts: [sparsity]
+
+  path:
+    span: block
+    short: "Refit for a range of α values to see each coefficient hit zero and stay there."
+    deep: |
+      Plot the rows against $\log \alpha$ and you get the **Lasso path**: from
+      $\alpha_{\max}$ downwards, features enter the model one at a time, each coefficient
+      a piecewise-linear function of α. Compare Ridge's path, where every coefficient
+      shrinks smoothly and none reaches 0.
+
+      The tight `tol` makes each fit essentially exact, so the zeros are real.
+    concepts: [sparsity, feature-selection]

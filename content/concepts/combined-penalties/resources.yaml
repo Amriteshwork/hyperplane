@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-elastic-net
+  note: "Adds the two penalties together on screen and explains what each half contributes."
+- id: sklearn-elastic-net-guide
+  note: "The same combined penalty as this page, in scikit-learn's notation, and why it picks both of two correlated features."
+- id: wikipedia-elastic-net
+  note: "The penalty in one line, and the two Lasso limitations (correlated groups, p > n) it fixes."
+- id: zou-hastie-elastic-net
+  note: "Proves the grouping effect this page's code demonstrates: correlated features get near-equal weights."

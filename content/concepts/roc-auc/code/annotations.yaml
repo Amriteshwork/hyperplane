@@ -1,0 +1,71 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `confusion` from Classification metrics to count outcomes at each threshold."
+    deep: |
+      The page links to its file; download it next to this one to run it.
+    concepts: [classification-metrics]
+
+  roc-curve: &roc-curve
+    span: block
+    short: "Sweep the threshold over every score; record the false and true positive rates at each."
+    deep: |
+      - **TPR** (recall) = tp / positives: the share of positives caught.
+      - **FPR** = fp / negatives: the share of negatives wrongly flagged.
+
+      At threshold $+\infty$ nothing is called positive: (0, 0). At the lowest score,
+      everything is: (1, 1). The ROC curve joins the points in between.
+
+  auc: &auc
+    span: block
+    short: "The area under the ROC curve, summed as trapezoids."
+    deep: |
+      1 means a threshold exists that separates the classes perfectly; 0.5 is the diagonal,
+      which random scores give.
+
+  demo: &demo
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so importing `roc_curve` or
+      `auc` skips this block.
+
+  data: &data
+    span: block
+    short: "Scores that are 1.5 higher for positives on average, with plenty of overlap."
+    deep: |
+      Higher scores *tend* to mean positive, but many negatives outscore some positives, so
+      no threshold is perfect: a realistic curve, neither the diagonal nor the corner.
+
+  curve: &curve
+    span: block
+    short: "Print a few points of the curve and the area; both rates only ever increase."
+    deep: |
+      Lowering the threshold can only add positive calls, so TPR and FPR never decrease.
+      Early on, TPR climbs much faster than FPR: the highest scores are mostly positives.
+
+  ranking: &ranking
+    span: block
+    short: "AUC equals the chance that a random positive outscores a random negative."
+    deep: |
+      Comparing every positive with every negative (ties count half) gives exactly the
+      area. That's the cleanest way to read AUC: it measures **ranking**, not calibration
+      or any particular threshold.
+
+  invariance: &invariance
+    span: block
+    short: "Any increasing transform of the scores leaves AUC unchanged; flipping them gives 1 − AUC."
+    deep: |
+      Only the order of the scores matters, so AUC can't tell you whether probabilities
+      are well calibrated: use log-loss for that. On data with a rare positive class, a
+      high AUC can coexist with poor precision; a precision–recall curve is more telling.
+    concepts: [log-loss, class-imbalance]
+
+pytorch:
+  reuse: *reuse
+  roc-curve: *roc-curve
+  auc: *auc
+  demo: *demo
+  data: *data
+  curve: *curve
+  ranking: *ranking
+  invariance: *invariance

@@ -1,0 +1,82 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `sigmoid` (Sigmoid) and `log_loss` (Log-loss)."
+    deep: |
+      The page links to their files; download them next to this one to run it.
+    concepts: [sigmoid, log-loss]
+
+  fit-logistic: &fit-logistic
+    span: block
+    short: "Binary logistic regression by gradient descent, with optional per-row weights."
+    deep: |
+      It minimises scikit-learn's objective, divided by $Cn$:
+
+      $$\frac{1}{n}\sum_i s_i\,\text{loss}_i + \frac{1}{2Cn}\lVert w \rVert^2 ,$$
+
+      where $s_i$ is row $i$'s weight (1 unless given; Class imbalance passes others). The
+      gradient is $\frac{1}{n}X^\top\big(s \odot (p - y)\big)$ plus the penalty's. The step
+      $1/L$, with $L$ the largest possible curvature, can never overshoot.
+    concepts: [gradient-descent, log-loss, l2-regularization]
+
+  demo: &demo
+    short: "Runs only when you execute this file; Class imbalance imports `fit_logistic` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so importing `fit_logistic`
+      skips this block.
+
+  data: &data
+    span: block
+    short: "Two overlapping clouds of 200 points each, one per class."
+    deep: |
+      Two Gaussian clouds with the same spread: exactly the situation in which the best
+      boundary really is a straight line.
+
+  fit: &fit
+    span: block
+    short: "Fit, then predict class 1 wherever p ≥ 0.5."
+    deep: |
+      The printed weights point from the class-0 cloud towards the class-1 cloud. Accuracy
+      is below 1 because the clouds overlap: no line can separate them perfectly.
+
+  line: &line
+    span: block
+    short: "The boundary is where w·x + b = 0; solving for x₂ gives a straight line."
+    deep: |
+      $p = \sigma(w^\top x + b) = 0.5$ exactly when the score is 0, so
+
+      $$x_2 = -\frac{w_1 x_1 + b}{w_2} .$$
+
+      Every point on that line gets probability 0.5; one side is called class 1, the other
+      class 0. With $p$ features the boundary is a $(p-1)$-dimensional flat plane: a
+      **hyperplane**.
+
+  distance: &distance
+    span: block
+    short: "Moving away from the line, the log-odds grow by ‖w‖ per unit: bigger weights, sharper boundary."
+    deep: |
+      The weight vector $w$ points across the line. Stepping a distance $d$ along it
+      changes the score by $d\lVert w\rVert$, so large weights mean probabilities jump from
+      near 0 to near 1 in a narrow band. The L2 penalty (small C) keeps $\lVert w\rVert$
+      small and the transition gentle.
+    concepts: [l2-regularization]
+
+  xor: &xor
+    span: block
+    short: "No line separates an XOR pattern, but adding the feature x₁·x₂ makes it separable."
+    deep: |
+      Class 1 is the top-right and bottom-left quarters. Any straight line gets about
+      half right. Logistic regression is linear in its **features**, not in the raw
+      inputs: with $x_1 x_2$ as a third feature, the boundary $x_1x_2 = 0$ is linear in
+      that feature, and a curve in the original two.
+    concepts: [feature-expansion]
+
+pytorch:
+  reuse: *reuse
+  fit-logistic: *fit-logistic
+  demo: *demo
+  data: *data
+  fit: *fit
+  line: *line
+  distance: *distance
+  xor: *xor

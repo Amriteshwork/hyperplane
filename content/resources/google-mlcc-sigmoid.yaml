@@ -1,0 +1,9 @@
+type: blog
+title: "Logistic regression: Calculating a probability with the sigmoid function"
+url: https://developers.google.com/machine-learning/crash-course/logistic-regression/sigmoid-function
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "A short lesson on how the sigmoid turns a linear output (the log-odds) into a probability, with an exercise."
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,8 @@
+type: paper
+title: "Hyperparameter Optimization: Foundations, Algorithms, Best Practices and Open Challenges"
+url: https://arxiv.org/abs/2107.05847
+author: Bernd Bischl, Martin Binder, Michel Lang, et al.
+level: advanced
+why: A thorough survey from grid and random search to Bayesian optimisation and Hyperband, with best practices for honest evaluation.
+source: curated
+checked: 2026-10-20

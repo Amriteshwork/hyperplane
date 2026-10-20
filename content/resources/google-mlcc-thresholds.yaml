@@ -1,0 +1,9 @@
+type: blog
+title: "Thresholds and the confusion matrix"
+url: https://developers.google.com/machine-learning/crash-course/classification/thresholding
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "How a threshold turns probabilities into classes, the four confusion-matrix outcomes, and why 0.5 isn't always right."
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Lasso model selection: AIC-BIC / cross-validation"
+url: https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 15
+why: Chooses Lasso's alpha on the diabetes data by cross-validation and by information criteria, and compares the two.
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,74 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  confusion: &confusion
+    span: block
+    short: "Count the four outcomes: true/false positives and negatives."
+    deep: |
+      Every binary prediction is one of four kinds. "Positive" is just the class you're
+      looking for (disease, fraud, spam); the other is "negative".
+
+  scores: &scores
+    span: block
+    short: "Precision = tp/(tp + fp), recall = tp/(tp + fn), F1 = their harmonic mean."
+    deep: |
+      - **Precision**: of everything called positive, how much really was.
+      - **Recall** (sensitivity, true positive rate): of all real positives, how many were found.
+      - **F1** $= \frac{2PR}{P + R}$: high only when both are.
+
+      With no positive calls, precision is $0/0$; returning 0 matches scikit-learn's
+      `zero_division=0`.
+
+  demo: &demo
+    short: "Runs only when you execute this file; ROC-AUC and Class imbalance import from it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so importing `confusion` or
+      `precision_recall_f1` skips this block.
+
+  data: &data
+    span: block
+    short: "1000 rows, 30% positive, with probabilities from a decent but imperfect model."
+    deep: |
+      Positives get probabilities around 0.65 and negatives around 0.3, plus noise, so the
+      two groups overlap and every threshold makes some mistakes.
+
+  matrix: &matrix
+    span: block
+    short: "The confusion matrix: rows are the truth, columns the prediction."
+    deep: |
+      The diagonal holds the right answers; the off-diagonal cells are the two kinds of
+      mistake. Which one is worse depends on the problem: a missed tumour (false negative)
+      costs more than a false alarm.
+
+  metrics: &metrics
+    span: block
+    short: "Accuracy, precision, recall and F1 from the four counts."
+    deep: |
+      This model almost never raises a false alarm (precision near 1) but misses about a
+      quarter of the positives (recall around 0.77). Accuracy alone hides that trade-off.
+
+  threshold: &threshold
+    span: block
+    short: "Lower the threshold: more positives caught (recall up), more false alarms (precision down)."
+    deep: |
+      Recall can only fall as the threshold rises: fewer rows are called positive.
+      Precision usually rises. Pick the threshold by the cost of each mistake, not by
+      habit; 0.5 is only the default.
+    concepts: [decision-boundary]
+
+  multiclass: &multiclass
+    span: block
+    short: "Three classes: score each class against the rest, then average (macro)."
+    deep: |
+      **Macro** averaging gives each class an equal vote, so a small class that is badly
+      predicted pulls the score down. Pooling the counts over classes (**micro**) instead
+      gives back plain accuracy, as the assertion checks.
+
+pytorch:
+  confusion: *confusion
+  scores: *scores
+  demo: *demo
+  data: *data
+  matrix: *matrix
+  metrics: *metrics
+  threshold: *threshold
+  multiclass: *multiclass

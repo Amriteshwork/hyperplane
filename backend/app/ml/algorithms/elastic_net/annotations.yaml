@@ -1,0 +1,306 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas and NumPy, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same building blocks as Linear Regression, with `ElasticNet` as the model. Plain
+      `LinearRegression` and `Lasso` are imported too, with `clone`, only to compare against
+      at the end.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` is
+      the **target vector**.
+
+      A row without a target value can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      Elastic Net has two settings to choose, α and the L1 ratio. Trying many pairs and
+      keeping the best *test* score slowly overfits the test set, which is why the search
+      is better done by cross-validation on the training rows (see the Under the hood tab).
+
+      `test_size` is the fraction held out; `random_state` fixes the shuffle.
+    concepts: [train-test-split, hyperparameter-search]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values and standardise features: both penalties need them on one scale."
+    deep: |
+      Both penalties treat every coefficient alike, but a coefficient's size depends on its
+      feature's units. Unscaled, a feature measured in large numbers needs only a tiny
+      coefficient and escapes the penalty, so **what gets shrunk and dropped would depend
+      on units**.
+
+      Standardising each numeric feature to mean 0 and standard deviation 1 makes the
+      penalty about how useful a feature is, not how it was measured.
+
+      Imputation, scaling and one-hot encoding are all learned **from the training set
+      only**, so no information leaks from the test set.
+    concepts: [feature-scaling]
+
+  model:
+    span: block
+    short: "Create the Elastic Net with your α and L1 ratio, chained after preprocessing."
+    deep: |
+      Elastic Net adds **both** penalties to the mean squared error (scikit-learn's scaling,
+      with $\rho$ = `l1_ratio`):
+
+      $$\min_\beta \; \frac{1}{2n}\lVert y - X\beta \rVert_2^2 + \alpha\rho \lVert \beta \rVert_1 + \frac{\alpha(1-\rho)}{2} \lVert \beta \rVert_2^2 .$$
+
+      - The **L1 part** (weight $\alpha\rho$) sets unhelpful coefficients exactly to 0.
+      - The **L2 part** (weight $\alpha(1-\rho)$) shrinks the rest and makes correlated
+        features share their weight, so they are kept or dropped *together*.
+
+      $\rho = 1$ is the Lasso; $\rho \to 0$ approaches Ridge. The intercept is not penalised.
+    concepts: [combined-penalties, l1-regularization, l2-regularization]
+
+  fit:
+    short: "Find the coefficients by coordinate descent: one coefficient at a time, until none moves."
+    deep: |
+      The L1 part has a corner at 0, so as for the Lasso there is no closed-form solution.
+      Coordinate descent still works: with the others fixed, the best value of one
+      coefficient is a soft threshold divided by (its curvature + the L2 weight). See the
+      Under the hood tab. `max_iter` caps the number of sweeps.
+    concepts: [l1-regularization]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and report R², RMSE and MAE."
+    deep: |
+      - **R²**: the share of the target's variance the model explains.
+      - **RMSE**: the typical error, in the target's own units; it punishes large misses.
+      - **MAE**: the average absolute error, less sensitive to outliers than RMSE.
+
+      There are two knobs now. Change one at a time: α moves the overall amount of
+      shrinkage, the L1 ratio moves how many features survive.
+    concepts: [r-squared, mean-squared-error, hyperparameter-search]
+
+  coefficients:
+    span: block
+    short: "List each feature's learned weight, largest effect first; dropped features show 0."
+    deep: |
+      Each coefficient is the change in the prediction for a one–standard-deviation change
+      in that feature, holding the others fixed, *shrunk* by both penalties.
+
+      A coefficient of exactly `0.0` means the feature is not used at all. Correlated
+      features tend to get similar coefficients, rather than one big and one zero.
+
+  sparsity:
+    span: block
+    short: "Count the features Elastic Net kept, and name the ones it dropped."
+    deep: |
+      This is feature selection, as in the Lasso, but less aggressive: the L2 part keeps
+      correlated features together, so expect it to keep more of them than a Lasso would.
+
+      `n_iter_` is how many coordinate-descent sweeps it took. If it equals `max_iter`, it
+      stopped before converging (scikit-learn also warns): raise `max_iter`.
+    concepts: [sparsity, feature-selection]
+
+  alpha-max:
+    span: block
+    short: "Compute the smallest α that zeroes every coefficient, for this L1 ratio."
+    deep: |
+      Only the L1 part can hold a coefficient at exactly 0, so the Lasso threshold applies
+      to $\alpha\rho$ instead of $\alpha$:
+
+      $$\alpha_{\max} = \frac{1}{n\rho}\max_j \left| x_j^\top (y - \bar y) \right| .$$
+
+      The smaller the L1 ratio, the larger α must be before everything is dropped. Search α
+      on a log grid below this value, for each L1 ratio you try.
+    concepts: [l1-regularization, sparsity]
+
+  compare:
+    span: block
+    short: "Fit Linear Regression, and a Lasso with the same L1 strength, to see what each penalty did."
+    deep: |
+      - **Linear Regression** uses every feature, unpenalised: the baseline.
+      - **Lasso with α·ρ** has exactly Elastic Net's L1 part and no L2 part. Any difference
+        from Elastic Net is the L2 part's doing. Typically the Lasso drops more features,
+        especially when features are correlated.
+
+      If the three test scores are close, pick the simplest model that achieves it.
+
+      `clone` gives each comparison its own copy of the preprocessing, so the saved Elastic
+      Net pipeline is untouched.
+    concepts: [combined-penalties, bias-variance]
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed and scaled exactly as the training data was, so the whole
+      pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy and loops; no machine-learning library."
+    deep: |
+      The Lasso's coordinate descent with one change in the update, plus a grid search over
+      both settings at the bottom.
+
+  soft-threshold:
+    span: block
+    short: "Soft thresholding: shrink a number towards 0 by t, and snap it to 0 if it gets there."
+    deep: |
+      $$S(z, t) = \operatorname{sign}(z)\,\max(|z| - t,\ 0)$$
+
+      The L1 part's contribution, unchanged from the Lasso: values within $t$ of zero become
+      **exactly** zero.
+    concepts: [l1-regularization, sparsity]
+
+  class:
+    span: block
+    short: "A minimal model with the same fit/predict interface and attributes as scikit-learn."
+    deep: |
+      Mirroring scikit-learn's names (`coef_`, `intercept_`, `n_iter_`) and its loss lets
+      you compare the two implementations number for number: the test suite checks they
+      agree.
+
+  fit:
+    short: "Fitting is coordinate descent: improve one coefficient at a time, sweep, repeat."
+    deep: |
+      Adding a squared penalty keeps the loss convex (it actually makes it *strictly*
+      convex, so the solution is unique), and coordinate descent converges to it.
+    concepts: [combined-penalties]
+
+  center:
+    span: block
+    short: "Subtract the column means so the intercept can be left out of the penalty."
+    deep: |
+      Penalising the intercept would pull predictions towards 0 for no reason. After
+      centring $X$ and $y$, the best intercept for the centred problem is exactly 0, so we
+      solve for the slopes alone and recover the intercept afterwards.
+
+  split-penalty:
+    span: block
+    short: "Split α into the L1 weight αρ and the L2 weight α(1 − ρ)."
+    deep: |
+      `l1_ratio` $\rho$ only decides the split; α is the total. With $\rho = 1$ the L2 weight
+      is 0 and everything below is exactly the Lasso.
+    concepts: [combined-penalties]
+
+  init:
+    span: block
+    short: "Start every coefficient at 0, so the residual starts as the (centred) target itself."
+    deep: |
+      `curvature[j]` is $\frac{1}{n}\sum_i x_{ij}^2$, the second derivative of the squared
+      error along coefficient $j$. It is 1 for every standardised column.
+
+      Keeping the **residual** $r = y - X\beta$ up to date makes each update cost one pass
+      over a single column instead of a full matrix product.
+
+  sweep:
+    span: block
+    short: "One sweep updates every coefficient once; repeat until the largest change is tiny."
+    deep: |
+      Each update uses the latest values of all the others (cyclic coordinate descent, as
+      scikit-learn does by default). A constant column can't explain anything, so its
+      coefficient stays 0.
+
+  update:
+    span: block
+    short: "The best β_j with the others fixed: soft-threshold by the L1 weight, divide by curvature + L2 weight."
+    deep: |
+      Along $\beta_j$ alone the loss is a parabola with curvature $c_j$, plus
+      $\alpha\rho|\beta_j|$ and $\frac{\alpha(1-\rho)}{2}\beta_j^2$. The squared penalty just
+      adds to the curvature, so
+
+      $$\beta_j = \frac{S(z_j,\ \alpha\rho)}{c_j + \alpha(1-\rho)}, \qquad z_j = \tfrac{1}{n} x_j^\top (r + x_j\beta_j),$$
+
+      where $z_j$ (`z`) is how much feature $j$ explains of what's left without it.
+
+      The numerator decides **whether** the feature is used (L1); the larger denominator
+      **shrinks** it if so (L2). Compare the Lasso's update: only the denominator changed.
+    concepts: [combined-penalties, l1-regularization, derivatives]
+
+  converged:
+    span: block
+    short: "Stop once a whole sweep moved no coefficient by more than tol."
+    deep: |
+      scikit-learn uses a stricter test (the *duality gap*, a bound on how far the loss is
+      from its minimum), but the idea is the same: stop when further sweeps would change
+      nothing that matters. Hitting `max_iter` first means it hasn't converged.
+
+  intercept:
+    span: block
+    short: "Put the means back: the intercept makes the line pass through (x̄, ȳ)."
+    deep: |
+      $\beta_0 = \bar y - \bar x^\top \beta$, so predicting at the average feature values
+      gives the average target, just as in OLS, Ridge and Lasso.
+
+  predict:
+    span: block
+    short: "A prediction is the weighted sum of the features plus the intercept."
+    deep: |
+      $$\hat{y} = X\beta + \beta_0$$
+
+      Exactly the same formula as Linear Regression. Features with $\beta_j = 0$ simply
+      drop out of the sum.
+
+  alpha-max:
+    span: block
+    short: "The smallest α at which every coefficient is 0, for a given L1 ratio."
+    deep: |
+      At $\beta = 0$ every soft threshold returns 0 exactly when
+      $\alpha\rho \ge \frac{1}{n}\max_j |x_j^\top y_c|$. The L2 part plays no role here: it
+      never sets anything to 0 on its own.
+    concepts: [sparsity]
+
+  grid-search:
+    span: block
+    short: "Choose α and the L1 ratio together, by k-fold cross-validation over every pair."
+    deep: |
+      Two hyperparameters interact: a good α for $\rho = 0.1$ is a poor one for $\rho = 0.9$.
+      So they are searched together, on a **grid** of all combinations, each scored by
+      k-fold cross-validation on the training data. The pair with the lowest average
+      validation error wins; the test set stays untouched.
+
+      A grid of $a$ values of α and $b$ ratios costs $a \times b \times k$ fits, which is
+      why grids grow expensive quickly.
+    concepts: [hyperparameter-search, cross-validation]
+
+  folds:
+    short: "Shuffle the row indices once and cut them into k nearly equal folds."
+    deep: |
+      Every pair is scored on the *same* folds, so differences in score come from the
+      hyperparameters, not from luck of the split.
+    concepts: [cross-validation]
+
+  pairs:
+    short: "Loop over every (α, L1 ratio) pair: that's the grid."
+    deep: |
+      `scores[i, j]` ends up as the mean validation MSE of `alphas[i]` with
+      `l1_ratios[j]`. Plot it as a heatmap to see which region of the grid works.
+    concepts: [hyperparameter-search]
+
+  fold-score:
+    short: "Add this fold's validation MSE, averaged over the k folds."
+    deep: |
+      Dividing by $k$ as we go makes each cell of `scores` a mean over the folds.
+    concepts: [mean-squared-error]

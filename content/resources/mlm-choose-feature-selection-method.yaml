@@ -1,0 +1,9 @@
+type: blog
+title: How to Choose a Feature Selection Method For Machine Learning
+url: https://machinelearningmastery.com/feature-selection-with-real-and-categorical-data/
+author: Jason Brownlee (Machine Learning Mastery)
+level: beginner
+duration_min: 20
+why: A practical map of filter, wrapper and intrinsic (built-in, like Lasso) selection methods, and which statistic suits which data.
+source: curated
+checked: 2026-10-20

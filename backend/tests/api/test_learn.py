@@ -18,9 +18,13 @@ def test_families_list_available_and_upcoming_algorithms(client: TestClient) -> 
     assert algorithms["linear_regression"]["task_types"] == ["regression"]
     assert algorithms["polynomial_regression"]["available"] is True
     assert algorithms["ridge"]["available"] is True
-    assert algorithms["lasso"] == {
-        "id": "lasso",
-        "name": "Lasso",
+    assert algorithms["lasso"]["available"] is True
+    assert algorithms["elastic_net"]["available"] is True
+    assert algorithms["logistic_regression"]["available"] is True
+    assert algorithms["logistic_regression"]["task_types"] == ["binary", "multiclass"]
+    assert algorithms["sgd"] == {
+        "id": "sgd",
+        "name": "SGD Classifier / Regressor",
         "available": False,
         "summary": None,
         "task_types": [],
@@ -153,7 +157,7 @@ def test_concept_page_links_algorithms_and_prerequisites(client: TestClient) -> 
 
 def test_unknown_ids_are_404_problems(client: TestClient) -> None:
     for path in (
-        "/api/v1/algorithms/lasso",
+        "/api/v1/algorithms/sgd",
         "/api/v1/algorithms/linear_regression/code/nope",
         "/api/v1/concepts/nope",
     ):

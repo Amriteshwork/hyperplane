@@ -1,0 +1,9 @@
+type: blog
+title: "Classification: ROC and AUC"
+url: https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "Reading ROC curves, AUC as a ranking probability, and choosing a threshold by the cost of each error."
+source: curated
+checked: 2026-10-20

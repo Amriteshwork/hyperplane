@@ -63,6 +63,7 @@ def context(**overrides: object) -> CodegenContext:
     values: dict[str, object] = {
         "data_file": "data.csv",
         "target": "y",
+        "task_type": "regression",
         "numeric_features": ["a"],
         "test_size": 0.2,
         "seed": 1,

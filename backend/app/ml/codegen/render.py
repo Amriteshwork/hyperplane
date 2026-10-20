@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from app.ml.base import ExplainedTemplate
 from app.ml.codegen.anchors import RenderedCode, strip_anchors
+from app.ml.types import TaskType
 
 
 class CodegenContext(BaseModel):
@@ -17,6 +18,8 @@ class CodegenContext(BaseModel):
 
     data_file: str
     target: str
+    #: Lets one template print the metrics for each task type it supports.
+    task_type: TaskType
     numeric_features: list[str]
     categorical_features: list[str] = []
     test_size: float = Field(gt=0, lt=1)

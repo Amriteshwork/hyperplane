@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Lasso, Lasso-LARS, and Elastic Net paths"
+url: https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lasso_lars_elasticnet_path.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 10
+why: Plots every coefficient on the diabetes data as alpha changes, for Lasso and Elastic Net, with the code to reproduce it.
+source: curated
+checked: 2026-10-20

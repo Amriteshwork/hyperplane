@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mathsisfun-logarithms
+  note: "Start here if logs are rusty: what a logarithm is, built up from repeated multiplication."
+- id: khan-logarithms
+  note: "The same idea worked through by hand, with plenty of examples."
+- id: mathsisfun-euler-number
+  note: "Where e comes from and why it is the natural base for logs and growth."
+- id: 3blue1brown-euler-number-e
+  note: "Why eˣ is its own derivative, the property behind this page's derivative check."

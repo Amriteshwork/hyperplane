@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-thresholds
+  note: "The four outcomes of the confusion matrix, and how the threshold moves rows between them."
+- id: google-mlcc-precision-recall
+  note: "Accuracy, precision, recall and F1 defined, with when each is the one to watch."
+- id: statquest-confusion-matrix
+  note: "Builds a confusion matrix from scratch and uses it to compare models."
+- id: statquest-sensitivity-specificity
+  note: "Reading recall and specificity off the matrix, for two classes and for three."
+- id: sklearn-model-evaluation
+  note: "The reference for scikit-learn's metrics: see the confusion matrix and precision/recall/F sections."

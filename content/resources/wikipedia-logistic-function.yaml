@@ -1,0 +1,8 @@
+type: blog
+title: "Logistic function"
+url: https://en.wikipedia.org/wiki/Logistic_function
+author: Wikipedia
+level: intermediate
+why: "The sigmoid's properties: symmetry, its inverse (the logit) and its derivative σ(1 − σ)."
+source: curated
+checked: 2026-10-20

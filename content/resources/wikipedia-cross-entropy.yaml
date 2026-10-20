@@ -1,0 +1,8 @@
+type: blog
+title: "Cross-entropy"
+url: https://en.wikipedia.org/wiki/Cross-entropy
+author: Wikipedia
+level: intermediate
+why: "Cross-entropy's link to maximum likelihood and its use as logistic regression's loss, with the gradient."
+source: curated
+checked: 2026-10-20

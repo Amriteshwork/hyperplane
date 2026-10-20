@@ -1,0 +1,17 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-elastic-net
+  note: "Builds Elastic Net from the Ridge and Lasso videos, and shows why it helps with many correlated variables."
+- id: sklearn-elastic-net-guide
+  note: "The exact loss this pack trains, and what l1_ratio means in scikit-learn's terms."
+- id: sklearn-l1-sparse-signals
+  note: "Elastic Net against Lasso on correlated sparse data: higher R², slightly less sparse."
+- id: sklearn-lasso-paths
+  note: "Elastic Net's coefficient paths next to Lasso's, on the diabetes data you can train here."
+- id: wikipedia-elastic-net
+  note: "The combined penalty in one formula, and the two Lasso limitations it addresses."
+- id: hastie-statistical-learning-with-sparsity
+  note: "Chapter 4 treats the elastic net among the Lasso's generalisations."
+- id: zou-hastie-elastic-net
+  note: "The original paper: the grouping effect, and why Elastic Net can keep more features than rows."
+- id: friedman-glmnet-coordinate-descent
+  note: "The coordinate-descent algorithm in the Under the hood tab, derived for the elastic net penalty."

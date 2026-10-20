@@ -1,0 +1,8 @@
+type: paper
+title: Regularization and variable selection via the elastic net
+url: https://hastie.su.domains/Papers/B67.2%20(2005)%20301-320%20Zou%20&%20Hastie.pdf
+author: Hui Zou, Trevor Hastie
+level: advanced
+why: The paper that introduced the elastic net, with its grouping effect for correlated predictors and the p ≫ n case.
+source: curated
+checked: 2026-10-20

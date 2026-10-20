@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-roc-auc
+  note: "Draws a ROC curve threshold by threshold, then explains what the area measures."
+- id: google-mlcc-roc-auc
+  note: "Reading ROC curves, AUC as a ranking probability, and choosing a threshold."
+- id: wikipedia-roc
+  note: "The 'Area under the curve' section proves the ranking interpretation this page's code checks."
+- id: saito-rehmsmeier-pr-vs-roc
+  note: "Why precision–recall curves beat ROC when positives are rare: read before trusting AUC on imbalanced data."

@@ -22,6 +22,7 @@ class Capability(StrEnum):
     PREDICT_PROBA = "predict_proba"
     FEATURE_IMPORTANCE = "feature_importance"
     COEFFICIENTS = "coefficients"
+    CLASS_COEFFICIENTS = "class_coefficients"
     SPARSE = "sparse"
 
 
@@ -83,6 +84,8 @@ class Progress(BaseModel):
 type ProgressFn = Callable[[Progress], None]
 type IterationCallback = Callable[[int], None]
 type CoefTable = Mapping[str, float]
+#: One `CoefTable` per class, keyed by the class label as text.
+type ClassCoefTable = Mapping[str, CoefTable]
 type ImportanceTable = Mapping[str, float]
 
 
@@ -133,6 +136,13 @@ class AlgorithmPack(Describable, Parameterised, Buildable, Explainable, Recommen
 @runtime_checkable
 class ReportsCoefficients(Protocol):
     def coefficients(self, fitted: Estimator, feature_names: list[str]) -> CoefTable: ...
+
+
+@runtime_checkable
+class ReportsClassCoefficients(Protocol):
+    """Classifiers with a weight per (class, feature), e.g. one row of `coef_` per class."""
+
+    def class_coefficients(self, fitted: Estimator, feature_names: list[str]) -> ClassCoefTable: ...
 
 
 @runtime_checkable

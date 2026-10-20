@@ -1,0 +1,8 @@
+type: paper
+title: Regularization Paths for Generalized Linear Models via Coordinate Descent
+url: https://www.jstatsoft.org/article/view/v033i01
+author: Jerome Friedman, Trevor Hastie, Rob Tibshirani
+level: advanced
+why: The open-access paper behind glmnet, showing why cyclic coordinate descent is the fast way to fit Lasso paths.
+source: curated
+checked: 2026-10-20

@@ -103,6 +103,10 @@ class ContentCatalog:
     def algorithms(self) -> Sequence[AlgorithmContent]:
         return list(self._algorithms.values())
 
+    def curriculum(self) -> Sequence[str]:
+        """Algorithm ids in teaching order: family by family, as each family page lists them."""
+        return [a.id for family in self._families.values() for a in family.meta.algorithms]
+
     def algorithm(self, algorithm_id: str) -> AlgorithmContent:
         return _get(self._algorithms, algorithm_id)
 

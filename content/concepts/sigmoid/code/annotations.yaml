@@ -1,0 +1,57 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  sigmoid: &sigmoid
+    span: block
+    short: "σ(z) = 1/(1 + e⁻ᶻ), written as exp(−log(1 + e⁻ᶻ)) so large |z| never overflows."
+    deep: |
+      `logaddexp(0, -z)` is $\log(1 + e^{-z})$ computed safely, so the function is exactly
+      $\sigma(z) = 1/(1 + e^{-z})$ without ever forming $e^{800}$.
+    concepts: [logarithms-exponentials]
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `sigmoid` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When Softmax, Log-loss and the
+      rest import `sigmoid`, Python loads the function and skips this block.
+
+  shape: &shape
+    span: block
+    short: "The S-curve: 0 maps to 0.5, big positive scores to nearly 1, big negative ones to nearly 0."
+    deep: |
+      Any real number goes in, a valid probability comes out. The curve is symmetric:
+      $\sigma(-z) = 1 - \sigma(z)$, so a score of $-2$ is exactly as confident in "no" as
+      $+2$ is in "yes".
+
+  log-odds: &log-odds
+    span: block
+    short: "The inverse of the sigmoid is the log-odds: z = log(p / (1 − p))."
+    deep: |
+      **Odds** $p/(1-p)$ compare yes to no (0.8 means 4 to 1). Their log runs from $-\infty$
+      to $\infty$, so a linear model can predict it directly. That's logistic regression:
+      a **linear model of the log-odds**, $\log\frac{p}{1-p} = w^\top x + b$.
+    concepts: [probability]
+
+  derivative: &derivative
+    span: block
+    short: "σ'(z) = σ(z)(1 − σ(z)): largest (¼) at z = 0, vanishing in the flat tails."
+    deep: |
+      The derivative is built from the function itself, so it costs nothing extra. It is
+      at most ¼, which bounds how curved the log-loss can be and gives gradient descent a
+      safe step size.
+    concepts: [derivatives]
+
+  stable: &stable
+    span: block
+    short: "Scores of ±800 still give clean 0 and 1, with no overflow."
+    deep: |
+      The textbook formula needs $e^{800}$ for $z = -800$. That overflows to `inf`;
+      $1/(1 + \infty)$ happens to come out as 0, but with a warning, and other formulas built
+      on it can turn into `nan`. Written via `logaddexp` it never overflows.
+
+pytorch:
+  sigmoid: *sigmoid
+  demo: *demo
+  shape: *shape
+  log-odds: *log-odds
+  derivative: *derivative
+  stable: *stable

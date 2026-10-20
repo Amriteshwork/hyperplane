@@ -1,0 +1,8 @@
+type: video
+title: "Regularization Part 2: Lasso (L1) Regression"
+url: https://www.youtube.com/watch?v=NGf0voTMlcs
+author: StatQuest with Josh Starmer
+level: beginner
+why: Builds Lasso as a small change to Ridge, and shows how it can remove useless variables entirely.
+source: curated
+checked: 2026-10-20

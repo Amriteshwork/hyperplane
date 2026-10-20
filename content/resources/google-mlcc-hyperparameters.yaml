@@ -1,0 +1,9 @@
+type: course
+title: "Machine Learning Crash Course: Linear regression: Hyperparameters"
+url: https://developers.google.com/machine-learning/crash-course/linear-regression/hyperparameters
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: Separates hyperparameters (chosen before training) from parameters (learned), with check-yourself questions.
+source: curated
+checked: 2026-10-20

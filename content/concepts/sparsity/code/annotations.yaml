@@ -1,0 +1,74 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse the coordinate-descent Lasso from the L1 regularisation concept."
+    deep: |
+      `lasso(X, y, alpha)` solves $\frac{1}{2n}\lVert y - Xw\rVert^2 + \alpha\lVert w\rVert_1$
+      on centred data. Here we only call it, many times, with different α. The page links
+      to its file; download it next to this one to run it.
+    concepts: [l1-regularization]
+
+  data: &data
+    span: block
+    short: "Six features with true effects 4, −3, 2, 1, 0.5 and 0: from very useful to useless."
+    deep: |
+      The features are independent and on the same scale, so a feature's usefulness is
+      just the size of its true weight. That makes the order in which they enter the model
+      easy to predict, and to check.
+
+  alpha-max: &alpha-max
+    span: block
+    short: "α_max: the smallest penalty at which every weight is exactly 0."
+    deep: |
+      With all weights at 0 the residual is $y$ itself. Feature $j$'s soft threshold stays
+      at 0 while $\frac{1}{n}|x_j^\top y| \le \alpha$, so all of them do once
+
+      $$\alpha \ge \alpha_{\max} = \tfrac{1}{n}\max_j |x_j^\top y| .$$
+
+      Every useful α is below this, which is where any search should start.
+    concepts: [l1-regularization]
+
+  path: &path
+    span: block
+    short: "Refit for 13 values of α from α_max down to α_max/1000, and count the non-zero weights."
+    deep: |
+      This is the **Lasso path**. Read the printout top to bottom: no features, then the
+      strongest, then more, until at tiny α every weight is close to its least-squares value.
+
+      The grid is logarithmic (`logspace`), because α's effect spans orders of magnitude.
+
+  entry: &entry
+    span: block
+    short: "For each feature, find the largest α at which it is already in the model."
+    deep: |
+      The earlier (larger α) a feature enters, the more it was worth to the fit. The
+      useless sixth feature enters last, at a tiny α, with a tiny weight that only fits
+      noise: a reason not to push α too low.
+
+  ridge: &ridge
+    span: block
+    short: "For contrast, Ridge with a huge penalty: every weight tiny, none exactly 0."
+    deep: |
+      Ridge's solution is $(X^\top X + \alpha I)^{-1}X^\top y$, which is a smooth function of
+      α: it approaches 0 but only reaches it as $\alpha \to \infty$. Only the corner in
+      $|w_j|$ makes exact zeros possible.
+    concepts: [l2-regularization]
+
+  checks: &checks
+    span: block
+    short: "The path starts empty, grows as α falls, and adds features in order of their true effect."
+    deep: |
+      - At $\alpha_{\max}$: zero features. At $\alpha_{\max}/1000$: (nearly) all of them.
+      - The count only grows as α falls. With independent features that's typical; with
+        correlated ones a feature can occasionally leave the path again.
+      - The order matches the true effect sizes, 4 > 3 > 2 > 1 > 0.5 > 0.
+      - Ridge, even with α = 10 000, has no zeros.
+
+pytorch:
+  reuse: *reuse
+  data: *data
+  alpha-max: *alpha-max
+  path: *path
+  entry: *entry
+  ridge: *ridge
+  checks: *checks

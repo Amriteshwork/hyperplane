@@ -1,0 +1,8 @@
+type: course
+title: "An Introduction to Statistical Learning (Chapter 4: Classification)"
+url: https://www.statlearning.com/
+author: James, Witten, Hastie, Tibshirani
+level: intermediate
+why: "The free standard textbook; chapter 4 covers logistic regression, multinomial models and confusion matrices."
+source: curated
+checked: 2026-10-20

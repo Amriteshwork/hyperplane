@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-hyperparameters
+  note: "Starts from the beginning: what a hyperparameter is, and how it differs from a learned parameter."
+- id: deeplearningai-tuning-process
+  note: "Why random search beats a grid when some hyperparameters matter more, and how to zoom in coarse to fine."
+- id: sklearn-grid-search
+  note: "GridSearchCV and RandomizedSearchCV: this page's two strategies, ready to use on any scikit-learn model."
+- id: sklearn-lasso-model-selection
+  note: "A worked search for Lasso's alpha by cross-validation, compared with information criteria."
+- id: bergstra-bengio-random-search
+  note: "The evidence behind this page's claim that random search gets close to a grid for far fewer trials."
+- id: arxiv-hyperparameter-optimization-review
+  note: "Beyond grid and random search: Bayesian optimisation, Hyperband, and how to evaluate a search honestly."

@@ -1,0 +1,9 @@
+type: blog
+title: "Logistic regression: Loss and regularization"
+url: https://developers.google.com/machine-learning/crash-course/logistic-regression/loss-regularization
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "The log loss formula, why squared loss doesn't suit a sigmoid, and why logistic regression needs regularisation."
+source: curated
+checked: 2026-10-20

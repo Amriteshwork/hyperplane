@@ -1,0 +1,8 @@
+type: blog
+title: "Receiver operating characteristic"
+url: https://en.wikipedia.org/wiki/Receiver_operating_characteristic
+author: Wikipedia
+level: intermediate
+why: "ROC space, curves, the probabilistic meaning of AUC, and criticisms of it."
+source: curated
+checked: 2026-10-20

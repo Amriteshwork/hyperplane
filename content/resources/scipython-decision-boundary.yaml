@@ -1,0 +1,9 @@
+type: blog
+title: "Plotting the decision boundary of a logistic regression model"
+url: https://scipython.com/blog/plotting-the-decision-boundary-of-a-logistic-regression-model
+author: SciPython
+level: intermediate
+duration_min: 10
+why: "Derives the boundary line's slope and intercept from the fitted weights and plots it."
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,8 @@
+type: blog
+title: Lasso (statistics)
+url: https://en.wikipedia.org/wiki/Lasso_(statistics)
+author: Wikipedia
+level: intermediate
+why: Covers the soft-thresholding solution, the diamond-versus-circle geometry, the Bayesian view and the many Lasso variants.
+source: curated
+checked: 2026-10-20

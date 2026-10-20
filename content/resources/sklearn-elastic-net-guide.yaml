@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Elastic-Net"
+url: https://scikit-learn.org/stable/modules/linear_model.html#elastic-net
+author: scikit-learn developers
+level: intermediate
+duration_min: 10
+why: The exact objective scikit-learn minimises, what l1_ratio controls, and ElasticNetCV for tuning both settings.
+source: curated
+checked: 2026-10-20

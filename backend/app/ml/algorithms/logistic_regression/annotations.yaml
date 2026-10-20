@@ -1,0 +1,286 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas and NumPy, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same preprocessing building blocks as the regression models, with
+      `LogisticRegression` as the model and a set of **classification** metrics: there's no
+      R² or RMSE when the answer is a class.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      Fixing `SEED` makes the train/test split reproducible: rerunning this script gives the
+      same split, and therefore the same metrics, as the platform reported.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no label, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** and `y` holds the class of each row: text like
+      `"malignant"` or numbers like `0`/`1` both work.
+
+      A row without a label can't teach the model anything, so it is dropped. Missing
+      *feature* values are kept and filled in during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The split is random, so class proportions in the test set wobble a little. With a rare
+      class, adding `stratify=y` keeps them equal in both halves; the platform's run doesn't
+      stratify, so this script doesn't either, to reproduce it exactly.
+
+      `test_size` is the fraction held out; `random_state` fixes the shuffle.
+    concepts: [train-test-split, class-imbalance]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      Logistic regression is penalised (C sets how much), and the penalty treats every weight
+      alike, so the features should share a scale: **standardising** gives each numeric
+      feature mean 0 and standard deviation 1. It also helps the solver converge.
+
+      Imputation, scaling and one-hot encoding are all learned **from the training set
+      only**, so no information leaks from the test set.
+    concepts: [feature-scaling]
+
+  model:
+    span: block
+    short: "Create the classifier with your settings, chained after preprocessing."
+    deep: |
+      For each row the model computes a **linear score** $z = w^\top x + b$, exactly like
+      linear regression, then turns it into a probability:
+
+      - **two classes**: $P(y = \text{positive}) = \sigma(z) = \frac{1}{1 + e^{-z}}$;
+      - **more classes**: one score per class, turned into probabilities that sum to 1 by
+        the **softmax**, $P(y = k) = \frac{e^{z_k}}{\sum_j e^{z_j}}$.
+
+      `C` is the *inverse* of the L2 penalty's strength: smaller C, smaller weights.
+      `class_weight="balanced"` makes rows of rare classes count more.
+    concepts: [sigmoid, softmax, l2-regularization, class-imbalance]
+
+  fit:
+    short: "Find the weights that make the true classes as probable as possible (minimise log-loss)."
+    deep: |
+      Training minimises the **log-loss** (cross-entropy) plus the penalty:
+
+      $$C \sum_{i=1}^{n} -\log p_i(y_i) \;+\; \tfrac{1}{2}\lVert w \rVert_2^2 ,$$
+
+      where $p_i(y_i)$ is the probability the model gives row $i$'s true class. Minimising it
+      is **maximum likelihood**: the weights under which the observed labels were most
+      probable. There's no closed form, so the L-BFGS solver walks downhill, much like
+      gradient descent but using curvature to take smarter steps.
+    concepts: [log-loss, gradient-descent]
+
+  predict:
+    span: block
+    short: "Get the predicted class and the probability of every class for each test row."
+    deep: |
+      `predict` returns the most probable class. `predict_proba` returns all the
+      probabilities, one column per class in `model.classes_` order (sorted). The
+      probabilities are what makes logistic regression useful beyond a label: they say how
+      sure the model is, and let you choose your own threshold.
+    concepts: [sigmoid, softmax]
+
+  evaluate:
+    span: block
+    short: "Score the test predictions: accuracy, precision, recall, F1, log-loss and ROC-AUC."
+    deep: |
+      - **Accuracy**: share of rows classified right. Misleading with a rare class.
+      - **Precision**: of the rows called positive, how many were. **Recall**: of the actual
+        positives, how many were found. **F1**: their harmonic mean.
+      - **Log-loss**: how good the *probabilities* are; confident mistakes cost the most.
+      - **ROC-AUC**: how well the scores rank positives above negatives, over all thresholds.
+
+      With two classes, "positive" is `model.classes_[1]`. With more, precision, recall, F1
+      and ROC-AUC are computed per class and averaged (**macro**), so every class counts
+      equally however rare it is.
+    concepts: [classification-metrics, log-loss, roc-auc]
+
+  confusion:
+    span: block
+    short: "Count test rows by actual class (rows) and predicted class (columns)."
+    deep: |
+      The **confusion matrix**: the diagonal holds the correct predictions, every other cell
+      a specific mistake ("actual A, predicted B"). Every metric above can be computed from
+      it, and it shows *which* classes get confused with which.
+    concepts: [classification-metrics]
+
+  decision:
+    span: block
+    short: "Two classes: see how moving the 0.5 threshold trades precision for recall. More: check confidence."
+    deep: |
+      **Two classes.** `predict` calls a row positive when its probability is at least 0.5,
+      which puts the **decision boundary** where $w^\top x + b = 0$. Nothing forces 0.5:
+      lower the threshold to catch more positives (recall up, precision down), raise it to
+      be more selective. Choose by the cost of each kind of mistake.
+
+      **More classes.** The most probable class wins, so there is no single threshold. A
+      well-behaved model is noticeably more confident when it's right than when it's wrong.
+    concepts: [decision-boundary, classification-metrics, roc-auc]
+
+  coefficients:
+    span: block
+    short: "Show each feature's weight: positive weights push a row towards that class."
+    deep: |
+      A coefficient is the change in the **log-odds** for a one–standard-deviation increase
+      in its feature, others fixed: $\log\frac{p}{1-p}$ goes up by $w_j$, so the odds are
+      multiplied by $e^{w_j}$.
+
+      With two classes there is one column, for the positive class. With more there is one
+      per class; only *differences* between columns matter, since adding the same number to
+      every class's score leaves the softmax unchanged.
+    concepts: [logarithms-exponentials, sigmoid]
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed, scaled and encoded exactly as the training data was, so the
+      whole pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict_proba(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy: two squashing functions and a gradient-descent loop."
+    deep: |
+      No solver library: the weights are found by stepping downhill on the penalised
+      log-loss until its gradient is (almost) zero.
+
+  sigmoid:
+    span: block
+    short: "σ(z) = 1/(1 + e^−z): maps any score to a probability between 0 and 1."
+    deep: |
+      $\sigma(0) = 0.5$, large positive scores approach 1, large negative ones 0. Its inverse
+      is the **log-odds**, $z = \log\frac{p}{1-p}$, which is why the score is linear in the
+      features on the log-odds scale.
+
+      `np.exp(-np.logaddexp(0, -z))` is the same formula written so that $e^{-z}$ is never
+      computed for very negative $z$ (it would overflow).
+    concepts: [sigmoid, logarithms-exponentials]
+
+  softmax:
+    span: block
+    short: "Softmax: exponentiate each class's score and divide by the total, so they sum to 1."
+    deep: |
+      $$\text{softmax}(z)_k = \frac{e^{z_k}}{\sum_j e^{z_j}}$$
+
+      Subtracting the row's maximum first changes nothing (it cancels in the fraction) but
+      keeps every exponent ≤ 0, so nothing overflows. With two classes, softmax reduces to
+      the sigmoid of the score difference.
+    concepts: [softmax]
+
+  class:
+    span: block
+    short: "A minimal classifier with the same attributes as scikit-learn's, to compare against."
+    deep: |
+      `classes_`, `coef_`, `intercept_` and `n_iter_` mirror scikit-learn, and the loss is
+      the same, so the test suite can check that both give the same probabilities.
+
+  fit:
+    short: "Fitting is gradient descent on the penalised log-loss."
+    deep: |
+      scikit-learn minimises $C\sum_i \text{loss}_i + \frac12\lVert w\rVert^2$. Dividing by
+      $Cn$ gives the same minimum in a friendlier form, the **mean** log-loss plus a small
+      penalty:
+
+      $$L(W) = \frac{1}{n}\sum_{i=1}^{n} -\log p_i(y_i) + \frac{1}{2Cn}\lVert W \rVert^2 .$$
+    concepts: [log-loss, gradient-descent]
+
+  targets:
+    span: block
+    short: "Turn the labels into 0/1 columns: one column for two classes, one per class otherwise."
+    deep: |
+      `np.unique` sorts the classes, as scikit-learn does. With two classes the model learns
+      one score, for `classes_[1]`; with $K$ classes, $K$ scores (**one-hot** targets $Y$).
+
+  design:
+    span: block
+    short: "Append a column of 1s for the intercept, and mark it as unpenalised."
+    deep: |
+      With the 1s column, the intercept is just one more weight, the last row of `W`.
+      `penalised` is 0 there so the penalty skips it: shrinking the intercept would bias
+      every probability towards 0.5 for no reason.
+
+  step:
+    span: block
+    short: "A step size that is guaranteed not to overshoot: 1 / (the loss's maximum curvature)."
+    deep: |
+      The sigmoid's slope is at most ¼ (softmax's at most ½), so the loss's curvature is at
+      most that times the largest eigenvalue of $X^\top X / n$, plus the penalty's
+      $1/(Cn)$. Stepping by the inverse of this bound always decreases the loss: no learning
+      rate to tune.
+    concepts: [gradient-descent]
+
+  descend:
+    span: block
+    short: "Repeat: compute probabilities, the gradient, and step downhill, until the gradient vanishes."
+    deep: |
+      Plain gradient descent converges, but slowly when classes are almost perfectly
+      separable (large C lets the weights keep growing). That's why scikit-learn uses
+      L-BFGS, which also uses the loss's curvature; the answer is the same.
+    concepts: [gradient-descent]
+
+  gradient:
+    short: "The gradient of log-loss is beautifully simple: features × (predicted − actual)."
+    deep: |
+      $$\nabla_W L = \frac{1}{n} X^\top (P - Y) + \frac{1}{Cn} W$$
+
+      The same form as linear regression's MSE gradient, with probabilities $P$ in place of
+      predictions: each row pulls the weights in proportion to how wrong its probability
+      was. This tidy result is why the sigmoid/softmax and log-loss belong together.
+    concepts: [log-loss, derivatives]
+
+  converged:
+    span: block
+    short: "Stop when no component of the gradient is larger than tol: we're at the bottom."
+    deep: |
+      The penalised log-loss is convex, so a zero gradient means the global minimum.
+
+  store:
+    span: block
+    short: "Split the learned weights into coefficients (one row per score) and intercepts."
+    deep: |
+      Shapes match scikit-learn: `coef_` is (1, p) for two classes and (K, p) for K. For K
+      classes, the intercepts' gradients always sum to zero, so starting from 0 they stay
+      centred, which is the same choice scikit-learn makes.
+
+  predict-proba:
+    span: block
+    short: "Probabilities for new rows: scores, then sigmoid (two classes) or softmax."
+    deep: |
+      For two classes the single score gives $p = P(\text{classes\_[1]})$, and the other
+      column is $1 - p$.
+    concepts: [sigmoid, softmax]
+
+  predict:
+    span: block
+    short: "Predict the most probable class (for two classes: probability ≥ 0.5)."
+    deep: |
+      `argmax` over the probability columns. For two classes that's the same as thresholding
+      at 0.5, or the score at 0, which is the decision boundary.
+    concepts: [decision-boundary]
+
+  boundary:
+    span: block
+    short: "The decision boundary is a straight line: where the score w·x + b equals 0."
+    deep: |
+      $p = 0.5$ exactly when $w_1x_1 + w_2x_2 + b = 0$. Solving for $x_2$ gives a line you
+      can draw over a 2-D scatter plot of the data. With more features it's a plane (a
+      *hyperplane*): logistic regression can only separate classes with flat boundaries.
+    concepts: [decision-boundary]

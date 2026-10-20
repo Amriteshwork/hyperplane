@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-argmax-softmax
+  note: "Why softmax rather than argmax turns scores into probabilities, worked by hand."
+- id: google-mlcc-softmax
+  note: "Softmax versus one-vs-all for several classes; expand the box for the equation."
+- id: wikipedia-softmax
+  note: "The 'Numerical algorithms' section explains the subtract-the-max trick used in this page's code."

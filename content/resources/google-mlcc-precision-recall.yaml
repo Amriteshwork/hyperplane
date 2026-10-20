@@ -1,0 +1,9 @@
+type: blog
+title: "Classification: Accuracy, recall, precision, and related metrics"
+url: https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall
+author: Google for Developers
+level: beginner
+duration_min: 15
+why: "Defines accuracy, recall, false positive rate, precision and F1, and when each is the one to watch."
+source: curated
+checked: 2026-10-20

@@ -183,6 +183,21 @@ def test_missing_root_is_empty_and_unknown_ids_raise(tmp_path: Path) -> None:
         catalog.concept("mse")
 
 
+def test_curriculum_lists_algorithms_family_by_family_in_page_order(tmp_path: Path) -> None:
+    family = "---\ntitle: {t}\nsummary: s\norder: {o}\nalgorithms:\n{a}\n---\n"
+    entry = "  - {{ id: {i}, name: N }}"
+    write(
+        tmp_path / "families" / "a.md",
+        family.format(t="A", o=2, a=entry.format(i="trees")),
+    )
+    write(
+        tmp_path / "families" / "b.md",
+        family.format(t="B", o=1, a="\n".join(entry.format(i=i) for i in ("ols", "lasso"))),
+    )
+
+    assert ContentCatalog.load(tmp_path).curriculum() == ["ols", "lasso", "trees"]
+
+
 def test_gaps_and_sections(tmp_path: Path) -> None:
     write_mse(tmp_path)
 

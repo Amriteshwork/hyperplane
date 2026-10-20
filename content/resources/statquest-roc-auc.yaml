@@ -1,0 +1,8 @@
+type: video
+title: "ROC and AUC, Clearly Explained!"
+url: https://www.youtube.com/watch?v=4jRBRDbJemM
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Draws a ROC curve threshold by threshold and explains what the area under it measures."
+source: curated
+checked: 2026-10-20

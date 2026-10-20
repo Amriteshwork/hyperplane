@@ -1,0 +1,73 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse the soft threshold and the Lasso from the L1 regularisation concept."
+    deep: |
+      `soft_threshold` is the L1 step, used unchanged in the Elastic Net update below.
+      `lasso` is the L1-only model we compare against. The page links to their file;
+      download it next to this one to run it.
+    concepts: [l1-regularization]
+
+  elastic-net: &elastic-net
+    span: block
+    short: "The Lasso's coordinate descent with the L2 weight added to each update's denominator."
+    deep: |
+      Put this next to `lasso` in the L1 concept: the only differences are splitting α into
+      `l1` and `l2`, and the `+ l2` in the denominator. Along one weight, the L2 penalty
+      $\frac{l_2}{2}w_j^2$ just adds $l_2$ to the curvature of the loss, so the update is
+
+      $$w_j = \frac{S(z_j,\ l_1)}{c_j + l_2}.$$
+
+      Whether a feature is used is still decided by the L1 threshold; L2 only shrinks.
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `elastic_net` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When Hyperparameter search
+      imports `elastic_net`, Python loads the function and skips this block.
+
+  data: &data
+    span: block
+    short: "A group of three near-copies of one signal, plus five useless features."
+    deep: |
+      The target depends on the shared signal, so *any* split of the weight across the
+      three copies predicts about equally well. That ambiguity is exactly where the Lasso
+      and Elastic Net behave differently.
+
+  fit: &fit
+    span: block
+    short: "Fit a Lasso and an Elastic Net with the same L1 part; the second adds an L2 part."
+    deep: |
+      With the L1 strength held fixed, any difference between the two fits is the L2
+      part's doing. Look at the first three weights: the Lasso splits them unevenly (it
+      gains nothing from sharing), Elastic Net nearly equally.
+    concepts: [l1-regularization, l2-regularization]
+
+  optimality: &optimality
+    span: block
+    short: "Check the answer: after subtracting the L2 pull, every kept feature is balanced by exactly ±(L1 part)."
+    deep: |
+      Setting the (sub)gradient of the loss to zero gives, for each feature,
+
+      $$\tfrac{1}{n}x_j^\top(y - Xw) - l_2 w_j = l_1\operatorname{sign}(w_j) \ \text{ if } w_j \ne 0, \qquad \left|\tfrac{1}{n}x_j^\top(y - Xw)\right| \le l_1 \ \text{ if } w_j = 0 .$$
+
+      The same check as for the Lasso, with the L2 term's pull $l_2 w_j$ moved to the left.
+    concepts: [derivatives]
+
+  checks: &checks
+    span: block
+    short: "Both drop the five noise features; only Elastic Net keeps the whole group, with even weights."
+    deep: |
+      This is the **grouping effect**. Among all ways to split a fixed total weight $t$
+      over $k$ copies, $\sum_j w_j^2$ is smallest at $w_j = t/k$, so the L2 part pushes the
+      weights to be equal. The L1 part, $\sum_j |w_j| = t$ for every split, doesn't care.
+    concepts: [sparsity]
+
+pytorch:
+  reuse: *reuse
+  elastic-net: *elastic-net
+  demo: *demo
+  data: *data
+  fit: *fit
+  optimality: *optimality
+  checks: *checks

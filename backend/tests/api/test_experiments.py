@@ -67,6 +67,23 @@ def test_train_a_run_end_to_end(
     assert _events(client, run["id"]) == [{"type": "done", "status": "succeeded"}]
 
 
+def test_train_a_classifier_end_to_end(client: TestClient, job_queue: FakeJobQueue) -> None:
+    dataset_id = _dataset(client, job_queue)
+    body = {"target": "colour", "features": ["x1", "x2"], "algorithm_id": "logistic_regression"}
+    created = client.post("/api/v1/experiments", json={"dataset_id": dataset_id, **body})
+    assert created.status_code == 201, created.text
+    assert created.json()["experiment"]["task_type"] == "binary"
+
+    job_queue.drain()
+    done = client.get(f"/api/v1/runs/{created.json()['id']}").json()
+    assert done["status"] == "succeeded", done["error"]
+    evaluation = done["report"]["evaluation"]
+    metrics = [m["id"] for m in evaluation["metrics"]]
+    assert metrics[:5] == ["accuracy", "precision", "recall", "f1", "log_loss"]
+    assert evaluation["plots"][0]["kind"] == "heatmap"
+    assert {c["target_class"] for c in done["report"]["coefficients"]} == {"red"}  # classes_[1]
+
+
 @pytest.mark.parametrize(
     ("changes", "detail"),
     [
@@ -154,8 +171,12 @@ def test_training_options_list_targets_algorithms_and_features(
         {"id": "linear_regression", "name": "Linear Regression"},
         {"id": "polynomial_regression", "name": "Polynomial Regression"},
         {"id": "ridge", "name": "Ridge"},
+        {"id": "lasso", "name": "Lasso"},
+        {"id": "elastic_net", "name": "Elastic Net"},
+    ]  # in teaching order (the family pages), not by id: the Lab preselects the first
+    assert targets["colour"]["algorithms"] == [
+        {"id": "logistic_regression", "name": "Logistic Regression"}
     ]
-    assert targets["colour"]["algorithms"] == []  # binary: nothing can train it yet
     assert {f["column"]: f["role"] for f in options["features"]} == {
         "x1": "numeric",
         "x2": "numeric",

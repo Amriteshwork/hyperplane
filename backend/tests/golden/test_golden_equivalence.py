@@ -31,7 +31,10 @@ from tests.conftest import DATASETS_DIR
 REGISTRY = AlgorithmRegistry.discover()
 SAMPLES = SampleCatalog.load(DATASETS_DIR)
 # Extra (sample, target) pairs that exercise missing values and categoricals for a task type.
-EXTRA_TARGETS = {TaskType.REGRESSION: [("penguins", "body_mass_g")]}
+EXTRA_TARGETS = {
+    TaskType.REGRESSION: [("penguins", "body_mass_g")],
+    TaskType.BINARY: [("penguins", "sex")],  # categorical features, and rows with no label
+}
 
 
 def _cases() -> list[Any]:
@@ -86,9 +89,18 @@ def test_rendered_script_reproduces_the_platform_run(
     assert script.returncode == 0, script.stderr
 
     script_model = joblib.load(tmp_path / "model.joblib")  # written by our own script
-    np.testing.assert_allclose(
-        script_model.predict(platform.X_test), platform.predictions, rtol=1e-9, atol=1e-9
-    )
+    predictions = script_model.predict(platform.X_test)
+    if config.task_type is TaskType.REGRESSION:
+        np.testing.assert_allclose(predictions, platform.predictions, rtol=1e-9, atol=1e-9)
+    else:  # class labels must match exactly, and so must the probabilities behind them
+        np.testing.assert_array_equal(predictions, platform.predictions)
+    if platform.probabilities is not None:
+        np.testing.assert_allclose(
+            script_model.predict_proba(platform.X_test),
+            platform.probabilities,
+            rtol=1e-9,
+            atol=1e-9,
+        )
     first_metric = platform.report.evaluation.metrics[0]
     printed = re.search(
         rf"^{re.escape(first_metric.label)}:\s+(-?[\d.]+)$", script.stdout, re.MULTILINE

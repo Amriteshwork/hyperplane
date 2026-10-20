@@ -1,0 +1,98 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse plain least squares from the Normal equation concept, to compare against Lasso."
+    deep: |
+      Unpenalised least squares is the baseline: every weight non-zero, nothing shrunk. The
+      page links to its file; download it next to this one to run it.
+    concepts: [normal-equation]
+
+  soft-threshold: &soft-threshold
+    span: block
+    short: "S(z, t) = sign(z)·max(|z| − t, 0): shrink by t, and anything within t of 0 becomes 0."
+    deep: |
+      This is the whole difference between L1 and L2. Minimise $\frac{1}{2}(w - z)^2 + t|w|$
+      over one number $w$:
+
+      - if $|z| > t$, the answer is $z$ moved $t$ towards 0;
+      - if $|z| \le t$, it is **exactly 0**: at 0 the penalty's slope can be anything in
+        $[-t, t]$, enough to cancel the pull of $z$.
+
+      The L2 version, $\frac{1}{2}(w - z)^2 + \frac{t}{2}w^2$, gives $z/(1+t)$: smaller, but
+      never 0.
+    concepts: [derivatives]
+
+  lasso: &lasso
+    span: block
+    short: "Coordinate descent: set each weight to its best value given the others, sweep until settled."
+    deep: |
+      With every other weight fixed, the loss along $w_j$ is a parabola plus $\alpha|w_j|$,
+      solved exactly by a soft threshold:
+
+      $$w_j = \frac{S\!\left(\tfrac{1}{n}x_j^\top r_{-j},\ \alpha\right)}{\tfrac{1}{n}x_j^\top x_j},$$
+
+      where $r_{-j} = y - Xw + x_j w_j$ is what's left to explain once the other features
+      have had their say. The loss is convex, so cycling these one-dimensional updates
+      converges to the global minimum.
+
+      Rebuilding the residual each time keeps the code short; real implementations
+      update it in place (see the Lasso pack's Under the hood tab).
+
+  demo: &demo
+    short: "Runs only when you execute this file; other concepts import `lasso` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run. When Sparsity or Feature
+      selection import `lasso`, Python loads the functions and skips this block.
+
+  data: &data
+    span: block
+    short: "Eight features, only three of which affect the target; the other five are pure noise."
+    deep: |
+      A **sparse** truth: $y = 3x_1 - 2x_2 + 1.5x_3 + \varepsilon$. Least squares will
+      still give the five useless features small non-zero weights, because they happen to
+      correlate a little with the noise.
+
+      Centring $X$ and $y$ removes the intercept, which should never be penalised.
+
+  fit: &fit
+    span: block
+    short: "Fit least squares, Lasso and Ridge on the same data and compare their weights."
+    deep: |
+      Look at the last five weights in each row: least squares and Ridge give small but
+      non-zero values (Ridge's α is large here, to shrink hard), while Lasso's are exactly
+      `0` (printed as `0.` or `-0.`). Lasso's first three weights are also pulled towards 0,
+      by about α each.
+    concepts: [l2-regularization]
+
+  optimality: &optimality
+    span: block
+    short: "Check the answer: kept features correlate with the residual by exactly ±α, dropped ones by at most α."
+    deep: |
+      Lasso has no formula to compare with, but its solution has a signature. Setting the
+      (sub)gradient of the loss to zero gives, for every feature,
+
+      $$\tfrac{1}{n}x_j^\top (y - Xw) = \alpha \operatorname{sign}(w_j) \ \text{ if } w_j \ne 0, \qquad \left|\tfrac{1}{n}x_j^\top (y - Xw)\right| \le \alpha \ \text{ if } w_j = 0 .$$
+
+      In words: a dropped feature could explain at most α of the residual, not enough to
+      pay the penalty for using it.
+    concepts: [derivatives]
+
+  checks: &checks
+    span: block
+    short: "Lasso zeroes exactly the five useless features; Ridge zeroes none; both shrink."
+    deep: |
+      - Lasso: exactly the noise features are 0, the three real ones are kept.
+      - Ridge: every weight is non-zero, however large its α.
+      - The kept Lasso weights are smaller than least squares': selection comes with
+        shrinkage, the bias the penalty accepts.
+    concepts: [sparsity]
+
+pytorch:
+  reuse: *reuse
+  soft-threshold: *soft-threshold
+  lasso: *lasso
+  demo: *demo
+  data: *data
+  fit: *fit
+  optimality: *optimality
+  checks: *checks

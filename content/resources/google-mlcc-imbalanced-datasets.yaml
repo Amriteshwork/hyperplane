@@ -1,0 +1,9 @@
+type: blog
+title: "Datasets: Class-imbalanced datasets"
+url: https://developers.google.com/machine-learning/crash-course/overfitting/imbalanced-datasets
+author: Google for Developers
+level: beginner
+duration_min: 10
+why: "Why rare labels are hard to learn, and the downsample-then-upweight remedy."
+source: curated
+checked: 2026-10-20

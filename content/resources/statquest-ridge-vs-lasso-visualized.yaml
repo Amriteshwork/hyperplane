@@ -1,0 +1,8 @@
+type: video
+title: "Ridge vs Lasso Regression, Visualized!!!"
+url: https://www.youtube.com/watch?v=Xm2C_gTAl8c
+author: StatQuest with Josh Starmer
+level: beginner
+why: Plots the two penalised losses side by side, so you can see why only Lasso's minimum lands exactly on zero.
+source: curated
+checked: 2026-10-20

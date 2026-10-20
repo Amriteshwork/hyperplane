@@ -1,20 +1,17 @@
 """Regression metrics (R², RMSE, MAE) and predicted-vs-actual / residual plot data."""
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from app.ml.evaluation.models import Evaluation, Metric, ScatterPlot
-
-#: Charts get at most this many points (a fixed random subset), to keep payloads small.
-MAX_POINTS = 1_000
+from app.ml.evaluation.models import Evaluation, Metric, Predictions, ScatterPlot
+from app.ml.evaluation.numbers import points, subset
 
 
-def evaluate_regression(y_true: ArrayLike, y_pred: ArrayLike) -> Evaluation:
-    actual = np.asarray(y_true, dtype=float)
-    predicted = np.asarray(y_pred, dtype=float)
+def evaluate_regression(predictions: Predictions) -> Evaluation:
+    actual = np.asarray(predictions.y_true, dtype=float)
+    predicted = np.asarray(predictions.y_pred, dtype=float)
     residuals = actual - predicted
-    shown = _subset(len(actual))
+    shown = subset(len(actual))
     return Evaluation(
         metrics=[
             Metric(
@@ -47,7 +44,7 @@ def evaluate_regression(y_true: ArrayLike, y_pred: ArrayLike) -> Evaluation:
                 description="Each dot is a test row. Dots on the diagonal are perfect predictions.",
                 x_label="Actual",
                 y_label="Predicted",
-                points=_points(actual[shown], predicted[shown]),
+                points=points(actual[shown], predicted[shown]),
                 reference="identity",
             ),
             ScatterPlot(
@@ -57,22 +54,8 @@ def evaluate_regression(y_true: ArrayLike, y_pred: ArrayLike) -> Evaluation:
                 "band around zero is good; curves or funnels mean the model misses a pattern.",
                 x_label="Predicted",
                 y_label="Residual",
-                points=_points(predicted[shown], residuals[shown]),
+                points=points(predicted[shown], residuals[shown]),
                 reference="zero",
             ),
         ],
     )
-
-
-def _subset(n: int) -> NDArray[np.intp]:
-    if n <= MAX_POINTS:
-        return np.arange(n)
-    return np.sort(np.random.default_rng(0).choice(n, MAX_POINTS, replace=False))
-
-
-def _points(x: NDArray[np.float64], y: NDArray[np.float64]) -> list[tuple[float, float]]:
-    return [(_round(a), _round(b)) for a, b in zip(x, y, strict=True)]
-
-
-def _round(value: float) -> float:
-    return float(f"{value:.6g}")

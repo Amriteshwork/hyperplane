@@ -1,0 +1,8 @@
+type: video
+title: "Neural Networks Part 5: ArgMax and SoftMax"
+url: https://www.youtube.com/watch?v=KpKog-L9veg
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Why softmax rather than argmax turns raw scores into probabilities, worked through by hand."
+source: curated
+checked: 2026-10-20

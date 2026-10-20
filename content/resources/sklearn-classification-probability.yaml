@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Plot classification probability"
+url: https://scikit-learn.org/stable/auto_examples/classification/plot_classification_probability.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 15
+why: "Maps logistic regression's class probabilities over a 2-D feature space next to other classifiers, scored by accuracy, ROC AUC and log loss."
+source: curated
+checked: 2026-10-20

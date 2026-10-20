@@ -1,0 +1,9 @@
+type: blog
+title: "How to Improve Class Imbalance using Class Weights in Machine Learning?"
+url: https://www.analyticsvidhya.com/blog/2020/10/improve-class-imbalance-class-weights/
+author: Kamaldeep (Analytics Vidhya)
+level: beginner
+duration_min: 15
+why: "Class weights in logistic regression's cost function on a 2%-positive dataset, including scikit-learn's 'balanced' formula."
+source: curated
+checked: 2026-10-20

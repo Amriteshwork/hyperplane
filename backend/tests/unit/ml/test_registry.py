@@ -71,7 +71,10 @@ def make_package(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Ma
 def test_real_algorithms_package_registers_every_pack() -> None:
     registry = AlgorithmRegistry.discover()
     assert [p.spec.id for p in registry.list()] == [
+        "elastic_net",
+        "lasso",
         "linear_regression",
+        "logistic_regression",
         "polynomial_regression",
         "ridge",
     ]

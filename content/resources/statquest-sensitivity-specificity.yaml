@@ -1,0 +1,8 @@
+type: video
+title: "Machine Learning Fundamentals: Sensitivity and Specificity"
+url: https://www.youtube.com/watch?v=vP06aMoz4v8
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Reads sensitivity (recall) and specificity off a confusion matrix, for two classes and more."
+source: curated
+checked: 2026-10-20

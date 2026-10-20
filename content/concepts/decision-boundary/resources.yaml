@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-logistic-regression
+  note: "The big picture: an S-curve of probabilities, and classifying where it crosses 0.5."
+- id: scipython-decision-boundary
+  note: "Derives the boundary line from the fitted weights and plots it, as this page's code does."
+- id: sklearn-classification-probability
+  note: "Maps logistic regression's probabilities over a 2-D plane, including with non-linear feature expansions."
+- id: sklearn-multinomial-vs-ovr
+  note: "Three-class boundaries: how softmax and one-vs-rest logistic regression split the plane."

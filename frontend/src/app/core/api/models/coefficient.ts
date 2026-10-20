@@ -3,5 +3,6 @@
 
 export interface Coefficient {
   feature: string;
+  target_class?: string | null;
   value: number;
 }

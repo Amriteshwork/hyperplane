@@ -1,0 +1,21 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-lasso-regression
+  note: "Starts from Ridge and changes one thing, the absolute value, then shows why that lets Lasso drop useless features."
+- id: statology-lasso-regression
+  note: "A quick read on what the L1 penalty does and how to choose between Lasso and Ridge."
+- id: statquest-ridge-vs-lasso-visualized
+  note: "See the loss curves: Ridge's minimum slides towards zero, Lasso's lands on it."
+- id: sklearn-lasso-paths
+  note: "The Lasso path on the diabetes data you can train here: watch features enter as alpha falls."
+- id: sklearn-lasso-model-selection
+  note: "How to choose alpha properly, by cross-validation, on the same diabetes data."
+- id: wikipedia-lasso
+  note: "The reference for the maths: soft thresholding, the geometry and the Bayesian view."
+- id: hastie-statistical-learning-with-sparsity
+  note: "Chapters 2 and 5 cover the Lasso and coordinate descent in full depth."
+- id: friedman-glmnet-coordinate-descent
+  note: "The coordinate-descent algorithm in the Under the hood tab, and why it is fast."
+- id: arxiv-least-angle-regression
+  note: "A different algorithm for the same problem that computes the whole path at once."
+- id: arxiv-lasso-uniqueness
+  note: "Why Lasso's choice between correlated features can be arbitrary, made precise."
