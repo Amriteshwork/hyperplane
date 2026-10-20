@@ -19,7 +19,7 @@ from app.content.models import (
 )
 
 _FRONTMATTER = re.compile(r"\A---\n(?P<meta>.*?)\n---\n?(?P<body>.*)\Z", re.DOTALL)
-_RESOURCES = TypeAdapter(tuple[Resource, ...])
+_RESOURCE_IDS = TypeAdapter(tuple[str, ...])
 
 
 class ContentError(ValueError):
@@ -36,10 +36,12 @@ class ContentCatalog:
         families: Sequence[Family] = (),
         algorithms: Sequence[AlgorithmContent] = (),
         concepts: Sequence[Concept] = (),
+        resources: Sequence[Resource] = (),
     ) -> None:
         self._families = {f.id: f for f in sorted(families, key=lambda f: f.meta.order)}
         self._algorithms = {a.id: a for a in algorithms}
         self._concepts = {c.id: c for c in concepts}
+        self._resources = {r.id: r for r in resources}
 
     @classmethod
     def load(cls, root: Path) -> ContentCatalog:
@@ -51,11 +53,14 @@ class ContentCatalog:
             for path in sorted((root / "families").glob("*.md"))
             if path.name != "README.md"
         ]
+        resources = {
+            path.stem: _resource(path) for path in sorted((root / "resources").glob("*.yaml"))
+        }
         algorithms = [
             AlgorithmContent(
                 id=folder.name,
                 **_parts(folder / "overview.md", AlgorithmFrontmatter),
-                resources=_resources(folder / "resources.yaml"),
+                resources=_resource_refs(folder / "resources.yaml", resources),
             )
             for folder in _folders(root / "algorithms")
         ]
@@ -63,14 +68,17 @@ class ContentCatalog:
             Concept(
                 id=folder.name,
                 **_parts(folder / "concept.md", ConceptFrontmatter),
-                resources=_resources(folder / "resources.yaml"),
+                resources=_resource_refs(folder / "resources.yaml", resources),
             )
             for folder in _folders(root / "concepts")
         ]
-        return cls(families, algorithms, concepts)
+        return cls(families, algorithms, concepts, list(resources.values()))
 
     def families(self) -> Sequence[Family]:
         return list(self._families.values())
+
+    def algorithms(self) -> Sequence[AlgorithmContent]:
+        return list(self._algorithms.values())
 
     def algorithm(self, algorithm_id: str) -> AlgorithmContent:
         return _get(self._algorithms, algorithm_id)
@@ -80,6 +88,9 @@ class ContentCatalog:
 
     def concepts(self) -> Sequence[Concept]:
         return list(self._concepts.values())
+
+    def resources(self) -> Sequence[Resource]:
+        return list(self._resources.values())
 
     def has_concept(self, concept_id: str) -> bool:
         return concept_id in self._concepts
@@ -119,11 +130,28 @@ def _parts[M: BaseModel](path: Path, meta_model: type[M]) -> _Parts[M]:
     return {"meta": meta, "body": match["body"].strip() + "\n"}
 
 
-def _resources(path: Path) -> tuple[Resource, ...]:
+def _resource(path: Path) -> Resource:
+    """A resource file; its id is the filename, so it can't drift from references."""
     try:
-        return _RESOURCES.validate_python(yaml.safe_load(_read(path)) or [])
+        data = yaml.safe_load(_read(path))
+        if not isinstance(data, dict):
+            raise ContentError(f"{path}: expected a YAML mapping")
+        return Resource.model_validate({**data, "id": path.stem})
+    except (yaml.YAMLError, ValidationError) as exc:
+        raise ContentError(f"{path}: invalid resource: {exc}") from exc
+
+
+def _resource_refs(path: Path, index: dict[str, Resource]) -> tuple[Resource, ...]:
+    """An algorithm's or concept's `resources.yaml`: a list of resource ids, in display order."""
+    try:
+        ids = _RESOURCE_IDS.validate_python(yaml.safe_load(_read(path)) or [])
     except (yaml.YAMLError, ValidationError) as exc:
         raise ContentError(f"{path}: invalid resources: {exc}") from exc
+    if unknown := [i for i in ids if i not in index]:
+        raise ContentError(f"{path}: unknown resources {unknown}")
+    if len(set(ids)) != len(ids):
+        raise ContentError(f"{path}: duplicate resource ids")
+    return tuple(index[i] for i in ids)
 
 
 def _read(path: Path) -> str:

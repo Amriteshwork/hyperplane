@@ -25,7 +25,7 @@ def test_algorithm_page(client: TestClient) -> None:
     assert body["family"]["id"] == "linear-models"
     assert "## Intuition" in body["overview"]
     assert {"id": "normal-equation", "title": "Normal equation"} in body["concepts"]
-    assert body["resources"] == []
+    assert body["resources"][0]["url"].startswith("https://")
     assert body["params_schema"]["properties"]["fit_intercept"]["level"] == "beginner"
     assert [v["id"] for v in body["code_variants"]] == ["train", "scratch"]
 

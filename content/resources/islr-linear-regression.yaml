@@ -1,0 +1,8 @@
+type: course
+title: 'An Introduction to Statistical Learning (Chapter 3: Linear Regression)'
+url: https://www.statlearning.com/
+author: James, Witten, Hastie, Tibshirani
+level: intermediate
+why: The free standard textbook; chapter 3 is the thorough treatment of fit, inference and pitfalls.
+source: curated
+checked: 2026-10-20

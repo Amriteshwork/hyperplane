@@ -7,12 +7,13 @@ Learning content is code: Markdown + YAML, reviewed in PRs, validated by
 content/
   algorithms/<algo_id>/        one folder per algorithm pack (id = pack id, e.g. linear_regression)
     overview.md                frontmatter + required sections (below)
-    resources.yaml             curated resources specific to this algorithm
+    resources.yaml             ids of its curated resources, in display order
   concepts/<concept_id>/       one folder per concept (kebab-case, e.g. train-test-split)
     concept.md                 short explanation; frontmatter: title, prerequisites[]
     resources.yaml
     posts/*.md                 our own posts, when good external material doesn't exist
   families/<family_id>.md      one page per family (e.g. linear-models.md)
+  resources/<resource_id>.yaml one file per curated link, shared by any page (ADR 0014)
 ```
 
 ## `overview.md`
@@ -36,18 +37,31 @@ difficulty: 1          # 1–5
 
 Math uses KaTeX: `$inline$` and `$$display$$`.
 
-## `resources.yaml`
+## Resources
+
+Each link lives once in `resources/<resource_id>.yaml` (kebab-case id = filename, e.g.
+`statquest-r-squared.yaml`). Pages list the ids they show in their own `resources.yaml`:
 
 ```yaml
-- type: video                 # blog | video | paper | interactive | course
-  title: "Linear regression, clearly explained"
-  url: https://example.com/...
-  author: Jane Doe
-  level: beginner             # beginner | intermediate | advanced
-  duration_min: 12
-  why: "One line on why this is worth the learner's time."
-  source: curated             # curated | own
-  checked: 2026-10-17         # last link check
+# concepts/r-squared/resources.yaml
+- khan-r-squared-intuition
+- statquest-r-squared
+```
+
+Unknown or duplicate ids are errors; a resource file nobody references is a warning. A shared
+resource has one `why`, so write it to fit every page that lists it.
+
+```yaml
+# resources/statquest-r-squared.yaml
+type: video                   # blog | video | paper | interactive | course
+title: "R-squared, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=2AQKmw14mHM
+author: StatQuest with Josh Starmer
+level: beginner               # beginner | intermediate | advanced
+duration_min: 11
+why: "One line on why this is worth the learner's time."
+source: curated               # curated | own
+checked: 2026-10-20           # last link check
 ```
 
 ## Rules

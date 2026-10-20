@@ -1,0 +1,9 @@
+type: interactive
+title: Train, Test, and Validation Sets
+url: https://mlu-explain.github.io/train-test-validation/
+author: Amazon MLU-Explain
+level: beginner
+duration_min: 10
+why: Interactive walk-through of what each split is for.
+source: curated
+checked: 2026-10-20

@@ -1,18 +1,2 @@
-- type: blog
-  title: "Linear regression: Loss"
-  url: https://developers.google.com/machine-learning/crash-course/linear-regression/loss
-  author: Google
-  level: beginner
-  duration_min: 10
-  why: "Compares MSE with MAE and shows how squaring makes outliers dominate the loss."
-  source: curated
-  checked: 2026-10-20
-- type: video
-  title: "The Main Ideas of Fitting a Line to Data (Least Squares)"
-  url: https://www.youtube.com/watch?v=PaFPbb66DxQ
-  author: StatQuest with Josh Starmer
-  level: beginner
-  duration_min: 9
-  why: "Shows why we square residuals and how minimising their sum picks the best line."
-  source: curated
-  checked: 2026-10-20
+- google-mlcc-loss
+- statquest-least-squares

@@ -1,18 +1,2 @@
-- type: blog
-  title: "Derivation of the Normal Equation for linear regression"
-  url: https://eli.thegreenplace.net/2014/derivation-of-the-normal-equation-for-linear-regression/
-  author: Eli Bendersky
-  level: intermediate
-  duration_min: 10
-  why: "Step-by-step matrix-calculus derivation that most courses skip."
-  source: curated
-  checked: 2026-10-20
-- type: video
-  title: "16. Projection Matrices and Least Squares (MIT 18.06)"
-  url: https://www.youtube.com/watch?v=osh80YCg_GM
-  author: Gilbert Strang, MIT OpenCourseWare
-  level: advanced
-  duration_min: 48
-  why: "The geometric view: least squares projects y onto the column space of X."
-  source: curated
-  checked: 2026-10-20
+- bendersky-normal-equation-derivation
+- mit-strang-projections-least-squares

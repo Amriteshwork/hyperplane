@@ -1,0 +1,9 @@
+type: blog
+title: Derivation of the Normal Equation for linear regression
+url: https://eli.thegreenplace.net/2014/derivation-of-the-normal-equation-for-linear-regression/
+author: Eli Bendersky
+level: intermediate
+duration_min: 10
+why: Step-by-step matrix-calculus derivation that most courses skip.
+source: curated
+checked: 2026-10-20

@@ -1,0 +1,9 @@
+type: video
+title: Regression assumptions explained!
+url: https://www.youtube.com/watch?v=0MFpOQRY0rw
+author: zedstatistics
+level: intermediate
+duration_min: 47
+why: Thorough tour of every assumption with residual-plot diagnostics.
+source: curated
+checked: 2026-10-20

@@ -26,6 +26,7 @@ def content(tmp_path: Path) -> Path:
     _touch(root / "concepts" / "mse" / "resources.yaml", "[]")
     _touch(root / "concepts" / "mse" / "posts" / "intro.md")
     _touch(root / "families" / "linear-models.md", FAMILY)
+    _touch(root / "resources" / ".gitkeep")
     _touch(root / "README.md")
     return root
 
@@ -74,6 +75,7 @@ def test_unexpected_entries(content: Path) -> None:
     _touch(content / "stray.txt")
     _touch(content / "algorithms" / "loose-file.md")
     _touch(content / "families" / "notes.txt")
+    _touch(content / "resources" / "notes.md")
 
     levels = {i.path.name: i.level for i in check_layout(content)}
 
@@ -81,4 +83,23 @@ def test_unexpected_entries(content: Path) -> None:
         "stray.txt": Level.WARNING,
         "loose-file.md": Level.ERROR,
         "notes.txt": Level.ERROR,
+        "notes.md": Level.ERROR,
     }
+
+
+def test_unreferenced_resource_is_a_warning(
+    content: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _touch(
+        content / "resources" / "orphan.yaml",
+        "type: blog\ntitle: T\nurl: https://example.org\nlevel: beginner\n"
+        "why: w\nsource: curated\nchecked: 2026-10-20\n",
+    )
+
+    assert main(["--content-dir", str(content)], NO_PACKS) == 0
+    assert "resources/orphan.yaml: not referenced" in capsys.readouterr().out
+
+
+def test_unknown_resource_id_is_an_error(content: Path) -> None:
+    _touch(content / "concepts" / "mse" / "resources.yaml", "[nope]")
+    assert main(["--content-dir", str(content)], NO_PACKS) == 1

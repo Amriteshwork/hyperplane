@@ -28,8 +28,9 @@ class Level(StrEnum):
 
 
 class Resource(_Frozen):
-    """One `resources.yaml` entry."""
+    """One `resources/<id>.yaml` file; algorithms and concepts reference it by id."""
 
+    id: str = Field(pattern=_SLUG)
     type: ResourceType
     title: str
     url: str = Field(pattern=r"^https://")

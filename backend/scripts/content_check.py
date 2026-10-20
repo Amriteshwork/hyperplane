@@ -1,7 +1,8 @@
 """Validate content/ (ARCHITECTURE §8) and report the content backlog.
 
-Errors (exit 1): bad layout, invalid frontmatter/resources, missing overview sections, packs
-without content or with unknown concepts. Warnings: curation gaps (the backlog).
+Errors (exit 1): bad layout, invalid frontmatter/resources, unknown resource ids, missing overview
+sections, packs without content or with unknown concepts. Warnings: unreferenced resources and
+curation gaps (the backlog).
 
 Usage: uv run python -m scripts.content_check [--content-dir PATH] [--backlog FILE.md]
 """
@@ -17,7 +18,7 @@ from app.content.gaps import content_gaps, missing_sections
 from app.core.config import get_settings
 from app.ml.registry import AlgorithmRegistry
 
-SECTIONS = ("algorithms", "concepts", "families")
+SECTIONS = ("algorithms", "concepts", "families", "resources")
 REQUIRED_FILES = {
     "algorithms": ("overview.md", "resources.yaml"),
     "concepts": ("concept.md", "resources.yaml"),
@@ -69,6 +70,12 @@ def check_layout(root: Path) -> list[Issue]:
             if not (item.is_file() and item.suffix == ".md"):
                 issues.append(Issue(Level.ERROR, item, "families/ holds <family_id>.md files"))
 
+    resources = root / "resources"
+    if resources.is_dir():
+        for item in sorted(p for p in resources.iterdir() if p.name not in IGNORED):
+            if not (item.is_file() and item.suffix == ".yaml"):
+                issues.append(Issue(Level.ERROR, item, "resources/ holds <resource_id>.yaml files"))
+
     return issues
 
 
@@ -107,6 +114,13 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
                         f"unknown prerequisite {prerequisite!r}",
                     )
                 )
+
+    used = {r.id for a in catalog.algorithms() for r in a.resources}
+    used |= {r.id for c in catalog.concepts() for r in c.resources}
+    for resource in catalog.resources():
+        if resource.id not in used:
+            path = root / "resources" / f"{resource.id}.yaml"
+            issues.append(Issue(Level.WARNING, path, "not referenced by any algorithm or concept"))
 
     for gap in content_gaps(catalog, pack_ids):
         issues.append(Issue(Level.WARNING, root / gap.item, f"backlog: {gap.message}"))

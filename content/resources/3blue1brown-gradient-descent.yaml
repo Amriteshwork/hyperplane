@@ -1,0 +1,9 @@
+type: video
+title: Gradient descent, how neural networks learn
+url: https://www.youtube.com/watch?v=IHZwWFHWa-w
+author: 3Blue1Brown
+level: intermediate
+duration_min: 21
+why: Beautiful geometric intuition for the gradient as 'downhill' in many dimensions.
+source: curated
+checked: 2026-10-20

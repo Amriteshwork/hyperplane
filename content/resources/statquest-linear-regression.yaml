@@ -1,0 +1,9 @@
+type: video
+title: Linear Regression, Clearly Explained!!!
+url: https://www.youtube.com/watch?v=7ArmBVF2dCs
+author: StatQuest with Josh Starmer
+level: beginner
+duration_min: 27
+why: Builds least squares, R² and p-values from one small example, with no notation shock.
+source: curated
+checked: 2026-10-20

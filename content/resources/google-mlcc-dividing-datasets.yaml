@@ -1,0 +1,9 @@
+type: blog
+title: Dividing the original dataset
+url: https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets
+author: Google
+level: beginner
+duration_min: 10
+why: Why we hold data back, how to split it, and the leakage traps to avoid.
+source: curated
+checked: 2026-10-20

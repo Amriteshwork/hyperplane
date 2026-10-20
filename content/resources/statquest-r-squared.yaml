@@ -1,0 +1,9 @@
+type: video
+title: R-squared, Clearly Explained!!!
+url: https://www.youtube.com/watch?v=2AQKmw14mHM
+author: StatQuest with Josh Starmer
+level: beginner
+duration_min: 11
+why: Derives R² from 'variation around the mean vs around the fit', so the formula sticks.
+source: curated
+checked: 2026-10-20

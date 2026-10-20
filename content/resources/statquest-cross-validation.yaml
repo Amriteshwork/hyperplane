@@ -1,0 +1,9 @@
+type: video
+title: 'Machine Learning Fundamentals: Cross Validation'
+url: https://www.youtube.com/watch?v=fSytzGwwBVw
+author: StatQuest with Josh Starmer
+level: beginner
+duration_min: 6
+why: Starts from a single train/test split and shows why rotating it gives a fairer score.
+source: curated
+checked: 2026-10-20

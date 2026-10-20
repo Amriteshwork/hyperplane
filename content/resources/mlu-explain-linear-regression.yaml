@@ -1,0 +1,9 @@
+type: interactive
+title: Linear Regression
+url: https://mlu-explain.github.io/linear-regression/
+author: Amazon MLU-Explain
+level: beginner
+duration_min: 15
+why: Scroll-driven visuals that fit a line in front of you and show what each coefficient means.
+source: curated
+checked: 2026-10-20

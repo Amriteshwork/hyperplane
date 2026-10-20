@@ -1,0 +1,9 @@
+type: video
+title: Gradient Descent, Step-by-Step
+url: https://www.youtube.com/watch?v=sDv4f4s2SB8
+author: StatQuest with Josh Starmer
+level: beginner
+duration_min: 24
+why: Does every step by hand on a tiny line fit, including the learning rate.
+source: curated
+checked: 2026-10-20
