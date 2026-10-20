@@ -98,9 +98,9 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
         pack_ids.append(pack.spec.id)
         for section in missing_sections(content.body):
             issues.append(Issue(Level.ERROR, folder / "overview.md", f"missing '## {section}'"))
-        for concept in pack.spec.concepts:
-            if not catalog.has_concept(concept):
-                issues.append(Issue(Level.ERROR, folder, f"spec concept {concept!r} not found"))
+        for concept_id in pack.spec.concepts:
+            if not catalog.has_concept(concept_id):
+                issues.append(Issue(Level.ERROR, folder, f"spec concept {concept_id!r} not found"))
         if catalog.family_of(pack.spec.id) is None:
             issues.append(Issue(Level.ERROR, folder, "not listed in any families/*.md"))
 
