@@ -1,0 +1,8 @@
+type: course
+title: "Deep Learning, chapter 7: Regularization for Deep Learning"
+url: https://www.deeplearningbook.org/contents/regularization.html
+author: Ian Goodfellow, Yoshua Bengio & Aaron Courville
+level: advanced
+why: Section 7.8 shows that early stopping acts like an L2 penalty on a quadratic loss, and gives the two retraining strategies.
+source: curated
+checked: 2026-10-24

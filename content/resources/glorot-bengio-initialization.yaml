@@ -1,0 +1,8 @@
+type: paper
+title: Understanding the difficulty of training deep feedforward neural networks
+url: https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
+author: Xavier Glorot & Yoshua Bengio
+level: advanced
+why: Why sigmoid networks saturate, and the uniform initialisation scikit-learn's MLP still uses.
+source: curated
+checked: 2026-10-24

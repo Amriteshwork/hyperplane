@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlm-batch-vs-epoch
+  note: "Start here: batch vs epoch in plain words, with a worked example of updates per epoch."
+- id: google-mlcc-hyperparameters
+  note: "Defines an epoch next to batch size and learning rate, and how many updates an epoch contains."
+- id: deeplearningai-mini-batch-gradient-descent
+  note: "What one pass through the training set means with mini-batches, and how the cost curve looks across them."
+- id: sklearn-sgd-guide
+  note: "Section 1.5.6: the exact stopping rule (tol, n_iter_no_change, early_stopping, max_iter) that this pack's models use."

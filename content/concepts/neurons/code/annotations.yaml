@@ -1,0 +1,79 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the sigmoid from its own page as the neurons' default bend."
+    deep: |
+      Any activation works here; the sigmoid makes a single neuron exactly logistic
+      regression. Download with dependencies to get `sigmoid_numpy.py` alongside.
+    concepts: [sigmoid]
+
+  layer:
+    span: block
+    short: "A whole layer for a whole batch: one matrix product, add the biases, bend."
+    deep: |
+      `A` is $(n \times p)$, `W` is $(p \times h)$: column $j$ of `W` holds neuron $j$'s
+      weights, so column $j$ of the result is neuron $j$'s output for every row. The bias
+      vector `b` (length $h$) is broadcast down the rows.
+    concepts: [matrix-multiplication, numpy-basics]
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Later pages (activation functions, backpropagation) import `layer`; the demo stays out
+      of their way.
+
+  one-neuron:
+    span: block
+    short: "One neuron: a weighted sum of the inputs, plus a bias, through the sigmoid."
+    deep: |
+      $a = \sigma(w^\top x + b)$. The weights say how much each input matters, the bias
+      shifts where the neuron "switches on".
+
+  shapes: &shapes
+    span: block
+    short: "A two-layer network on a batch of 5 rows: 3 features → 4 hidden neurons → 1 output."
+    deep: |
+      Each layer's output is the next layer's input, so the inner sizes must chain:
+      $(5 \times 3)(3 \times 4) \to (5 \times 4)$, then $(5 \times 4)(4 \times 1) \to
+      (5 \times 1)$. The parameter count is $(3+1) \cdot 4 + (4+1) \cdot 1 = 21$: weights
+      plus one bias per neuron.
+    concepts: [matrix-multiplication]
+
+  xor-data:
+    span: block
+    short: "XOR: four points that no straight line can separate."
+    deep: |
+      $(0,1)$ and $(1,0)$ are class 1, $(0,0)$ and $(1,1)$ class 0: the classes sit on
+      opposite corners of the square.
+
+  one-line:
+    span: block
+    short: "Try 20,000 random lines (single neurons): the best gets 3 of the 4 points right."
+    deep: |
+      A single neuron predicts class 1 when $w^\top x + b > 0$, which is one side of a
+      straight line. No line puts both diagonals on opposite sides, so 75% is the best
+      possible: this is the limit Minsky and Papert pointed out for the perceptron.
+    concepts: [decision-boundary]
+
+  xor-network: &xor
+    span: block
+    short: "Two hidden neurons (OR, AND) and one output (OR but not AND) solve XOR exactly."
+    deep: |
+      The weights are set by hand, large so the sigmoids act almost like on/off switches.
+      Hidden neuron 0 fires when at least one input is 1, neuron 1 only when both are; the
+      output fires when the first is on and the second off. Each hidden neuron draws one
+      line; the output combines the two regions. Training would find weights like these by
+      itself (backpropagation).
+
+pytorch:
+  shapes:
+    <<: *shapes
+    short: "The same 3 → 4 → 1 network with `nn.Linear` layers and `nn.Sigmoid` bends."
+    deep: |
+      `nn.Linear(3, 4)` holds a weight matrix and 4 biases. PyTorch stores the weight as
+      $(\text{out} \times \text{in})$ and computes $XW^\top + b$, the transpose of the NumPy
+      layout. `nn.Sequential` feeds each module's output to the next.
+  xor-network:
+    <<: *xor
+    short: "The hand-set XOR network in PyTorch, weights copied in without tracking gradients."

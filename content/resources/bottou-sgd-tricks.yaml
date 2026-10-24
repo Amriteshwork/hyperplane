@@ -1,0 +1,8 @@
+type: paper
+title: Stochastic Gradient Descent Tricks
+url: https://leon.bottou.org/publications/pdf/tricks-2012.pdf
+author: Léon Bottou
+level: advanced
+why: "From the researcher behind scikit-learn's optimal schedule: why SGD suits large training sets, SGD updates for classic models, and practical recommendations."
+source: curated
+checked: 2026-10-24

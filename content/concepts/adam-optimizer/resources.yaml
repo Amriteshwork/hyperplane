@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlm-adam
+  note: "Start here: what Adam is and what each of its settings does, in plain words."
+- id: deeplearningai-momentum
+  note: "The first half of Adam: why averaging past gradients damps the zig-zag across a ravine."
+- id: deeplearningai-adam
+  note: "Adam as momentum plus RMSprop, with bias correction and the usual β₁, β₂, ε."
+- id: d2l-adam
+  note: "Derives the update and bias correction, with a from-scratch implementation to compare with this one."
+- id: arxiv-gradient-descent-overview
+  note: "Section 4: momentum, AdaGrad, RMSprop and Adam side by side, and when each helps."
+- id: kingma-ba-adam
+  note: "Advanced: the original paper. Algorithm 1 is exactly the update on this page."

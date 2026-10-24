@@ -1,0 +1,8 @@
+type: video
+title: But what is a neural network? (Deep learning, chapter 1)
+url: https://www.youtube.com/watch?v=aircAruvnKk
+author: 3Blue1Brown
+level: beginner
+why: Neurons, weights, biases and layers drawn out for a digit recogniser, with the matrix form at the end.
+source: curated
+checked: 2026-10-24

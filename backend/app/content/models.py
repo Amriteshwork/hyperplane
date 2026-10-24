@@ -97,6 +97,7 @@ class ConceptArea(StrEnum):
     OPTIMISATION = "optimisation"
     EVALUATION = "evaluation"
     FEATURES = "features"
+    NEURAL_NETWORKS = "neural-networks"
 
 
 CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
@@ -104,6 +105,7 @@ CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
     ConceptArea.OPTIMISATION: "Loss & optimisation",
     ConceptArea.EVALUATION: "Evaluation & generalisation",
     ConceptArea.FEATURES: "Features & regularisation",
+    ConceptArea.NEURAL_NETWORKS: "Neural networks",
 }
 
 

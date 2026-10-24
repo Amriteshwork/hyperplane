@@ -1,0 +1,8 @@
+type: interactive
+title: "scikit-learn example: Varying regularization in Multi-layer Perceptron"
+url: https://scikit-learn.org/stable/auto_examples/neural_networks/plot_mlp_alpha.html
+author: scikit-learn developers
+level: beginner
+why: Decision boundaries of the same MLP for increasing α — from wiggly and overfitted to smooth.
+source: curated
+checked: 2026-10-24

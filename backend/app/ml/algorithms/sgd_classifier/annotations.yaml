@@ -1,0 +1,268 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same preprocessing building blocks as Logistic Regression, with `SGDClassifier` as
+      the model and the classification metrics. Log-loss and ROC-AUC need probabilities, so
+      they are only imported when the chosen loss gives them (not with `hinge`). `warnings`
+      silences the "did not converge" warning in the epochs experiment, where stopping early
+      is deliberate.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      `SEED` fixes the train/test split. SGD has a second source of randomness, the order
+      it visits the rows in; that is the model's own `random_state`, below.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no label, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** and `y` holds the class of each row: text like
+      `"malignant"` or numbers like `0`/`1` both work. A row without a label can't teach the
+      model anything, so it is dropped; missing *feature* values are filled in during
+      preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The split is random, so class proportions in the test set wobble a little. With a rare
+      class, adding `stratify=y` keeps them equal in both halves; the platform's run doesn't
+      stratify, so this script doesn't either, to reproduce it exactly.
+    concepts: [train-test-split, class-imbalance]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      Scaling matters even more for SGD than for other linear models. Every step moves each
+      weight by (learning rate) × (feature value) × (slope of the loss), so a feature
+      measured in thousands gets steps a thousand times bigger than one measured in units: no
+      single learning rate suits both. **Standardising** gives every numeric feature mean 0
+      and standard deviation 1.
+
+      All of it is learned **from the training set only**, so no information leaks from the
+      test set.
+    concepts: [feature-scaling, learning-rate]
+
+  model:
+    span: block
+    short: "Create the SGD classifier with your settings, chained after preprocessing."
+    deep: |
+      A linear score $z = w^\top x + b$, as in Logistic Regression, trained to minimise the
+      mean loss plus a penalty:
+
+      $$\frac{1}{n}\sum_{i=1}^{n} \ell\big(y_i,\; w^\top x_i + b\big) + \tfrac{\alpha}{2}\lVert w\rVert_2^2 .$$
+
+      The **loss** decides which model you get: `log_loss` is logistic regression (with
+      probabilities), `hinge` is a linear support vector machine, `modified_huber` sits in
+      between. With `log_loss` and L2 this is Logistic Regression's objective with
+      $C = 1/(\alpha n)$, reached by a different route.
+    concepts: [stochastic-gradient-descent, log-loss, l2-regularization]
+
+  fit:
+    span: block
+    short: "Fit by SGD: shuffle the rows, update the weights once per row, repeat for several epochs."
+    deep: |
+      Each **epoch** is one pass over the shuffled training rows; every row nudges the
+      weights against its own gradient:
+
+      $$w \leftarrow w - \eta_t\big(\,\ell'(y_i, z_i)\,x_i + \alpha w\big)$$
+
+      Training stops when the average loss hasn't improved by `tol` for 5 epochs in a row.
+
+      With three or more classes, scikit-learn's SGD trains **one-vs-rest**: one yes/no
+      model per class ("this class or not?"), each with its own weights. `n_iter_` is the
+      longest of them.
+    concepts: [stochastic-gradient-descent, epochs, learning-rate]
+
+  predict:
+    span: block
+    short: "Predict the class of each test row, and its probabilities when the loss provides them."
+    deep: |
+      The prediction is the class with the highest score (two classes: score above 0 means
+      `classes_[1]`). `log_loss` turns scores into probabilities with the sigmoid, and
+      `modified_huber` with a clipped straight line. `hinge` has no probabilities at all: it
+      learns where the boundary is, not how sure to be, so `predict_proba` doesn't exist.
+    concepts: [sigmoid, decision-boundary]
+
+  evaluate:
+    span: block
+    short: "Score the test predictions: accuracy, precision, recall, F1, and log-loss and ROC-AUC with probabilities."
+    deep: |
+      - **Accuracy**: share of rows classified right. Misleading with a rare class.
+      - **Precision**: of the rows called positive, how many were. **Recall**: of the actual
+        positives, how many were found. **F1**: their harmonic mean.
+      - **Log-loss**: how good the *probabilities* are; confident mistakes cost the most.
+      - **ROC-AUC**: how well the scores rank positives above negatives, over all thresholds.
+
+      With two classes, "positive" is `model.classes_[1]`. With more, precision, recall, F1
+      and ROC-AUC are averaged over classes (**macro**), so every class counts equally.
+    concepts: [classification-metrics, log-loss, roc-auc]
+
+  confusion:
+    span: block
+    short: "Count test rows by actual class (rows) and predicted class (columns)."
+    deep: |
+      The **confusion matrix**: the diagonal holds the correct predictions, every other cell
+      a specific mistake ("actual A, predicted B"). It shows *which* classes get confused
+      with which.
+    concepts: [classification-metrics]
+
+  epochs:
+    span: block
+    short: "Retrain with a fixed number of epochs to watch the test accuracy improve, then level off."
+    deep: |
+      Each copy of the pipeline is stopped after 1, 2, 5, 10 or 20 passes over the data
+      (`tol=None` turns off the automatic stop). On data this size one epoch often gets most
+      of the way; extra epochs refine the weights as the learning rate shrinks. Accuracy that
+      jumps up and down between epochs is SGD's noise: a smaller learning rate, or more
+      epochs with a decaying schedule, smooths it out.
+
+      The copies are separate models: the one saved below is untouched.
+    concepts: [epochs, learning-rate]
+
+  coefficients:
+    span: block
+    short: "Show each feature's weight: positive weights push a row towards that class."
+    deep: |
+      Features were standardised, so a weight is the change in the class's score for a
+      one–standard-deviation increase in that feature. With `log_loss` the score is the
+      log-odds, as in Logistic Regression.
+
+      With two classes there is one column, for the positive class. With more there is one
+      per class, each from its own one-vs-rest model. Rerun with another `random_state` and
+      the weights move slightly: SGD's answer depends on the order it saw the rows.
+    concepts: [logarithms-exponentials]
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed, scaled and encoded exactly as the training data was, so the
+      whole pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy: two losses, a step-size schedule and an SGD loop."
+    deep: |
+      No solver: each yes/no model is trained one row at a time, and several of them make a
+      multiclass classifier.
+
+  losses:
+    span: block
+    short: "Each loss returns a row's cost and its slope, for a label written as y = +1 or −1."
+    deep: |
+      With the score $z = w^\top x + b$ and $y \in \{-1, +1\}$, the product $yz$ is positive
+      when the row is on the right side of the boundary:
+
+      - **log-loss** $\log(1 + e^{-yz})$: always some pull, weaker the more confidently right
+        the row is. Its slope is $-y\,\sigma(-yz)$, the same "predicted minus actual" as
+        Logistic Regression's gradient;
+      - **hinge** $\max(0, 1 - yz)$: rows beyond the margin ($yz \ge 1$) cost nothing and
+        don't move the weights at all. Only the rows near the boundary matter, which is the
+        idea behind support vector machines.
+    concepts: [log-loss, sigmoid, loss-function]
+
+  schedule:
+    span: block
+    short: "The learning rate at step t: the 'optimal' 1/t schedule, η₀/√t, or constant η₀."
+    deep: |
+      One row's gradient is a noisy estimate of the full gradient, so the steps must shrink
+      for the weights to settle. **optimal** uses
+      $\eta_t = \frac{1}{\alpha\,(t_0 + t - 1)}$: the theory of SGD on a strongly convex loss
+      says a $1/t$ decay converges fastest, and α sets the scale. `optimal_offset` picks
+      $t_0$ so the very first step is about the size of a typical weight.
+    concepts: [learning-rate]
+
+  class:
+    span: block
+    short: "A minimal classifier with the same parameter names as scikit-learn's SGDClassifier."
+    deep: |
+      `classes_`, `coef_`, `intercept_` and `n_iter_` mirror scikit-learn, so the test suite
+      can compare both. This version supports the L2 penalty and the log-loss and hinge
+      losses.
+
+  fit:
+    short: "Fitting sorts the classes, then trains one binary model per score."
+    deep: |
+      `np.unique` sorts the classes, as scikit-learn does.
+
+  one-vs-rest:
+    span: block
+    short: "Two classes: one model for classes_[1]. More: one 'this class vs the rest' model per class."
+    deep: |
+      **One-vs-rest** turns a $K$-class problem into $K$ yes/no problems. Each gets labels
+      $+1$ for its class and $-1$ for every other, and its own weight row in `coef_`.
+      Logistic Regression instead trains one softmax model over all classes at once; both
+      give a linear score per class.
+    concepts: [decision-boundary]
+
+  binary:
+    span: block
+    short: "SGD on one yes/no problem: shuffle, step once per row, stop when the loss stalls."
+    deep: |
+      The same loop as the SGD Regressor's, with a classification loss. Each epoch visits
+      every row once in a new random order, and the epoch's average loss decides whether
+      to stop.
+    concepts: [stochastic-gradient-descent, epochs]
+
+  update:
+    span: block
+    short: "The SGD step: move the weights against this one row's gradient, scaled by the learning rate."
+    deep: |
+      $$w \leftarrow w - \eta_t\big(\ell'(y_i z_i)\,x_i + \alpha w\big), \qquad b \leftarrow b - \eta_t\,\ell'(y_i z_i)$$
+
+      The $\alpha w$ term is the L2 penalty's gradient: each step also shrinks the weights a
+      little towards 0. The intercept is not penalised.
+    concepts: [stochastic-gradient-descent, gradient-descent, l2-regularization]
+
+  stop:
+    span: block
+    short: "Stop when the epoch's average loss hasn't improved by tol for n_iter_no_change epochs."
+    deep: |
+      This is scikit-learn's rule. Waiting several epochs matters because SGD's loss is
+      noisy: one bad epoch doesn't mean we've reached the bottom. `tol=None` always runs
+      `max_iter` epochs.
+    concepts: [epochs]
+
+  decision:
+    span: block
+    short: "The score of each row: w·x + b, one column per class with one-vs-rest."
+    deep: |
+      The sign of the score says which side of the boundary a row is on; its size says how
+      far. The **decision boundary** is where the score is 0.
+    concepts: [decision-boundary]
+
+  predict:
+    span: block
+    short: "Two classes: a positive score means classes_[1]. More: the class with the highest score."
+    deep: |
+      With one-vs-rest every class's model says how strongly "yes" it is, and the most
+      confident one wins.
+    concepts: [decision-boundary]
+
+  predict-proba:
+    span: block
+    short: "With log-loss, the sigmoid of each score is a probability; one-vs-rest rescales them to sum to 1."
+    deep: |
+      For two classes, $P(\text{classes\_[1]}) = \sigma(z)$. With one-vs-rest each model's
+      "yes" probability is computed on its own, so they don't add up to 1; dividing by their
+      sum fixes that, as scikit-learn does. The hinge loss has no probabilities.
+    concepts: [sigmoid]

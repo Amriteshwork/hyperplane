@@ -1,0 +1,8 @@
+type: blog
+title: "Machine Learning Crash Course: Neural networks — activation functions"
+url: https://developers.google.com/machine-learning/crash-course/neural-networks/activation-functions
+author: Google for Developers
+level: beginner
+why: Sigmoid, tanh and ReLU plotted side by side, and how one non-linearity lets a network model curves.
+source: curated
+checked: 2026-10-24

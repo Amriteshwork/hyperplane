@@ -1,0 +1,8 @@
+type: video
+title: Other Regularization Methods (C2W1L08)
+url: https://www.youtube.com/watch?v=BOCLq2gpcGU
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: Early stopping on the training and dev-set error curves, and its trade-off against L2 regularisation.
+source: curated
+checked: 2026-10-24

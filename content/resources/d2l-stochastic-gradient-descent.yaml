@@ -1,0 +1,9 @@
+type: blog
+title: "Dive into Deep Learning: Stochastic Gradient Descent"
+url: https://d2l.ai/chapter_optimization/sgd.html
+author: Aston Zhang, Zachary C. Lipton, Mu Li, Alexander J. Smola
+level: intermediate
+duration_min: 20
+why: Why one sample's gradient is an unbiased estimate of the full one, decaying learning rates, and sampling without replacement, with runnable code.
+source: curated
+checked: 2026-10-24

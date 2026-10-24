@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-neural-network
+  note: "Start here: what the neurons, weights and layers of this model are."
+- id: statquest-neural-networks
+  note: "A tiny regression network fitted by hand: how bent, scaled and added activations make a curve."
+- id: tensorflow-playground
+  note: "Switch the problem type to regression and watch a network fit the data as you add neurons."
+- id: sklearn-neural-network-guide
+  note: "The exact loss, output layer, solvers and regularisation MLPRegressor uses, and tips on scaling and α."
+- id: d2l-multilayer-perceptrons
+  note: "Advanced: hidden layers, activations and the maths of the forward pass, with runnable code."

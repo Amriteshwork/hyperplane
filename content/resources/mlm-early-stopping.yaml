@@ -1,0 +1,8 @@
+type: blog
+title: A Gentle Introduction to Early Stopping to Avoid Overtraining Neural Networks
+url: https://machinelearningmastery.com/early-stopping-to-avoid-overtraining-neural-network-models/
+author: Jason Brownlee (Machine Learning Mastery)
+level: beginner
+why: When to stop, what to monitor, patience, and restoring the best weights, with the training/validation curves.
+source: curated
+checked: 2026-10-24

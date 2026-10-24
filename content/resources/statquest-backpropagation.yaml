@@ -1,0 +1,8 @@
+type: video
+title: "Neural Networks Pt. 2: Backpropagation Main Ideas"
+url: https://www.youtube.com/watch?v=IN2XmBhILt4
+author: StatQuest (Josh Starmer)
+level: beginner
+why: Backpropagation as the chain rule plus gradient descent, one parameter at a time, slowly.
+source: curated
+checked: 2026-10-24

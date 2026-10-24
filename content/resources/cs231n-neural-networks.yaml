@@ -1,0 +1,8 @@
+type: course
+title: "CS231n: Neural Networks Part 1 — Setting up the Architecture"
+url: https://cs231n.github.io/neural-networks-1/
+author: Andrej Karpathy (Stanford CS231n)
+level: intermediate
+why: The neuron model, common activations and their pitfalls (saturation, dying ReLUs), and layer-wise matrix form.
+source: curated
+checked: 2026-10-24

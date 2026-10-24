@@ -1,0 +1,271 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same preprocessing building blocks as the other regression models, with
+      `SGDRegressor` as the model. `LinearRegression` is only imported to compare against
+      the exact least-squares answer, and `warnings` to silence the "did not converge"
+      warning in the epochs experiment, where stopping early is deliberate.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      `SEED` fixes the train/test split. SGD has a second source of randomness, the order
+      it visits the rows in; that is the model's own `random_state`, below.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y`
+      is the target we want to predict. Rows with a missing target can't be used for
+      training or scoring, so they are dropped; missing *feature* values are filled in
+      during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The model only learns from the training rows. Scoring it on the held-out test rows
+      estimates how it will do on new data. `test_size` is the fraction held out;
+      `random_state` makes the shuffle reproducible.
+    concepts: [train-test-split]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      Scaling matters even more for SGD than for Ridge. Every step moves each weight by
+      (learning rate) × (feature value) × (error), so a feature measured in thousands gets
+      steps a thousand times bigger than one measured in units: a single learning rate
+      can't suit both, and training either crawls or blows up. **Standardising** gives every
+      numeric feature mean 0 and standard deviation 1.
+
+      All of it is learned **from the training set only**, so no information leaks from
+      the test set.
+    concepts: [feature-scaling, learning-rate]
+
+  model:
+    span: block
+    short: "Create the SGD regressor with your settings, chained after preprocessing."
+    deep: |
+      The model is still linear, $\hat y = w^\top x + b$, and with the default squared-error
+      loss and L2 penalty it minimises the same objective as Ridge:
+
+      $$\frac{1}{n}\sum_{i=1}^{n} \tfrac12\big(y_i - w^\top x_i - b\big)^2 + \tfrac{\alpha}{2}\lVert w\rVert_2^2 .$$
+
+      What changes is *how* it gets there: instead of solving equations with all rows at
+      once, it takes one small step per row. `loss`, `penalty` and `alpha` choose the
+      objective; `learning_rate`, `eta0`, `max_iter` and `tol` choose how to walk down it.
+
+      `eta0` defaults to 0.001, below scikit-learn's 0.01: a few rows with extreme feature
+      values (California's room counts sit over 100 standard deviations out) make a step of
+      0.01 overshoot badly whenever the shuffle reaches them early.
+    concepts: [stochastic-gradient-descent, loss-function, l2-regularization, combined-penalties]
+
+  scale-target:
+    short: "Standardise the target too, so the learning rate and tolerance don't depend on its units."
+    deep: |
+      SGD's steps are proportional to the error, and the stopping rule compares the loss
+      with `tol`. In the target's own units (a house price, grams of penguin) both depend on
+      how big the numbers are: a target in the thousands gives huge steps and a loss whose
+      epoch-to-epoch noise never drops below `tol=0.001`.
+
+      `TransformedTargetRegressor` trains `sgd` on $(y - \bar y)/s_y$ and converts every
+      prediction back, so you never see the scaled values. `epsilon` (for the huber and
+      ε-insensitive losses) is in standard deviations of the target for the same reason.
+    concepts: [feature-scaling, learning-rate]
+
+  fit:
+    span: block
+    short: "Fit by SGD: shuffle the rows, update the weights once per row, repeat for several epochs."
+    deep: |
+      Each **epoch** is one pass over the shuffled training rows. For every row the model
+      computes its error and nudges the weights against that row's gradient:
+
+      $$w \leftarrow w - \eta_t\big(\,\ell'(\hat y_i - y_i)\,x_i + \alpha w\big)$$
+
+      It stops when the average training loss hasn't improved by `tol` for 5 epochs in a
+      row (or after `max_iter` epochs). `model.regressor_` is the fitted `SGDRegressor`
+      inside the target-scaling wrapper. Each update reads one row, so memory use doesn't
+      grow with the dataset: this is how linear models train on millions of rows.
+    concepts: [stochastic-gradient-descent, epochs, learning-rate]
+
+  evaluate:
+    span: block
+    short: "Score the test predictions with R², RMSE and MAE."
+    deep: |
+      - **R²**: share of the target's variance explained (1 is perfect, 0 is no better than
+        predicting the mean).
+      - **RMSE**: typical error size, in the target's units; punishes big misses.
+      - **MAE**: average absolute error, also in the target's units.
+    concepts: [r-squared, mean-squared-error]
+
+  epochs:
+    span: block
+    short: "Retrain with a fixed number of epochs to watch the test score improve, then level off."
+    deep: |
+      Each copy of the pipeline is stopped after 1, 2, 5, 10 or 20 passes over the data
+      (`tol=None` turns off the automatic stop; `model__regressor__` reaches the
+      `SGDRegressor` inside the wrapper). The first epoch does most of the work;
+      later ones fine-tune as the learning rate shrinks. If the score gets *worse* with
+      more epochs, the learning rate is too large or the model is starting to overfit.
+
+      The copies are separate models: the one saved below is untouched.
+    concepts: [epochs, learning-rate]
+
+  exact:
+    span: block
+    short: "Compare with Linear Regression, which solves least squares exactly in one step."
+    deep: |
+      On data this size, the exact solver is fast and needs no learning rate. SGD should
+      land at almost the same test score (the default α is tiny); a much worse score means
+      its learning rate or number of epochs needs attention. SGD's advantage shows on data
+      too large for the exact solver's $X^\top X$, or when rows arrive as a stream.
+    concepts: [normal-equation, gradient-descent]
+
+  coefficients:
+    span: block
+    short: "Show the intercept and each feature's coefficient, largest effect first."
+    deep: |
+      SGD learned its weights for the standardised target, so they are multiplied by the
+      target's standard deviation $s_y$ (and the intercept shifted by its mean) to get back
+      to the target's units. Features were standardised too, so each coefficient is the
+      change in the prediction for a one–standard-deviation increase in that feature,
+      holding the others fixed. Rerun with
+      another `random_state` and they move slightly: SGD's answer depends on the order it
+      saw the rows, while the exact solver's doesn't.
+
+  save:
+    short: "Save the whole fitted pipeline (preprocessing + model) to model.joblib."
+    deep: |
+      New data must be imputed, scaled and encoded exactly as the training data was, so the
+      whole pipeline is saved:
+
+      ```python
+      pipeline = joblib.load("model.joblib")
+      pipeline.predict(new_rows)
+      ```
+
+      Only load joblib files you trust: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Everything below is plain NumPy: three losses, a step-size schedule and two loops."
+    deep: |
+      No solver: the weights are found one row at a time, which is all stochastic gradient
+      descent is.
+
+  losses:
+    span: block
+    short: "Each loss returns a row's cost and its slope: how hard that row pulls on the weights."
+    deep: |
+      With error $e = \hat y - y$:
+
+      - **squared error** $\tfrac12 e^2$, slope $e$: the pull grows with the error, so one
+        outlier can drag the line;
+      - **Huber**: $\tfrac12 e^2$ for $|e| \le \varepsilon$, else $\varepsilon|e| - \tfrac12\varepsilon^2$;
+        the slope is capped at $\pm\varepsilon$, so outliers pull no harder than ε;
+      - **ε-insensitive** $\max(0, |e| - \varepsilon)$: errors within ε cost nothing.
+
+      SGD only ever needs the slope, so swapping the loss is swapping one function.
+    concepts: [loss-function, mean-squared-error, derivatives]
+
+  schedule:
+    span: block
+    short: "The learning rate at step t: constant, or η₀ / t^power_t, shrinking as training goes on."
+    deep: |
+      One row's gradient is a noisy estimate of the full gradient, so even at the minimum
+      the weights keep jittering by about η × noise. Shrinking η over time lets that
+      jitter die down: $\eta_t = \eta_0 / t^{0.25}$ is scikit-learn's default for
+      regression. A constant rate keeps jittering forever, but adapts if the data drift.
+    concepts: [learning-rate]
+
+  class:
+    span: block
+    short: "A minimal regressor with the same parameter names as scikit-learn's SGDRegressor."
+    deep: |
+      `coef_`, `intercept_` and `n_iter_` mirror scikit-learn. `loss_curve_` records the
+      average training loss of every epoch, something scikit-learn only prints with
+      `verbose=1`. This version supports the L2 penalty only; scikit-learn's L1 needs a
+      special "truncated" update to set weights exactly to 0.
+
+  fit:
+    short: "Fitting is a loop over epochs, and inside it a loop over the shuffled rows."
+    deep: |
+      The objective is the mean loss plus the penalty,
+      $\frac1n\sum_i \ell(w^\top x_i + b - y_i) + \frac{\alpha}{2}\lVert w\rVert^2$, and each
+      update uses the gradient of **one** term of the sum.
+    concepts: [stochastic-gradient-descent]
+
+  init:
+    span: block
+    short: "Start from zero weights, at update t = 1, with a seeded random generator."
+    deep: |
+      The objective is convex, so the starting point doesn't change where we end up, only
+      how long it takes. `t` counts single-row updates across all epochs; the schedule uses
+      it to shrink the step size.
+
+  epoch:
+    span: block
+    short: "One epoch = one pass over every training row, in a fresh random order."
+    deep: |
+      Sum each row's loss as we go, so the end of the epoch gives the average training loss
+      to decide whether to stop.
+    concepts: [epochs]
+
+  shuffle:
+    short: "Visit the rows in a new random order every epoch."
+    deep: |
+      If the data were sorted (say, by price), the weights would chase the cheap rows, then
+      the expensive ones, and never settle. Shuffling makes each row an unbiased sample of
+      the whole dataset, which is what makes one row's gradient a fair estimate.
+    concepts: [stochastic-gradient-descent]
+
+  update:
+    span: block
+    short: "The SGD step: move the weights against this one row's gradient, scaled by the learning rate."
+    deep: |
+      For row $i$ with error $e_i = w^\top x_i + b - y_i$:
+
+      $$w \leftarrow w - \eta_t\big(\ell'(e_i)\,x_i + \alpha w\big), \qquad b \leftarrow b - \eta_t\,\ell'(e_i)$$
+
+      The $\alpha w$ term is the L2 penalty's gradient: every step also shrinks the weights
+      a little towards 0, exactly the "weight decay" of neural-network training.
+    concepts: [stochastic-gradient-descent, gradient-descent, l2-regularization]
+
+  stop:
+    span: block
+    short: "Stop when the epoch's average loss hasn't improved by tol for n_iter_no_change epochs."
+    deep: |
+      This is scikit-learn's rule. Waiting several epochs matters because SGD's loss is
+      noisy: one bad epoch doesn't mean we've reached the bottom. `tol=None` always runs
+      `max_iter` epochs.
+    concepts: [epochs]
+
+  predict:
+    span: block
+    short: "Prediction is the same weighted sum as every linear model: X·w + b."
+    deep: |
+      How the weights were found (exactly or by SGD) doesn't change how they're used.
+
+  sweep:
+    span: block
+    short: "Train with several constant learning rates to see the sweet spot, and the cliff beyond it."
+    deep: |
+      Too small and five epochs barely move the weights (high MSE). In the middle, the MSE
+      reaches the noise floor. Too large and each step overshoots more than the last: the
+      weights, and the MSE, explode towards infinity. One row's step changes its own
+      prediction by about $\eta\lVert x_i\rVert^2$, so on standardised features the cliff
+      sits near $\eta \approx 2/p$ for $p$ features; on unscaled ones it can be orders of
+      magnitude lower.
+    concepts: [learning-rate, feature-scaling]

@@ -122,13 +122,13 @@ docs/        Architecture, roadmap, architecture decision records (ADRs)
 
 | Family | Algorithms |
 |--------|------------|
-| Linear models | Linear, Polynomial, Ridge, Lasso, Elastic Net, Logistic Regression, SGD |
+| Linear models | Linear, Polynomial, Ridge, Lasso, Elastic Net, Logistic Regression, SGD Regressor / Classifier |
 | Instance-based | K-Nearest Neighbors |
 | Probabilistic | Naive Bayes (Gaussian, Multinomial, Bernoulli), LDA / QDA |
 | Support Vector Machines | Linear SVM, Kernel SVM, SVR |
 | Tree-based | Decision Tree |
 | Ensembles | Bagging, Random Forest, Extra Trees, AdaBoost, Gradient Boosting, HistGradientBoosting, XGBoost / LightGBM / CatBoost, Voting & Stacking |
-| Neural | MLP |
+| Neural | MLP Regressor / Classifier |
 
 Progress is tracked in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 

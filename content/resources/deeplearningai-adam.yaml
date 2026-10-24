@@ -1,0 +1,8 @@
+type: video
+title: Adam Optimization Algorithm (C2W2L08)
+url: https://www.youtube.com/watch?v=JXQT_vxqwIs
+author: DeepLearningAI (Andrew Ng)
+level: intermediate
+why: Adam as momentum plus RMSprop, with bias correction and the usual hyperparameter values.
+source: curated
+checked: 2026-10-24

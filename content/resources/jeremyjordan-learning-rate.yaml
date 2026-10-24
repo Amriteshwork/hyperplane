@@ -1,0 +1,9 @@
+type: blog
+title: Setting the learning rate of your neural network
+url: https://www.jeremyjordan.me/nn-learning-rate/
+author: Jeremy Jordan
+level: intermediate
+duration_min: 15
+why: Too-small vs too-large rates, the learning-rate range test for finding a good one, and decay and cyclical schedules.
+source: curated
+checked: 2026-10-24

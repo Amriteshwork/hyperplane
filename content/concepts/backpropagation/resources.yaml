@@ -1,0 +1,15 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-backpropagation
+  note: "Start here: what backpropagation is doing, before any formula: every example nudging every weight."
+- id: statquest-backpropagation
+  note: "The chain rule and gradient descent combined, slowly, for one parameter at a time."
+- id: colah-backprop
+  note: "Why going backwards is so much cheaper than forwards: reverse-mode differentiation on a graph."
+- id: 3blue1brown-backpropagation-calculus
+  note: "The chain-rule derivation of the δ recursion on this page, on a network with one neuron per layer."
+- id: google-mlcc-backpropagation
+  note: "Vanishing and exploding gradients and dead ReLUs: what goes wrong in practice, and the fixes."
+- id: d2l-backpropagation
+  note: "The forward and backward pass of a one-hidden-layer network with an L2 penalty, as a computational graph."
+- id: karpathy-micrograd
+  note: "Advanced: build automatic backpropagation from scratch, then train a network with it (2.5 hours)."

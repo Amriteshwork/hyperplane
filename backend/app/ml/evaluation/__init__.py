@@ -3,6 +3,7 @@
 from collections.abc import Callable
 
 from app.ml.evaluation.classification import evaluate_classification
+from app.ml.evaluation.curves import training_curve_plots
 from app.ml.evaluation.models import (
     CurvePlot,
     CurveSeries,
@@ -36,4 +37,5 @@ __all__ = [
     "Plot",
     "Predictions",
     "ScatterPlot",
+    "training_curve_plots",
 ]

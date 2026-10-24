@@ -108,4 +108,20 @@ describe('plotOptions for classification', () => {
     expect(options.series[1].markLine).toBeUndefined();
     expect(plotOptions({ ...roc, series: [roc.series[0]] })).not.toHaveProperty('legend.top');
   });
+
+  it('fits the axes to the data for curves that are not rates, e.g. a loss per epoch', () => {
+    const rates = plotOptions(roc) as {
+      xAxis: { min?: number; scale: boolean };
+      yAxis: { max?: number };
+    };
+    expect(rates.xAxis.min).toBe(0);
+    expect(rates.yAxis.max).toBe(1);
+    const loss = plotOptions({ ...roc, axes: 'data', reference: null }) as {
+      xAxis: { min?: number; scale: boolean };
+      yAxis: { max?: number };
+    };
+    expect(loss.xAxis.min).toBeUndefined();
+    expect(loss.xAxis.scale).toBe(true);
+    expect(loss.yAxis.max).toBeUndefined();
+  });
 });

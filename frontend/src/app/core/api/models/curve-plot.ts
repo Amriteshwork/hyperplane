@@ -4,9 +4,10 @@
 import { CurveSeries } from '../models/curve-series';
 
 /**
- * One or more lines on shared axes, e.g. ROC curves.
+ * One or more lines on shared axes, e.g. ROC curves or a loss per epoch.
  */
 export interface CurvePlot {
+  axes?: 'unit' | 'data';
   description: string;
   id: string;
   kind?: 'curve';

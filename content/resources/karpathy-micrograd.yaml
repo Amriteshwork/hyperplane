@@ -1,0 +1,8 @@
+type: video
+title: "The spelled-out intro to neural networks and backpropagation: building micrograd"
+url: https://www.youtube.com/watch?v=VMj-3S1tku0
+author: Andrej Karpathy
+level: intermediate
+why: Builds automatic backpropagation from scratch in plain Python, then trains a small neural network with it.
+source: curated
+checked: 2026-10-24

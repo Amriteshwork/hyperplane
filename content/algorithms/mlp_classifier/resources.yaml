@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-neural-network
+  note: "Start here: a network that classifies handwritten digits, neuron by neuron."
+- id: tensorflow-playground
+  note: "Train a classifier in the browser: change layers, neurons and activation and watch the boundary bend."
+- id: sklearn-mlp-alpha
+  note: "The same MLPClassifier's decision boundary for growing α: from overfitted to smooth."
+- id: sklearn-neural-network-guide
+  note: "The exact losses, output layers (sigmoid, softmax) and solvers MLPClassifier uses, plus practical tips."
+- id: cs231n-neural-networks
+  note: "Advanced: neurons as linear classifiers, common activations and their pitfalls, and network sizing."

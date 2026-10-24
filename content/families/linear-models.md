@@ -9,7 +9,8 @@ algorithms:
   - { id: lasso, name: Lasso }
   - { id: elastic_net, name: Elastic Net }
   - { id: logistic_regression, name: Logistic Regression }
-  - { id: sgd, name: SGD Classifier / Regressor }
+  - { id: sgd_regressor, name: SGD Regressor }
+  - { id: sgd_classifier, name: SGD Classifier }
 ---
 
 Linear models assume the target is (roughly) a weighted sum of the features. They train in

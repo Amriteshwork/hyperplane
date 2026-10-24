@@ -1,0 +1,98 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the activations (with their slopes), the numerical gradient and the MSE."
+    deep: |
+      `ACTIVATIONS` gives each bend and its slope; `numerical_gradient` checks the
+      backward pass; `mse` is the loss. Download with dependencies to get the files
+      alongside.
+    concepts: [activation-functions, derivatives, mean-squared-error]
+
+  init:
+    span: block
+    short: "One weight matrix and bias vector per pair of neighbouring layers, weights small and random."
+    deep: |
+      `sizes = [1, 16, 1]` means 1 input, 16 hidden neurons, 1 output. Random weights break
+      the symmetry between neurons (identical weights would get identical gradients
+      forever); the $\sqrt{6/(m+k)}$ scale keeps signals from growing or shrinking from
+      layer to layer. Biases can start at 0.
+    concepts: [neurons]
+
+  forward:
+    span: block
+    short: "Forward pass: run the layers in order and keep every output; backpropagation needs them."
+    deep: |
+      $Z_\ell = A_{\ell-1}W_\ell + b_\ell$, $A_\ell = f(Z_\ell)$. The last layer stays linear,
+      so the network can output any number.
+    concepts: [neurons, matrix-multiplication]
+
+  backward:
+    span: block
+    short: "Backward pass: start from the output error and walk the layers in reverse."
+    deep: |
+      `delta` is $\partial L/\partial Z_\ell$. At the top, the MSE's derivative
+      $\tfrac2n(\hat y - y)$. Each layer's gradients are "input times error",
+      $A_{\ell-1}^\top\delta_\ell$ and $\sum_i \delta_{\ell,i}$. Then the error moves down a
+      layer: back through the weights ($\delta W^\top$), then times the activation's slope.
+
+      The slope is evaluated at the layer's output, which `forward` kept: no function is
+      evaluated twice.
+    concepts: [derivatives, matrix-multiplication]
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Adam and early stopping import `init_network`, `forward` and `backward`; the demo stays
+      out of their way.
+
+  data: &data
+    span: block
+    short: "200 noisy points on a sine wave: a curve no straight line fits."
+    deep: |
+      The noise has variance 0.01, so the best possible MSE is about 0.01; a straight line
+      gets about 0.45.
+
+  gradient-check:
+    span: block
+    short: "Gradient check: backpropagation's answer must match nudging each weight and measuring."
+    deep: |
+      For each layer, `loss_with` is the MSE as a function of that layer's weights alone, and
+      `numerical_gradient` nudges every weight by $\pm h$. Agreement to $10^{-6}$ means the
+      backward pass is right. This is the standard test for a hand-written backward pass.
+    concepts: [derivatives]
+
+  train: &train
+    span: block
+    short: "Train with plain full-batch gradient descent: forward, backward, step, 5,000 times."
+    deep: |
+      Every step uses all 200 rows and moves every weight against its gradient, with
+      $\eta = 0.1$. Progress is slow (the MSE crawls down after the first thousand steps):
+      the loss surface of a network is far less friendly than a linear model's bowl. Adam
+      reaches a lower loss in far fewer steps.
+    concepts: [gradient-descent, learning-rate]
+
+  compare:
+    span: block
+    short: "Compare with the best straight line: the hidden layer bent itself around the curve."
+    deep: |
+      `np.polyfit(x, y, 1)` is least squares with a straight line. The network's MSE is
+      several times lower: its 16 tanh neurons each contribute a smooth step, and the
+      output layer adds them into a wave.
+
+pytorch:
+  data: *data
+  by-hand:
+    span: block
+    short: "Let autograd backpropagate, then check its gradients against the δ recursion by hand."
+    deep: |
+      `loss.backward()` walks the graph of operations recorded during the forward pass in
+      reverse, applying the chain rule at every node. The hand-computed `delta2` and
+      `delta1` follow the formulas on this page and give the same `.grad` values.
+    concepts: [derivatives]
+  train:
+    <<: *train
+    short: "The same network with nn.Linear and nn.Tanh, trained by torch.optim.SGD."
+    deep: |
+      `zero_grad`, `backward`, `step` is the loop every PyTorch training script uses.
+      Gradients accumulate across `backward()` calls, so they are cleared before each one.

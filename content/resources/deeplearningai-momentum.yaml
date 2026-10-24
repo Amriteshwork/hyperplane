@@ -1,0 +1,8 @@
+type: video
+title: Gradient Descent With Momentum (C2W2L06)
+url: https://www.youtube.com/watch?v=k8fTYJPd3_I
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: Why averaging past gradients damps the zig-zag of plain gradient descent; the first half of Adam.
+source: curated
+checked: 2026-10-24

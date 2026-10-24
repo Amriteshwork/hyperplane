@@ -1,0 +1,9 @@
+type: blog
+title: A Gentle Introduction to Mini-Batch Gradient Descent and How to Configure Batch Size
+url: https://machinelearningmastery.com/gentle-introduction-mini-batch-gradient-descent-configure-batch-size/
+author: Jason Brownlee (Machine Learning Mastery)
+level: beginner
+duration_min: 15
+why: Stochastic, batch and mini-batch gradient descent compared, each with its upsides and downsides.
+source: curated
+checked: 2026-10-24

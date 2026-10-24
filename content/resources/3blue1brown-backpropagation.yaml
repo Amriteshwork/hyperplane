@@ -1,0 +1,8 @@
+type: video
+title: Backpropagation, intuitively (Deep learning, chapter 3)
+url: https://www.youtube.com/watch?v=Ilg3gGewQ5U
+author: 3Blue1Brown
+level: beginner
+why: What backpropagation does, before any formula — each example nudging every weight in proportion to its effect.
+source: curated
+checked: 2026-10-24

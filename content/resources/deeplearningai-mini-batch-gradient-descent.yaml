@@ -1,0 +1,8 @@
+type: video
+title: Mini Batch Gradient Descent (C2W2L01)
+url: https://www.youtube.com/watch?v=4qJaSmvhxi8
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: Batch, mini-batch and one-example-at-a-time descent side by side, and what an epoch means for each.
+source: curated
+checked: 2026-10-24

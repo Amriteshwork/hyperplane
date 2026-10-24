@@ -1,0 +1,78 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the network (init, forward, backward) from backpropagation, and the MSE."
+    deep: |
+      Backpropagation computes the gradients; Adam only decides what to do with them.
+      Download with dependencies to get the files alongside.
+    concepts: [backpropagation, mean-squared-error]
+
+  adam:
+    span: block
+    short: "Update the two running averages: the gradient (momentum) and the squared gradient."
+    deep: |
+      $m \leftarrow \beta_1 m + (1-\beta_1)g$ and $v \leftarrow \beta_2 v + (1-\beta_2)g^2$,
+      entry by entry. With $\beta_1 = 0.9$, $m$ averages roughly the last 10 gradients; with
+      $\beta_2 = 0.999$, $v$ roughly the last 1,000. `params`, `grads`, `ms` and `vs` are
+      lists of arrays with matching shapes, one entry per weight matrix or bias vector.
+
+  bias-correction:
+    span: block
+    short: "Bias correction: m and v start at 0, so divide by 1 − βᵗ to undo the early shrinkage."
+    deep: |
+      After the first step, $m_1 = 0.1\,g_1$: ten times too small. Dividing by
+      $1 - 0.9^1 = 0.1$ restores it. As $t$ grows, $\beta^t \to 0$ and the correction
+      fades away.
+
+  step:
+    span: block
+    short: "Step each weight by η·m̂/(√v̂ + ε): direction from the average, size from the scale."
+    deep: |
+      $\hat m / \sqrt{\hat v}$ is about $\pm 1$ when gradients are consistent and smaller
+      when they are noisy, so the step is at most about $\eta$ for every weight. $\epsilon$
+      only guards against dividing by 0.
+    concepts: [learning-rate]
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Early stopping imports `adam_step` and `adam_state`; the demo stays out of its way.
+
+  scale-free:
+    span: block
+    short: "The first step moves every weight by about η, whether its gradient is 10⁻⁴ or 10⁴."
+    deep: |
+      With bias correction, the first step is $\eta\, g / (|g| + \epsilon) \approx \eta\,
+      \text{sign}(g)$. Plain gradient descent would move these three weights by amounts
+      $10^8$ apart.
+
+  ravine:
+    span: block
+    short: "A ravine, steep one way and flat the other: gradient descent crawls, Adam doesn't."
+    deep: |
+      For $f = \tfrac12(100w_0^2 + w_1^2)$ gradient descent diverges unless
+      $\eta < 2/100$, and at that step size the flat direction shrinks by only 2% per step.
+      Adam rescales each direction by its own gradient size, so both shrink at a similar
+      rate.
+    concepts: [gradient-descent, learning-rate]
+
+  network: &network
+    span: block
+    short: "Train the backpropagation page's network with Adam: lower loss in a fifth of the steps."
+    deep: |
+      The same data, network and gradients as on the backpropagation page; only the update
+      changes. 1,000 Adam steps reach the noise floor (MSE ≈ 0.01), where 5,000 plain
+      gradient-descent steps stopped near 0.05.
+    concepts: [backpropagation]
+
+pytorch:
+  by-hand:
+    span: block
+    short: "Run torch.optim.Adam for five steps and check it against the formulas by hand."
+    deep: |
+      The hand-written `m`, `v` and bias-corrected step reproduce PyTorch's result, so this
+      is the same algorithm as the NumPy file and as scikit-learn's `solver="adam"`.
+  network:
+    <<: *network
+    short: "The same network trained with torch.optim.Adam: swap the optimiser, keep the loop."

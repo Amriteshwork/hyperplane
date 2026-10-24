@@ -1,0 +1,8 @@
+type: blog
+title: "Machine Learning Crash Course: Neural networks — training using backpropagation"
+url: https://developers.google.com/machine-learning/crash-course/neural-networks/backpropagation
+author: Google for Developers
+level: beginner
+why: The practical failure modes of backpropagation — vanishing and exploding gradients, dead ReLUs — and their fixes.
+source: curated
+checked: 2026-10-24

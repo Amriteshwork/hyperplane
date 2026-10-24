@@ -1,0 +1,8 @@
+type: paper
+title: "Adam: A Method for Stochastic Optimization"
+url: https://arxiv.org/abs/1412.6980
+author: Diederik P. Kingma & Jimmy Ba
+level: advanced
+why: The original paper; Algorithm 1 is the exact update scikit-learn's adam solver uses, with the default β₁, β₂, ε.
+source: curated
+checked: 2026-10-24

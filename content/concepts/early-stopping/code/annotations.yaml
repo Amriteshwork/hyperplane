@@ -1,0 +1,81 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the network from backpropagation and the Adam update."
+    deep: |
+      Early stopping doesn't change how a network trains, only when it stops and which
+      weights it keeps. Download with dependencies to get the files alongside.
+    concepts: [backpropagation, adam-optimizer, mean-squared-error]
+
+  early-stopping:
+    span: block
+    short: "Track the best validation loss and a copy of its weights; count epochs without improvement."
+    deep: |
+      An improvement must beat the best by more than `tol`. `stale` counts the epochs since
+      the last one; `update` returns `True` once it reaches `patience`. The copy matters:
+      the optimiser keeps changing `params` in later epochs.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      `EarlyStopping` is small enough to reuse; the demo stays out of the way of anything
+      that imports it.
+
+  data: &data
+    span: block
+    short: "30 noisy training points on a sine wave, and 200 validation points from the same curve."
+    deep: |
+      The noise has variance 0.09: no model can get the validation MSE much below that.
+      With only 30 rows a network has plenty of room to fit the noise instead.
+    concepts: [train-test-split]
+
+  network:
+    span: block
+    short: "A two-hidden-layer network with about 1,100 weights: far more than 30 rows can pin down."
+    deep: |
+      Adam works on a flat list of arrays (W₁, b₁, W₂, b₂, …); `as_layers` regroups them in
+      pairs for `forward` and `backward`.
+    concepts: [neurons]
+
+  loop: &loop
+    span: block
+    short: "Train for 3,000 epochs (full batch), measuring the validation loss after each."
+    deep: |
+      The printed losses tell the story: training MSE falls all the way, validation MSE
+      bottoms out after a couple of hundred epochs and then climbs as the network starts
+      fitting the noise of its 30 rows.
+    concepts: [epochs, overfitting-underfitting]
+
+  check: &check
+    span: block
+    short: "Ask the stopper after every epoch; note the epoch where early stopping would break."
+    deep: |
+      A real training loop would `break` here. This one carries on to 3,000 epochs only to
+      show what stopping saved us from.
+
+  compare:
+    span: block
+    short: "The best epoch's weights beat the fully trained network by a wide margin."
+    deep: |
+      Restoring the best weights gives a validation MSE near the noise floor; training to
+      the end gives one about three times worse. The stopper would also have saved over 90%
+      of the training time.
+
+pytorch:
+  data: *data
+  loop:
+    <<: *loop
+    short: "The same network and data in PyTorch, with a validation loss computed without gradients."
+  check:
+    <<: *check
+    short: "Keep a deep copy of the state_dict at each new best; stop after 100 epochs without one."
+    deep: |
+      `state_dict()` returns references to the live tensors, so it must be deep-copied, or
+      the "best" weights would keep changing with training.
+  restore:
+    span: block
+    short: "Load the best weights back: the network is now the one from its best epoch."
+    deep: |
+      Without this step early stopping only saves time; the model would still carry the
+      last `patience` epochs of overfitting.

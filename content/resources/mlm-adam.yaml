@@ -1,0 +1,8 @@
+type: blog
+title: Gentle Introduction to the Adam Optimization Algorithm for Deep Learning
+url: https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/
+author: Jason Brownlee (Machine Learning Mastery)
+level: beginner
+why: What Adam is, how it combines AdaGrad and RMSProp, and what each of its settings does, in plain words.
+source: curated
+checked: 2026-10-24

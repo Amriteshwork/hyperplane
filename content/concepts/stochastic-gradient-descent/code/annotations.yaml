@@ -1,0 +1,68 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the MSE function from the mean squared error concept."
+    deep: |
+      Download this file with its dependencies to get `mean_squared_error_numpy.py`
+      alongside it.
+    concepts: [mean-squared-error]
+
+  sgd-epoch:
+    span: block
+    short: "One epoch of (mini-batch) SGD: shuffle, then step on each batch's gradient in turn."
+    deep: |
+      For a batch $B$ of rows, the MSE gradient is estimated from those rows only:
+
+      $$\nabla_w \approx \frac{2}{|B|} X_B^\top (X_B w + b - y_B)$$
+
+      `batch_size=1` is pure SGD; `batch_size=len(y)` takes one full gradient-descent step
+      per pass. The **epochs** concept builds training loops on this function.
+    concepts: [gradient-descent, epochs]
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      `sgd_epoch` is reused by later concepts; the demo stays out of their way.
+
+  data: &data
+    span: block
+    short: "10,000 rows with a known answer: intercept 4, weights [2, −3], noise 0.5."
+    deep: |
+      Enough rows that a full gradient is noticeably more expensive than a single row's.
+      The best achievable MSE is the noise variance, 0.25.
+
+  unbiased:
+    span: block
+    short: "One row's gradient is far off, but the average of many equals the full gradient."
+    deep: |
+      Each row's gradient points somewhere different, sometimes far from the true
+      direction. Their average over random rows is the full gradient, which is what
+      "unbiased" means: SGD's steps go the right way *on average*, and the errors largely
+      cancel over many steps.
+    concepts: [probability]
+
+  batches: &batches
+    span: block
+    short: "One pass at three batch sizes: 10,000 tiny steps, 313 small ones, or a single full one."
+    deep: |
+      Every run reads each row exactly once, so they cost about the same. One row per step
+      and 32 per step both reach the noise floor (MSE ≈ 0.25) in a single pass; full-batch
+      gradient descent has taken one step and is barely started. That's SGD's case in one
+      experiment: on large data, many rough steps beat few exact ones.
+    concepts: [epochs, learning-rate]
+
+pytorch:
+  data: *data
+  batches:
+    <<: *batches
+    short: "torch.optim.SGD is the same update; the batch size is just how many rows the loss sees."
+    deep: |
+      The optimiser is called SGD, but it simply applies $\theta \leftarrow \theta - \eta\nabla$
+      to whatever gradient `backward()` produced. Computing the loss on a mini-batch is what
+      makes it stochastic. `torch.randperm(n).split(batch_size)` is one shuffled pass; a
+      `DataLoader(..., shuffle=True)` does the same for real datasets.
+
+      Every run reads each row once: 1 or 32 rows per step reach the noise floor, the full
+      batch takes a single step.
+    concepts: [epochs, learning-rate]

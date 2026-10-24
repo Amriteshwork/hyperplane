@@ -1,0 +1,8 @@
+type: blog
+title: "scikit-learn User Guide: Neural network models (supervised)"
+url: https://scikit-learn.org/stable/modules/neural_networks_supervised.html
+author: scikit-learn developers
+level: intermediate
+why: The exact losses, output layers, solvers and regularisation MLPClassifier and MLPRegressor use, plus practical tips.
+source: curated
+checked: 2026-10-24

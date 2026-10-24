@@ -1,0 +1,15 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlm-mini-batch-gradient-descent
+  note: "A beginner's comparison of one-row, full-batch and mini-batch descent, with the trade-offs of each."
+- id: statquest-stochastic-gradient-descent
+  note: "Start here: the gradient descent example redone with one random sample per step."
+- id: google-mlcc-hyperparameters
+  note: "Batch size explained (one row, mini-batch, full batch), with loss curves showing SGD's noise."
+- id: deeplearningai-mini-batch-gradient-descent
+  note: "Mini-batches between the two extremes, and why they're the default for large datasets."
+- id: d2l-stochastic-gradient-descent
+  note: "Why one row's gradient is an unbiased estimate of the full gradient, with code to see the noisy path."
+- id: bottou-sgd-tricks
+  note: "Advanced: why SGD wins on large training sets, and SGD updates for classic models (perceptron, SVM, Lasso)."
+- id: arxiv-gradient-descent-overview
+  note: "Advanced: batch, stochastic and mini-batch descent compared, then the optimisers built on SGD."

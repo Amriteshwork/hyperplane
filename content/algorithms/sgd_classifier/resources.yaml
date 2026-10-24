@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-stochastic-gradient-descent
+  note: "Start here: how SGD replaces the full gradient with one random sample per step."
+- id: statquest-logistic-regression
+  note: "The model the default log_loss trains: refresh the S-curve before watching SGD fit it."
+- id: google-mlcc-hyperparameters
+  note: "Learning rate, batch size and epochs, the settings that matter most here, with loss curves."
+- id: sklearn-sgd-guide
+  note: "The exact losses (log_loss, hinge, modified_huber), one-vs-rest, schedules and stopping rule SGDClassifier uses."
+- id: bottou-sgd-tricks
+  note: "Advanced: SGD updates for the perceptron, SVMs and more, and why SGD suits large training sets."

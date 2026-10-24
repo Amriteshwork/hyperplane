@@ -1,0 +1,77 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the numerical derivative, a layer, and the sigmoid from earlier concepts."
+    deep: |
+      `numerical_derivative` checks each slope formula; `layer` builds the two-layer
+      networks below. Download with dependencies to get the files alongside.
+    concepts: [derivatives, neurons, sigmoid]
+
+  activations:
+    span: block
+    short: "ReLU keeps positive sums and zeroes negative ones; identity applies no bend at all."
+    deep: |
+      tanh is `np.tanh`, and the sigmoid comes from its own page, so only these two need
+      writing.
+
+  slopes:
+    span: block
+    short: "Each activation with its slope, written in terms of its own output a."
+    deep: |
+      $\sigma' = \sigma(1 - \sigma)$ and $\tanh' = 1 - \tanh^2$ only need the output, which
+      the forward pass has already computed, so backpropagation never re-evaluates
+      $f$. scikit-learn stores its activations the same way.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Backpropagation imports `ACTIVATIONS`; the demo stays out of its way.
+
+  check-slopes: &check
+    span: block
+    short: "Check every slope formula against a numerical derivative."
+    deep: |
+      The numerical slope $(f(z+h) - f(z-h))/2h$ must agree with the formula. $z = 0$ is
+      left out: ReLU has a kink there, and its slope is defined as 0 by convention.
+    concepts: [derivatives]
+
+  collapse: &collapse
+    span: block
+    short: "Without a bend, two layers equal one: W = W₁W₂ and b = b₁W₂ + b₂."
+    deep: |
+      Matrix products compose, so a stack of linear layers is a single linear layer: it can
+      only draw straight boundaries, whatever its depth. Put a ReLU in between and the
+      result is no longer any single linear layer.
+    concepts: [matrix-multiplication]
+
+  vanishing: &vanishing
+    span: block
+    short: "The sigmoid's slope is at most ¼, so stacking sigmoid layers shrinks the gradient fast."
+    deep: |
+      Backpropagation multiplies one slope per layer. Ten sigmoid layers scale the gradient
+      by at most $(\tfrac14)^{10} \approx 10^{-6}$: the first layers barely learn. A
+      saturated neuron (large $|z|$) has an even flatter slope. ReLU's slope is exactly 1
+      where it is active, which is why deep networks use it.
+
+  dead-relu:
+    span: block
+    short: "A dead ReLU: negative for every row, so it outputs 0 and gets no gradient, ever."
+    deep: |
+      A large negative bias, or a big learning-rate step that overshoots, can leave a ReLU
+      neuron off for every input. Its slope is then 0 everywhere and gradient descent can
+      never revive it. A small learning rate, standardised inputs and careful
+      initialisation keep this rare.
+
+pytorch:
+  check-slopes:
+    <<: *check
+    short: "Let autograd differentiate each activation, and compare with the formulas."
+    deep: |
+      `torch.autograd.grad(a.sum(), z)` gives $\partial a_i / \partial z_i$ for every entry
+      (each output depends only on its own input). They match the closed-form slopes.
+    concepts: [derivatives]
+  collapse: *collapse
+  vanishing:
+    <<: *vanishing
+    short: "Backpropagate through ten sigmoids in a row: the gradient is about a millionth."

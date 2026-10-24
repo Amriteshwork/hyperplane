@@ -1,0 +1,8 @@
+type: video
+title: The Essential Main Ideas of Neural Networks
+url: https://www.youtube.com/watch?v=CqOfi41LfDw
+author: StatQuest (Josh Starmer)
+level: beginner
+why: A tiny network fitted by hand shows how bent, scaled and added activations build a curve that fits the data.
+source: curated
+checked: 2026-10-24

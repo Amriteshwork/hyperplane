@@ -1,0 +1,66 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse MSE and one SGD pass (`sgd_epoch`) from earlier concepts."
+    deep: |
+      `sgd_epoch` shuffles the rows and takes one step per row; this file only decides how
+      many times to call it. Download with dependencies to get both files alongside.
+    concepts: [mean-squared-error, stochastic-gradient-descent]
+
+  stalled:
+    span: block
+    short: "Stop when the last `patience` epochs each failed to improve on the best by `tol`."
+    deep: |
+      This is the rule behind scikit-learn's `tol` and `n_iter_no_change`. Waiting several
+      epochs instead of one matters because SGD's loss is noisy: one bad epoch doesn't mean
+      training is done.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      `stalled` is small enough to reuse; the demo stays out of the way of anything that
+      imports it.
+
+  data: &data
+    span: block
+    short: "2,000 rows with a known answer, 1,600 for training and 400 held out for validation."
+    deep: |
+      The validation rows are never used for a gradient step, so their MSE says how the model
+      does on new data. The rows were generated at random, so taking the first 1,600 is
+      already a random split.
+    concepts: [train-test-split]
+
+  loop: &loop
+    span: block
+    short: "Each epoch: one SGD pass over the training rows, then measure the validation MSE."
+    deep: |
+      The learning rate shrinks with the epoch ($0.0005/\sqrt{\text{epoch}}$), so later passes
+      take smaller steps and the weights settle. The printed validation MSE falls quickly
+      over the first epochs, then flattens near the noise floor (0.25).
+    concepts: [learning-rate, stochastic-gradient-descent]
+
+  stop: &stop
+    span: block
+    short: "Once the validation MSE has stalled for 5 epochs, stop: more passes won't help."
+    deep: |
+      Stopping on a validation loss rather than the training loss is **early stopping**: it
+      also halts training when a flexible model starts to overfit (training loss still
+      falling, validation loss rising).
+    concepts: [overfitting-underfitting]
+
+pytorch:
+  data:
+    <<: *data
+    short: "Training rows wrapped in a DataLoader (batches of 16, reshuffled each epoch), plus 400 validation rows."
+    deep: |
+      `DataLoader(..., shuffle=True)` hands out the training rows in mini-batches, in a new
+      random order every time you loop over it: one loop over it is one epoch.
+    concepts: [train-test-split, stochastic-gradient-descent]
+  loop:
+    <<: *loop
+    short: "Each epoch: loop over the DataLoader once, then measure the validation MSE without gradients."
+    deep: |
+      The inner loop is mini-batch SGD; the outer loop counts epochs. `torch.no_grad()` keeps
+      validation out of the autograd graph, since it must not affect training.
+  stop: *stop

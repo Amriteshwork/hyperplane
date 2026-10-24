@@ -75,16 +75,17 @@ function heatmapOptions(plot: HeatmapPlot): EChartsCoreOption {
   };
 }
 
-/** Lines on a 0–1 square (e.g. ROC curves), with an optional y = x guide. */
+/** Lines on a 0–1 square (e.g. ROC curves) or on axes fit to the data (e.g. a loss per epoch). */
 function curveOptions(plot: CurvePlot): EChartsCoreOption {
   const several = plot.series.length > 1;
-  const unit = (name: string) => ({ ...axis(name), scale: false, min: 0, max: 1 });
+  const range = (name: string) =>
+    plot.axes === 'data' ? axis(name) : { ...axis(name), scale: false, min: 0, max: 1 };
   return {
     grid: { left: 56, right: 16, top: several ? 40 : 16, bottom: 48 },
     tooltip: { trigger: 'item' },
     legend: several ? { top: 0 } : undefined,
-    xAxis: unit(plot.x_label),
-    yAxis: unit(plot.y_label),
+    xAxis: range(plot.x_label),
+    yAxis: range(plot.y_label),
     series: plot.series.map((line, i) => ({
       type: 'line',
       name: line.name,

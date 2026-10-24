@@ -1,0 +1,8 @@
+type: blog
+title: "Calculus on Computational Graphs: Backpropagation"
+url: https://colah.github.io/posts/2015-08-Backprop/
+author: Christopher Olah
+level: beginner
+why: Backpropagation as reverse-mode differentiation on a graph, and why it is so much cheaper than going forward.
+source: curated
+checked: 2026-10-24

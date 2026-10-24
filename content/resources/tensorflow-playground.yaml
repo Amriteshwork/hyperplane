@@ -1,0 +1,8 @@
+type: interactive
+title: TensorFlow Playground
+url: https://playground.tensorflow.org/
+author: Daniel Smilkov & Shan Carter (Google)
+level: beginner
+why: Train a small network in the browser — change layers, neurons, activation and learning rate and watch the boundary form.
+source: curated
+checked: 2026-10-24

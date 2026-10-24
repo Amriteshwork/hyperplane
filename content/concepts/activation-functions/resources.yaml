@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-activation-functions
+  note: "Start here: sigmoid, tanh and ReLU plotted, and how a single non-linearity lets a network curve."
+- id: deeplearningai-activation-functions
+  note: "Why tanh usually beats sigmoid in hidden layers, and why ReLU became the default."
+- id: statquest-relu
+  note: "Watch ReLUs (bent lines) get scaled and added into a curve that fits the data."
+- id: d2l-multilayer-perceptrons
+  note: "Section 5.1.2: each activation and its derivative plotted, and the collapse of stacked linear layers."
+- id: cs231n-neural-networks
+  note: "Advanced: saturation, zero-centred outputs and dying ReLUs, with practical advice."
+- id: glorot-bengio-initialization
+  note: "Advanced: experiments showing sigmoid networks saturate, and why tanh and careful initialisation help."

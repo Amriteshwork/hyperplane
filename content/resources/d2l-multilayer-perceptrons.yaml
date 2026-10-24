@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Multilayer Perceptrons"
+url: https://d2l.ai/chapter_multilayer-perceptrons/mlp.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: Hidden layers, why they need non-linear activations, and ReLU, sigmoid and tanh with their derivatives plotted.
+source: curated
+checked: 2026-10-24

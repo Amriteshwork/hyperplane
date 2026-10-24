@@ -1,0 +1,73 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  limit:
+    span: block
+    short: "The largest learning rate plain gradient descent on MSE survives: n / λ_max(XᵀX)."
+    deep: |
+      MSE is a quadratic bowl with curvature $\frac{2}{n}X^\top X$. Along its steepest
+      direction (largest eigenvalue $\lambda_{\max}$), one step multiplies the distance to
+      the minimum by $1 - \eta\,\frac{2}{n}\lambda_{\max}$. If that factor's size is above 1
+      the distance grows every step: so $\eta$ must stay below $n / \lambda_{\max}(X^\top X)$.
+    concepts: [matrix-multiplication, derivatives]
+
+  decay:
+    span: block
+    short: "A schedule: start at η₀ and divide by t^power_t, so later steps are smaller."
+    deep: |
+      Plain gradient descent doesn't need this, since its steps shrink by themselves as the
+      gradient vanishes. Stochastic steps don't: one row's gradient isn't zero even at the
+      minimum. Shrinking η is what lets them settle.
+
+  demo: &demo
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Later concepts reuse `largest_stable_rate` and `inverse_scaling`; the demo stays out
+      of their way.
+
+  data: &data
+    span: block
+    short: "Two random features plus a column of 1s, and a target 4 + 2x₁ − 3x₂ + noise."
+    deep: |
+      The column of 1s lets the intercept be learned as one more weight. The noise
+      (standard deviation 0.5) puts the best achievable MSE at about 0.25.
+
+  compare:
+    span: block
+    short: "100 gradient-descent steps at a tiny, a good and a too-large learning rate."
+    deep: |
+      - **0.002 × the limit**: 100 steps barely leave the start; the MSE is still large.
+      - **0.5 × the limit**: reaches the noise floor (≈ 0.25) well within 100 steps.
+      - **1.05 × the limit**: every step overshoots a little further than the last, and the
+        MSE explodes into the hundreds of millions.
+
+      Just past the limit is enough: the failure is a cliff, not a slope.
+
+  schedule:
+    span: block
+    short: "SGD with one row per step: a constant rate keeps wandering, a decaying one settles."
+    deep: |
+      Each step uses a single random row, so even at the minimum it gets pushed around. With
+      a constant η the weights keep jittering by roughly η × the gradient noise (and here
+      0.05 is big enough to sit well off target). With $\eta_t = 0.5/\sqrt t$ the jitter
+      dies down as training goes on.
+    concepts: [stochastic-gradient-descent]
+
+pytorch:
+  data:
+    <<: *data
+    short: "Two random features and a target 4 + 2x₁ − 3x₂ + noise; the limit computed from XᵀX."
+  compare:
+    span: block
+    short: "torch.optim.SGD on the whole dataset is plain gradient descent; `lr` is the learning rate."
+    deep: |
+      With every row in each step, `torch.optim.SGD` is ordinary gradient descent, so the
+      same limit applies: half of it converges, 0.002 × crawls and 1.05 × explodes.
+  schedule:
+    span: block
+    short: "LambdaLR multiplies the starting lr by 1/√t; `scheduler.step()` advances t after each update."
+    deep: |
+      PyTorch keeps the schedule separate from the optimiser: the optimiser takes steps, the
+      scheduler rewrites its `lr` between them. `StepLR`, `ExponentialLR` and
+      `CosineAnnealingLR` are ready-made alternatives to this hand-written one.
+    concepts: [stochastic-gradient-descent]

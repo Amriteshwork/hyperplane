@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Stochastic Gradient Descent"
+url: https://scikit-learn.org/stable/modules/sgd.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 20
+why: The exact losses, penalties, learning-rate schedules and stopping rule SGDClassifier and SGDRegressor use, plus practical tips.
+source: curated
+checked: 2026-10-24

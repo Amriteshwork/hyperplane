@@ -75,8 +75,12 @@ def test_real_algorithms_package_registers_every_pack() -> None:
         "lasso",
         "linear_regression",
         "logistic_regression",
+        "mlp_classifier",
+        "mlp_regressor",
         "polynomial_regression",
         "ridge",
+        "sgd_classifier",
+        "sgd_regressor",
     ]
 
 

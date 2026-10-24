@@ -173,9 +173,13 @@ def test_training_options_list_targets_algorithms_and_features(
         {"id": "ridge", "name": "Ridge"},
         {"id": "lasso", "name": "Lasso"},
         {"id": "elastic_net", "name": "Elastic Net"},
+        {"id": "sgd_regressor", "name": "SGD Regressor"},
+        {"id": "mlp_regressor", "name": "MLP Regressor"},
     ]  # in teaching order (the family pages), not by id: the Lab preselects the first
     assert targets["colour"]["algorithms"] == [
-        {"id": "logistic_regression", "name": "Logistic Regression"}
+        {"id": "logistic_regression", "name": "Logistic Regression"},
+        {"id": "sgd_classifier", "name": "SGD Classifier"},
+        {"id": "mlp_classifier", "name": "MLP Classifier"},
     ]
     assert {f["column"]: f["role"] for f in options["features"]} == {
         "x1": "numeric",

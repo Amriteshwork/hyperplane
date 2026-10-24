@@ -1,0 +1,286 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same preprocessing building blocks as the other regression models, with
+      `MLPRegressor` (from `sklearn.neural_network`) as the model. `LinearRegression` is
+      only imported to compare against: does the network's flexibility pay off on this
+      data? `clone` copies the preprocessing for that comparison, unfitted.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      `SEED` fixes the train/test split. A network has more randomness of its own (its
+      starting weights and the order of its mini-batches); that is the model's own
+      `random_state`, below.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y`
+      is the target we want to predict. Rows with a missing target can't be used for
+      training or scoring, so they are dropped; missing *feature* values are filled in
+      during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The network only learns from the training rows. With thousands of weights it can
+      fit the training rows far better than it predicts new ones, so the held-out score
+      is the one to trust.
+    concepts: [train-test-split, overfitting-underfitting]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      Networks are trained by gradient steps, so they need features on a common scale as
+      much as SGD does. Scaling also keeps each neuron's weighted sum near 0 at the start,
+      where `tanh` and `logistic` still have a slope; a feature in the thousands would push
+      them straight into their flat tails, and **saturated** neurons barely learn.
+
+      All of it is learned **from the training set only**, so no information leaks from
+      the test set.
+    concepts: [feature-scaling, activation-functions]
+
+  model:
+    span: block
+    short: "Create the network with your settings: its shape, activation, optimiser and stopping rule."
+    deep: |
+      `hidden_layer_sizes` lists the width of each hidden layer: `[100]` is one layer of
+      100 neurons, `[64, 64]` two layers of 64. The inputs feed the first layer, each
+      layer feeds the next, and a single linear neuron at the end outputs the prediction.
+
+      Each neuron computes $a = f(w^\top x + b)$ with the `activation` $f$ (default ReLU,
+      $\max(0, z)$). The bends are what let the network fit curves; with `identity` the
+      whole network collapses to one linear model.
+
+      The weights are learned by **backpropagation** (the chain rule, layer by layer) and
+      an optimiser: `adam` takes mini-batch steps with a per-weight step size, `sgd` plain
+      steps with momentum, `lbfgs` full-batch quasi-Newton steps. `alpha` is an L2 penalty
+      on the weights, as in Ridge. Training stops after `max_iter` epochs, or earlier once
+      the loss has not improved by `tol` for more than `n_iter_no_change` epochs.
+
+      `batch_size="auto"` means 200 rows per step (or all of them, if fewer).
+      `random_state` fixes the starting weights and the shuffles, so this script trains the
+      same network as the platform did.
+    concepts: [neurons, activation-functions, backpropagation, adam-optimizer, l2-regularization]
+
+  scale-target:
+    span: block
+    short: "Standardise the target as well, and chain everything into one pipeline."
+    deep: |
+      `TransformedTargetRegressor` trains the network on $(y - \bar y)/s_y$ and converts its
+      predictions back to the target's units. The network starts with small random
+      weights, so its first outputs are near 0; a target in the thousands would need
+      thousands of tiny Adam steps just to reach the right scale, and the loss, `tol` and
+      learning rate would mean something different for every dataset.
+
+      R² is unaffected by the rescaling, and every prediction you see is in the original
+      units. The training loss the network reports is on the standardised target.
+    concepts: [feature-scaling, mean-squared-error]
+
+  fit:
+    span: block
+    short: "Train the network: repeated forward pass, backpropagation and an optimiser step per mini-batch."
+    deep: |
+      Each epoch shuffles the training rows and walks through them in mini-batches. For
+      each batch: a **forward pass** computes every layer's outputs and the loss
+      $\tfrac12\,\text{mean}(\hat y - y)^2$ plus the L2 penalty; **backpropagation** sends
+      the error back through the layers to get the gradient of every weight; the
+      optimiser takes one step.
+
+      `n_iter_` is the number of epochs it ran and `t_` the number of rows it processed.
+      If it reached `max_iter`, scikit-learn warns that it hasn't converged: train for
+      more epochs or raise the learning rate.
+    concepts: [backpropagation, epochs, stochastic-gradient-descent]
+
+  evaluate:
+    span: block
+    short: "Predict the held-out rows and score the predictions."
+    deep: |
+      - **R²**: the share of the target's variance the model explains (1 is perfect, 0 is
+        no better than predicting the mean).
+      - **RMSE**: typical error size, in the target's units.
+      - **MAE**: average absolute error, less sensitive to a few large misses.
+    concepts: [r-squared, mean-squared-error]
+
+  loss-curve:
+    span: block
+    short: "Print the training loss at about ten points along training: it should fall, then flatten."
+    deep: |
+      `loss_curve_` holds the average training loss of every epoch (the Lab plots all of
+      it). A steep start and a long flat tail is normal. A curve that zig-zags or rises
+      means the learning rate is too large; one still falling steeply at the end means
+      training stopped too soon.
+
+      With **early stopping**, `validation_scores_` holds the R² on the held-out part of
+      the training rows each epoch, and the network keeps the weights of its best epoch.
+      L-BFGS has no epochs, so no curve.
+    concepts: [epochs, learning-rate, early-stopping]
+
+  overfit:
+    span: block
+    short: "Compare the score on the training rows with the test score: a big gap means overfitting."
+    deep: |
+      A network with thousands of weights can learn the noise in a few hundred training
+      rows. If the training R² is far above the test R², it has: raise `alpha`, use fewer
+      neurons, or turn on early stopping (with enough rows to hold some out).
+    concepts: [overfitting-underfitting, l2-regularization, early-stopping]
+
+  baseline:
+    span: block
+    short: "Fit plain Linear Regression on the same features, to see what the network adds."
+    deep: |
+      An MLP is only worth its cost if it beats the simplest model. On data where the
+      target is roughly a weighted sum of the features, the two score about the same and
+      the linear model is easier to explain. A clear win for the network means the data
+      has curves or interactions a straight line can't capture.
+    concepts: [overfitting-underfitting]
+
+  weights:
+    span: block
+    short: "Show the shape of each layer's weight matrix and count every learned number."
+    deep: |
+      `coefs_[i]` is the matrix from layer $i$ to layer $i+1$: one row per input neuron,
+      one column per output neuron. `intercepts_[i]` holds a bias per neuron. A network
+      with $p$ inputs and one hidden layer of $h$ neurons has $(p + 1)h + (h + 1)$
+      parameters. Unlike a linear model's, these weights don't say how one feature affects
+      the prediction: each hidden neuron mixes all of them.
+    concepts: [neurons, matrix-multiplication]
+
+  save:
+    short: "Save the fitted pipeline (target scaling included) so you can load it and predict later."
+    deep: |
+      `joblib.load("model.joblib").predict(new_rows)` applies the same preprocessing, runs
+      the network and converts the prediction back to the target's units. Only load model
+      files you created yourself: unpickling can run arbitrary code.
+
+scratch:
+  numpy:
+    short: "Only NumPy: every step of the network is written out below."
+    deep: |
+      This file trains the same network as `MLPRegressor` with `solver="adam"`, step for
+      step: with the same seed and settings, its predictions match scikit-learn's to the
+      last digit.
+
+  activations:
+    span: block
+    short: "The bends a hidden neuron can apply, and the slope of each, used by backpropagation."
+    deep: |
+      ReLU $\max(0, z)$, $\tanh z$, the logistic sigmoid $1/(1+e^{-z})$ and the identity.
+      Each slope is written in terms of the activation's *output* $a$ (e.g. $\tanh' = 1 -
+      a^2$, $\sigma' = a(1 - a)$), so backpropagation can reuse the values the forward pass
+      already computed.
+    concepts: [activation-functions, sigmoid, derivatives]
+
+  init:
+    span: block
+    short: "Start every weight at a small random value, sized to the layer: Glorot initialisation."
+    deep: |
+      All-zero weights would make every neuron in a layer compute the same thing and get
+      the same gradient forever, so the start must be random. The bound
+      $\sqrt{6/(\text{fan-in} + \text{fan-out})}$ keeps each layer's outputs and gradients
+      at about the same size as its inputs, so signals neither die out nor blow up as they
+      pass through the layers.
+    concepts: [neurons]
+
+  adam:
+    span: block
+    short: "Adam: each weight gets its own step size, from running averages of its gradients."
+    deep: |
+      $m$ averages the gradient (momentum: steps keep going in consistent directions) and
+      $v$ averages its square (how large this weight's gradients usually are). The step is
+      $\eta\,\hat m / (\sqrt{\hat v} + \epsilon)$: weights with small, consistent gradients
+      take relatively large steps, noisy ones small steps. The hats are **bias
+      corrections**: $m$ and $v$ start at 0, so early averages are scaled up by
+      $1/(1-\beta^t)$.
+    concepts: [adam-optimizer, learning-rate]
+
+  class:
+    span: block
+    short: "The same settings as MLPRegressor's, with its defaults."
+    deep: |
+      `coefs_`, `intercepts_`, `loss_curve_` and `n_iter_` are named as in scikit-learn,
+      so you can compare the two side by side.
+
+  forward:
+    span: block
+    short: "Forward pass: each layer takes a weighted sum of the one below, then bends it."
+    deep: |
+      For a whole batch at once, layer $\ell$ computes $Z_\ell = A_{\ell-1} W_\ell + b_\ell$
+      (a matrix product: every row, every neuron) and $A_\ell = f(Z_\ell)$. The output
+      layer skips the activation, so the network can predict any number. Every layer's
+      output is kept: backpropagation needs them.
+    concepts: [neurons, matrix-multiplication, activation-functions]
+
+  backprop:
+    span: block
+    short: "The batch's loss: half the mean squared error, plus the L2 penalty on every weight."
+    deep: |
+      $$L = \frac{1}{2n}\sum_i (\hat y_i - y_i)^2 + \frac{\alpha}{2n}\sum_\ell \lVert W_\ell\rVert^2$$
+
+      The ½ makes the derivative tidy. The penalty is divided by the batch size $n$, as in
+      scikit-learn, and biases are not penalised.
+    concepts: [mean-squared-error, l2-regularization]
+
+  delta:
+    span: block
+    short: "Backpropagation: start from the output error and pass it back, layer by layer."
+    deep: |
+      $\delta_\ell = \partial L / \partial Z_\ell$ (times $n$) is how much each neuron's
+      weighted sum should change. At the output it is simply $\hat y - y$. Then, by the
+      chain rule, for every layer from the top down:
+
+      $$\nabla W_\ell = \tfrac1n\big(A_{\ell-1}^\top \delta_\ell + \alpha W_\ell\big), \qquad
+      \nabla b_\ell = \tfrac1n \textstyle\sum_i \delta_{\ell,i}, \qquad
+      \delta_{\ell-1} = (\delta_\ell W_\ell^\top) \odot f'(A_{\ell-1}).$$
+
+      One backward pass gives the gradient of every weight for about the cost of one
+      forward pass. That is what makes training large networks possible.
+    concepts: [backpropagation, derivatives, gradient-descent]
+
+  fit:
+    span: block
+    short: "Set up the layers and the optimiser, then train epoch by epoch."
+    deep: |
+      `sizes` lists the neurons per layer, inputs first and the single output last; each
+      neighbouring pair gets a weight matrix. `RandomState` is NumPy's older generator,
+      used here only because scikit-learn uses it: drawing the same numbers in the same
+      order is what makes the two implementations agree exactly.
+    concepts: [neurons]
+
+  epoch:
+    span: block
+    short: "One epoch: shuffle, then one backpropagation and one Adam step per mini-batch."
+    deep: |
+      With 200 rows per batch, an epoch over 1,000 rows is 5 steps. The epoch's loss is
+      the average over its batches, weighted by their sizes; that is what `loss_curve_`
+      records.
+    concepts: [epochs, stochastic-gradient-descent]
+
+  stop:
+    span: block
+    short: "Stop once the epoch loss has failed to beat the best by tol for more than 10 epochs."
+    deep: |
+      Mini-batch losses are noisy, so one bad epoch is no reason to stop. scikit-learn's
+      early stopping applies the same rule to a held-out validation score instead, and
+      then restores the best epoch's weights; this file leaves that out to stay short.
+    concepts: [epochs, early-stopping]
+
+  predict:
+    short: "Predict: run the forward pass and read the output neuron."
+    deep: |
+      The last layer's output is one column, one prediction per row. A pipeline would
+      standardise the features (and the target) around this, as the training script does.

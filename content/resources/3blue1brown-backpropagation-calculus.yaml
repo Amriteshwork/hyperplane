@@ -1,0 +1,8 @@
+type: video
+title: Backpropagation calculus (Deep learning, chapter 4)
+url: https://www.youtube.com/watch?v=tIeHLnjs5U8
+author: 3Blue1Brown
+level: intermediate
+why: The chain rule behind backpropagation, worked through on a network with one neuron per layer.
+source: curated
+checked: 2026-10-24

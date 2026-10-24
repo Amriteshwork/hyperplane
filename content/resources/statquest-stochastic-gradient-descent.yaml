@@ -1,0 +1,8 @@
+type: video
+title: Stochastic Gradient Descent, Clearly Explained!!!
+url: https://www.youtube.com/watch?v=vMh0zPT0tLI
+author: StatQuest with Josh Starmer
+level: beginner
+why: Picks up from StatQuest's gradient descent video and swaps the full gradient for one random sample at a time.
+source: curated
+checked: 2026-10-24

@@ -1,0 +1,9 @@
+type: blog
+title: Difference Between a Batch and an Epoch in a Neural Network
+url: https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/
+author: Jason Brownlee (Machine Learning Mastery)
+level: beginner
+duration_min: 10
+why: Plain definitions of SGD, batch size and epochs, with a worked example counting the updates per epoch.
+source: curated
+checked: 2026-10-24

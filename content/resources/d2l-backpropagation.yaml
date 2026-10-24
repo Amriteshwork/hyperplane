@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Forward Propagation, Backward Propagation, and Computational Graphs"
+url: https://d2l.ai/chapter_multilayer-perceptrons/backprop.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: The forward and backward passes of a one-hidden-layer network with L2 penalty, derived term by term.
+source: curated
+checked: 2026-10-24

@@ -1,0 +1,8 @@
+type: blog
+title: "Machine Learning Crash Course: Neural networks — nodes and hidden layers"
+url: https://developers.google.com/machine-learning/crash-course/neural-networks/nodes-hidden-layers
+author: Google for Developers
+level: beginner
+why: Why stacking linear layers is still linear, and how hidden layers of nodes are wired, with interactive diagrams.
+source: curated
+checked: 2026-10-24

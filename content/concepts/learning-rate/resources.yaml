@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: google-mlcc-gradient-descent
+  note: "Start here: the step size in the gradient descent loop, and how it decides whether training converges."
+- id: google-mlcc-hyperparameters
+  note: "Loss curves for a learning rate that is right, too small and too large: learn to recognise each shape."
+- id: deeplearningai-learning-rate-decay
+  note: "Why noisy steps need a shrinking learning rate to settle, with the common decay formulas."
+- id: jeremyjordan-learning-rate
+  note: "Practical: the learning-rate range test for finding a good rate, then decay and cyclical schedules."
+- id: sklearn-sgd-guide
+  note: "Section 1.5.8.1 lists the schedules scikit-learn's SGD offers (optimal, invscaling, constant, adaptive) with their formulas."

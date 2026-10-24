@@ -1,0 +1,322 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      The same preprocessing and metrics as Logistic Regression, with `MLPClassifier`
+      (from `sklearn.neural_network`) as the model. `LogisticRegression` is only imported
+      to compare against: does the network's curved boundary pay off on this data?
+      `clone` copies the preprocessing for that comparison, unfitted.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict
+      (`TARGET`), which columns are features, how much data to hold out, and the random seed.
+
+      `SEED` fixes the train/test split. A network has more randomness of its own (its
+      starting weights and the order of its mini-batches); that is the model's own
+      `random_state`, below.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no label, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y`
+      holds the class labels. Rows with a missing label can't be used for training or
+      scoring, so they are dropped; missing *feature* values are filled in during
+      preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The network only learns from the training rows. With thousands of weights it can
+      classify the training rows far better than new ones, so the held-out scores are the
+      ones to trust.
+    concepts: [train-test-split, overfitting-underfitting]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      Networks are trained by gradient steps, so they need features on a common scale as
+      much as SGD does. Scaling also keeps each neuron's weighted sum near 0 at the start,
+      where `tanh` and `logistic` still have a slope; a feature in the thousands would push
+      them straight into their flat tails, and **saturated** neurons barely learn.
+
+      All of it is learned **from the training set only**, so no information leaks from
+      the test set.
+    concepts: [feature-scaling, activation-functions]
+
+  model:
+    span: block
+    short: "Create the network with your settings, chained after preprocessing."
+    deep: |
+      `hidden_layer_sizes` lists the width of each hidden layer: `[100]` is one layer of
+      100 neurons, `[64, 64]` two layers of 64. The inputs feed the first layer, each
+      layer feeds the next, and the output layer turns the last one into class
+      probabilities.
+
+      Each neuron computes $a = f(w^\top x + b)$ with the `activation` $f$ (default ReLU,
+      $\max(0, z)$). The bends are what let the decision boundary curve; with `identity`
+      the network is just (multinomial) logistic regression.
+
+      The weights are learned by **backpropagation** (the chain rule, layer by layer) and
+      an optimiser: `adam` takes mini-batch steps with a per-weight step size, `sgd` plain
+      steps with momentum, `lbfgs` full-batch quasi-Newton steps. `alpha` is an L2 penalty
+      on the weights. Training stops after `max_iter` epochs, or earlier once the loss has
+      not improved by `tol` for more than `n_iter_no_change` epochs.
+
+      `batch_size="auto"` means 200 rows per step (or all of them, if fewer).
+      `random_state` fixes the starting weights and the shuffles, so this script trains the
+      same network as the platform did.
+    concepts: [neurons, activation-functions, backpropagation, adam-optimizer, l2-regularization]
+
+  fit:
+    span: block
+    short: "Train the network: repeated forward pass, backpropagation and an optimiser step per mini-batch."
+    deep: |
+      Each epoch shuffles the training rows and walks through them in mini-batches. For
+      each batch: a **forward pass** computes every layer's outputs and the log-loss plus
+      the L2 penalty; **backpropagation** sends the error back through the layers to get
+      the gradient of every weight; the optimiser takes one step.
+
+      The output layer depends on the labels: with two classes, **one** neuron with a
+      sigmoid gives $P(\texttt{classes\_[1]})$; with more, one neuron per class and a
+      **softmax**, so the probabilities add up to 1. `n_iter_` is the number of epochs it
+      ran; if it reached `max_iter`, scikit-learn warns that it hasn't converged.
+    concepts: [backpropagation, epochs, sigmoid, softmax, log-loss]
+
+  predict:
+    span: block
+    short: "Predict a class for each held-out row, and the probability of every class."
+    deep: |
+      `predict_proba` returns the output layer's probabilities (two classes: $1 - p$ and
+      $p$). `predict` picks the likeliest class, which with two classes means
+      $p > 0.5$. The columns follow `model.classes_`, the labels in sorted order.
+    concepts: [decision-boundary]
+
+  evaluate:
+    span: block
+    short: "Score the predictions on the held-out rows."
+    deep: |
+      - **Accuracy**: the share of rows classified correctly. Misleading when one class is
+        rare.
+      - **Precision** and **recall**: of the rows called positive, how many were; of the
+        positives, how many were found. With several classes, each is averaged over the
+        classes (macro).
+      - **F1**: the harmonic mean of precision and recall.
+      - **Log-loss**: how much probability went to the true class; it punishes confident
+        mistakes, and is the loss the network was trained on.
+      - **ROC-AUC**: how well the probabilities rank positives above negatives, 1 is
+        perfect and 0.5 is guessing.
+    concepts: [classification-metrics, log-loss, roc-auc]
+
+  confusion:
+    span: block
+    short: "Count every (actual, predicted) pair of classes: the mistakes, and which way they go."
+    deep: |
+      The diagonal holds the correct predictions; every other cell is one kind of mistake.
+      It shows which classes the network confuses with which.
+    concepts: [classification-metrics]
+
+  loss-curve:
+    span: block
+    short: "Print the training log-loss at about ten points along training: it should fall, then flatten."
+    deep: |
+      `loss_curve_` holds the average training loss of every epoch (the Lab plots all of
+      it). A steep start and a long flat tail is normal. A curve that zig-zags or rises
+      means the learning rate is too large; one still falling steeply at the end means
+      training stopped too soon.
+
+      With **early stopping**, `validation_scores_` holds the accuracy on the held-out part
+      of the training rows each epoch, and the network keeps the weights of its best epoch.
+      L-BFGS has no epochs, so no curve.
+    concepts: [epochs, learning-rate, early-stopping]
+
+  overfit:
+    span: block
+    short: "Compare accuracy on the training rows with test accuracy: a big gap means overfitting."
+    deep: |
+      A network with thousands of weights can memorise a few hundred training rows,
+      reaching 100% training accuracy. If test accuracy is well below it: raise `alpha`,
+      use fewer neurons, or turn on early stopping (with enough rows to hold some out).
+    concepts: [overfitting-underfitting, l2-regularization, early-stopping]
+
+  baseline:
+    span: block
+    short: "Fit Logistic Regression on the same features, to see what the network adds."
+    deep: |
+      An MLP is only worth its cost if it beats the simplest model. When the classes can be
+      separated by a straight boundary, the two score about the same and Logistic
+      Regression is easier to explain. A clear win for the network means the boundary
+      needs to curve.
+    concepts: [decision-boundary]
+
+  weights:
+    span: block
+    short: "Show the shape of each layer's weight matrix and count every learned number."
+    deep: |
+      `coefs_[i]` is the matrix from layer $i$ to layer $i+1$: one row per input neuron,
+      one column per output neuron. `intercepts_[i]` holds a bias per neuron. A network
+      with $p$ inputs, one hidden layer of $h$ neurons and $k$ outputs has
+      $(p + 1)h + (h + 1)k$ parameters. Unlike Logistic Regression's coefficients, these
+      weights don't say how one feature moves the odds: each hidden neuron mixes all of
+      them.
+    concepts: [neurons, matrix-multiplication]
+
+  save:
+    short: "Save the fitted pipeline so you can load it and predict later."
+    deep: |
+      `joblib.load("model.joblib").predict(new_rows)` applies the same preprocessing and
+      runs the network. Only load model files you created yourself: unpickling can run
+      arbitrary code.
+
+scratch:
+  numpy:
+    short: "Only NumPy: every step of the network is written out below."
+    deep: |
+      This file trains the same network as `MLPClassifier` with `solver="adam"`, step for
+      step: with the same seed and settings, its probabilities match scikit-learn's to the
+      last digit.
+
+  activations:
+    span: block
+    short: "The bends a hidden neuron can apply, and the slope of each, used by backpropagation."
+    deep: |
+      ReLU $\max(0, z)$, $\tanh z$, the logistic sigmoid $1/(1+e^{-z})$ and the identity.
+      Each slope is written in terms of the activation's *output* $a$ (e.g. $\tanh' = 1 -
+      a^2$, $\sigma' = a(1 - a)$), so backpropagation can reuse the values the forward pass
+      already computed.
+    concepts: [activation-functions, sigmoid, derivatives]
+
+  output:
+    span: block
+    short: "Softmax: one score per class in, probabilities that add up to 1 out."
+    deep: |
+      $\text{softmax}(z)_k = e^{z_k} / \sum_j e^{z_j}$. Subtracting the row's largest score
+      first changes nothing (it cancels) but keeps $e^z$ from overflowing.
+    concepts: [softmax]
+
+  init:
+    span: block
+    short: "Start every weight at a small random value, sized to the layer: Glorot initialisation."
+    deep: |
+      All-zero weights would make every neuron in a layer compute the same thing and get
+      the same gradient forever, so the start must be random. The bound
+      $\sqrt{6/(\text{fan-in} + \text{fan-out})}$ keeps each layer's outputs and gradients
+      at about the same size as its inputs, so signals neither die out nor blow up as they
+      pass through the layers.
+    concepts: [neurons]
+
+  adam:
+    span: block
+    short: "Adam: each weight gets its own step size, from running averages of its gradients."
+    deep: |
+      $m$ averages the gradient (momentum: steps keep going in consistent directions) and
+      $v$ averages its square (how large this weight's gradients usually are). The step is
+      $\eta\,\hat m / (\sqrt{\hat v} + \epsilon)$: weights with small, consistent gradients
+      take relatively large steps, noisy ones small steps. The hats are **bias
+      corrections**: $m$ and $v$ start at 0, so early averages are scaled up by
+      $1/(1-\beta^t)$.
+    concepts: [adam-optimizer, learning-rate]
+
+  class:
+    span: block
+    short: "The same settings as MLPClassifier's, with its defaults."
+    deep: |
+      `classes_`, `coefs_`, `intercepts_`, `loss_curve_` and `n_iter_` are named as in
+      scikit-learn, so you can compare the two side by side.
+
+  forward:
+    span: block
+    short: "Forward pass: each layer takes a weighted sum of the one below, then bends it."
+    deep: |
+      For a whole batch at once, layer $\ell$ computes $Z_\ell = A_{\ell-1} W_\ell + b_\ell$
+      (a matrix product: every row, every neuron) and $A_\ell = f(Z_\ell)$. The output
+      layer applies the sigmoid (one neuron, two classes) or the softmax (one neuron per
+      class) instead, giving probabilities. Every layer's output is kept: backpropagation
+      needs them.
+    concepts: [neurons, matrix-multiplication, sigmoid, softmax]
+
+  backprop:
+    span: block
+    short: "The batch's loss: the log-loss of the true labels, plus the L2 penalty on every weight."
+    deep: |
+      $$L = -\frac1n\sum_i\sum_k Y_{ik}\log P_{ik} + \frac{\alpha}{2n}\sum_\ell \lVert W_\ell\rVert^2$$
+
+      With one output column, the sum over classes is written out as
+      $y\log p + (1-y)\log(1-p)$. Probabilities are clipped away from 0 and 1 so the logs
+      stay finite.
+    concepts: [log-loss, l2-regularization]
+
+  delta:
+    span: block
+    short: "Backpropagation: start from the output error and pass it back, layer by layer."
+    deep: |
+      $\delta_\ell = \partial L / \partial Z_\ell$ (times $n$) is how much each neuron's
+      weighted sum should change. At the output it is $P - Y$, probability minus truth:
+      the sigmoid with log-loss, and softmax with log-loss, both simplify to this, as for
+      Logistic Regression. Then, by the chain rule, for every layer from the top down:
+
+      $$\nabla W_\ell = \tfrac1n\big(A_{\ell-1}^\top \delta_\ell + \alpha W_\ell\big), \qquad
+      \nabla b_\ell = \tfrac1n \textstyle\sum_i \delta_{\ell,i}, \qquad
+      \delta_{\ell-1} = (\delta_\ell W_\ell^\top) \odot f'(A_{\ell-1}).$$
+    concepts: [backpropagation, derivatives, log-loss]
+
+  fit:
+    span: block
+    short: "Set up the layers and the optimiser, then train epoch by epoch."
+    deep: |
+      `sizes` lists the neurons per layer, inputs first and the outputs last; each
+      neighbouring pair gets a weight matrix. `RandomState` is NumPy's older generator,
+      used here only because scikit-learn uses it: drawing the same numbers in the same
+      order is what makes the two implementations agree exactly.
+    concepts: [neurons]
+
+  targets:
+    span: block
+    short: "Turn the labels into one 0/1 column per class (one column only, for two classes)."
+    deep: |
+      Row $i$ of `Y` is 1 in its class's column and 0 elsewhere (**one-hot**). With two
+      classes the second column says everything, so the network gets one output neuron
+      for "is it `classes_[1]`?".
+
+  epoch:
+    span: block
+    short: "One epoch: shuffle, then one backpropagation and one Adam step per mini-batch."
+    deep: |
+      With 200 rows per batch, an epoch over 1,000 rows is 5 steps. The epoch's loss is
+      the average over its batches, weighted by their sizes; that is what `loss_curve_`
+      records.
+    concepts: [epochs, stochastic-gradient-descent]
+
+  stop:
+    span: block
+    short: "Stop once the epoch loss has failed to beat the best by tol for more than 10 epochs."
+    deep: |
+      Mini-batch losses are noisy, so one bad epoch is no reason to stop. scikit-learn's
+      early stopping applies the same rule to the validation accuracy instead, and then
+      restores the best epoch's weights; this file leaves that out to stay short.
+    concepts: [epochs, early-stopping]
+
+  predict-proba:
+    span: block
+    short: "Run the forward pass and return one probability column per class."
+    deep: |
+      With two classes the network outputs only $p = P(\texttt{classes\_[1]})$; the first
+      column is $1 - p$.
+
+  predict:
+    span: block
+    short: "Predict the likeliest class for each row."
+    deep: |
+      The class with the largest probability. With two classes, that is `classes_[1]`
+      exactly when $p > 0.5$: the decision boundary is where the network is unsure.
+    concepts: [decision-boundary]

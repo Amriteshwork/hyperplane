@@ -26,9 +26,10 @@ from app.ml.base import (
     ProgressFn,
     ReportsClassCoefficients,
     ReportsCoefficients,
+    ReportsTrainingCurve,
 )
 from app.ml.codegen import CodegenContext
-from app.ml.evaluation import EVALUATORS, Evaluation, Predictions
+from app.ml.evaluation import EVALUATORS, Evaluation, Predictions, training_curve_plots
 from app.ml.preprocessing import PreprocessingConfig, build_preprocessor
 from app.ml.types import TaskType
 
@@ -114,6 +115,11 @@ def train(
     evaluation = EVALUATORS[config.task_type](
         Predictions(y_test, predictions, probabilities, classes)
     )
+    if isinstance(pack, ReportsTrainingCurve) and (
+        curve := pack.training_curve(pipeline.named_steps["model"])
+    ):
+        plots = [*evaluation.plots, *training_curve_plots(curve)]
+        evaluation = evaluation.model_copy(update={"plots": plots})
     return TrainingResult(
         pipeline=pipeline,
         report=TrainingReport(

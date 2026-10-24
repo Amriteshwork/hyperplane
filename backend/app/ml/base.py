@@ -4,7 +4,7 @@ Required capabilities make up `AlgorithmPack`. Optional ones (`Reports*`) are ch
 `isinstance` and declared in `AlgorithmSpec.supports`; packs never stub them out.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Literal, Protocol, runtime_checkable
@@ -23,6 +23,7 @@ class Capability(StrEnum):
     FEATURE_IMPORTANCE = "feature_importance"
     COEFFICIENTS = "coefficients"
     CLASS_COEFFICIENTS = "class_coefficients"
+    TRAINING_CURVE = "training_curve"
     SPARSE = "sparse"
 
 
@@ -89,6 +90,17 @@ type ClassCoefTable = Mapping[str, CoefTable]
 type ImportanceTable = Mapping[str, float]
 
 
+@dataclass(frozen=True, slots=True)
+class TrainingCurve:
+    """What an iterative model recorded once per epoch, in order."""
+
+    loss: Sequence[float]
+    #: The held-out score per epoch, when the model stopped early on one.
+    validation: Sequence[float] | None = None
+    #: What `validation` measures, e.g. "Validation accuracy".
+    validation_label: str = "Validation score"
+
+
 class Estimator(Protocol):
     """The subset of the scikit-learn estimator API the platform relies on."""
 
@@ -150,6 +162,16 @@ class ReportsFeatureImportance(Protocol):
     def feature_importance(
         self, fitted: Estimator, feature_names: list[str]
     ) -> ImportanceTable: ...
+
+
+@runtime_checkable
+class ReportsTrainingCurve(Protocol):
+    """Models trained epoch by epoch that keep their loss per epoch (e.g. `loss_curve_`).
+
+    `None` when this run's settings recorded no curve (e.g. a full-batch solver).
+    """
+
+    def training_curve(self, fitted: Estimator) -> TrainingCurve | None: ...
 
 
 @runtime_checkable

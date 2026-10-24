@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from app.content.catalog import ContentCatalog
 from app.content.gaps import missing_sections
@@ -20,6 +21,7 @@ from app.ml.base import (
     ReportsClassCoefficients,
     ReportsCoefficients,
     ReportsFeatureImportance,
+    ReportsTrainingCurve,
 )
 from app.ml.codegen import CodegenContext, find_anchors, render
 from app.ml.registry import AlgorithmRegistry
@@ -52,6 +54,7 @@ def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     assert (Capability.COEFFICIENTS in supports) == isinstance(pack, ReportsCoefficients)
     assert (Capability.CLASS_COEFFICIENTS in supports) == isinstance(pack, ReportsClassCoefficients)
     assert (Capability.FEATURE_IMPORTANCE in supports) == isinstance(pack, ReportsFeatureImportance)
+    assert (Capability.TRAINING_CURVE in supports) == isinstance(pack, ReportsTrainingCurve)
 
 
 @pytest.mark.parametrize("pack", PACKS)
@@ -74,7 +77,10 @@ def test_defaults_train_on_every_matching_sample(pack: AlgorithmPack) -> None:
         df = pd.read_csv(sample.path)
         X = df.drop(columns=sample.meta.target).select_dtypes("number")
         y = df[sample.meta.target]
-        model = make_pipeline(SimpleImputer(), pack.build_estimator(pack.params_model()))
+        # Scaled as the platform's preprocessing always does; SGD can't train on raw scales.
+        model = make_pipeline(
+            SimpleImputer(), StandardScaler(), pack.build_estimator(pack.params_model())
+        )
         model.fit(X, y)
         assert len(model.predict(X.head())) == 5
 

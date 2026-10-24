@@ -15,6 +15,12 @@
 @theme inline {
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  /* Figures (shared/figures): the chart palette's first hues, for SVG `fill-*` / `stroke-*`. */
+  --color-fig-1: var(--fig-1);
+  --color-fig-2: var(--fig-2);
+  --color-fig-3: var(--fig-3);
+  --color-fig-4: var(--fig-4);
+  --color-fig-negative: var(--fig-negative);
 }
 
 /* Light theme (default). Neutral palette from Spartan's "neutral" theme. */
@@ -46,6 +52,12 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
 
+  /* Same values as chart-themes.ts PALETTE.light (validated for colour-vision deficiency). */
+  --fig-1: #2a78d6;
+  --fig-2: #eb6834;
+  --fig-3: #1baf7a;
+  --fig-4: #eda100;
+  --fig-negative: #e34948;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -78,6 +90,11 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
 
+  --fig-1: #3987e5;
+  --fig-2: #d95926;
+  --fig-3: #199e70;
+  --fig-4: #c98500;
+  --fig-negative: #e66767;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -146,6 +163,10 @@
   }
   .prose-hp .math-display {
     @apply overflow-x-auto py-1;
+  }
+  /* `::figure[name]` placeholders become interactive figures (shared/figures). */
+  .prose-hp .figure-slot {
+    @apply block;
   }
 }
 

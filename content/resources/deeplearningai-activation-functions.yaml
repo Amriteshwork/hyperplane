@@ -1,0 +1,8 @@
+type: video
+title: Activation Functions (C1W3L06)
+url: https://www.youtube.com/watch?v=Xvg00QnyaIY
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: Sigmoid vs tanh vs ReLU vs leaky ReLU, and the rule of thumb for choosing between them.
+source: curated
+checked: 2026-10-24

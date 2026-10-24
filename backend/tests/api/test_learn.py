@@ -22,9 +22,12 @@ def test_families_list_available_and_upcoming_algorithms(client: TestClient) -> 
     assert algorithms["elastic_net"]["available"] is True
     assert algorithms["logistic_regression"]["available"] is True
     assert algorithms["logistic_regression"]["task_types"] == ["binary", "multiclass"]
-    assert algorithms["sgd"] == {
-        "id": "sgd",
-        "name": "SGD Classifier / Regressor",
+    assert algorithms["sgd_regressor"]["task_types"] == ["regression"]
+    assert algorithms["sgd_classifier"]["task_types"] == ["binary", "multiclass"]
+    upcoming = {a["id"]: a for a in body["items"][1]["algorithms"]}
+    assert upcoming["knn"] == {
+        "id": "knn",
+        "name": "K-Nearest Neighbors",
         "available": False,
         "summary": None,
         "task_types": [],
@@ -70,7 +73,16 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
     body = client.get("/api/v1/concepts").json()
     areas = {a["id"]: [c["id"] for c in a["concepts"]] for a in body["items"]}
 
-    assert list(areas) == ["foundations", "optimisation", "evaluation", "features"]
+    assert list(areas) == [
+        "foundations",
+        "optimisation",
+        "evaluation",
+        "features",
+        "neural-networks",
+    ]
+    assert areas["neural-networks"].index("neurons") < areas["neural-networks"].index(
+        "backpropagation"
+    )
     assert areas["foundations"][0] == "numpy-basics"
     foundations = areas["foundations"]
     assert foundations.index("vectors") < foundations.index("matrix-multiplication")
@@ -157,7 +169,7 @@ def test_concept_page_links_algorithms_and_prerequisites(client: TestClient) -> 
 
 def test_unknown_ids_are_404_problems(client: TestClient) -> None:
     for path in (
-        "/api/v1/algorithms/sgd",
+        "/api/v1/algorithms/knn",
         "/api/v1/algorithms/linear_regression/code/nope",
         "/api/v1/concepts/nope",
     ):

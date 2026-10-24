@@ -65,7 +65,7 @@ class CurveSeries(_Frozen):
 
 
 class CurvePlot(_Frozen):
-    """One or more lines on shared axes, e.g. ROC curves."""
+    """One or more lines on shared axes, e.g. ROC curves or a loss per epoch."""
 
     kind: Literal["curve"] = "curve"
     id: str
@@ -76,6 +76,8 @@ class CurvePlot(_Frozen):
     series: list[CurveSeries]
     #: `diagonal` is y = x from (0, 0) to (1, 1): a random classifier's ROC curve.
     reference: Literal["diagonal"] | None = None
+    #: `unit`: both axes run 0–1 (rates, e.g. ROC); `data`: axes fit the points (e.g. a loss).
+    axes: Literal["unit", "data"] = "unit"
 
 
 Plot = Annotated[ScatterPlot | HeatmapPlot | CurvePlot, Field(discriminator="kind")]

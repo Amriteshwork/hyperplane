@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-neural-network
+  note: "Start here: neurons as numbers, weights and biases as the knobs, and a layer as one matrix product."
+- id: statquest-neural-networks
+  note: "A two-neuron network fitted by hand: how bent, scaled and added activations make a curve."
+- id: google-mlcc-neural-networks
+  note: "Why stacked linear layers stay linear, and what hidden layers add; try the interactive diagrams."
+- id: tensorflow-playground
+  note: "Solve the XOR-like datasets yourself: add hidden neurons until the boundary bends around the classes."
+- id: cs231n-neural-networks
+  note: "Advanced: the biological analogy and its limits, layer-wise matrix form, and how to size a network."

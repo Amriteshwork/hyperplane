@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: mlm-early-stopping
+  note: "Start here: what to monitor, patience, and restoring the best weights, with the two loss curves."
+- id: deeplearningai-other-regularization
+  note: "Early stopping on the training and dev-set curves, and why Andrew Ng often prefers L2 instead."
+- id: google-mlcc-overfitting
+  note: "How the training and validation loss curves look when a model overfits."
+- id: sklearn-neural-network-guide
+  note: "How MLPClassifier and MLPRegressor's early_stopping, validation_fraction and n_iter_no_change work."
+- id: goodfellow-dl-regularization
+  note: "Advanced: section 7.8 proves early stopping acts like an L2 penalty, and gives two ways to retrain."

@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Adam"
+url: https://d2l.ai/chapter_optimization/adam.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: Adam's update and bias correction derived from momentum and RMSProp, with a from-scratch implementation.
+source: curated
+checked: 2026-10-24
