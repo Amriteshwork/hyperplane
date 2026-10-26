@@ -1,0 +1,8 @@
+type: interactive
+title: "LLM Visualization"
+url: https://bbycroft.net/llm
+author: Brendan Bycroft
+level: intermediate
+why: "A 3-D walk through every matrix of a small GPT, step by step, from token embedding to output probabilities."
+source: curated
+checked: 2026-10-24

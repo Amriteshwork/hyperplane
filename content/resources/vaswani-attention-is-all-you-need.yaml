@@ -1,0 +1,8 @@
+type: paper
+title: "Attention Is All You Need"
+url: https://arxiv.org/abs/1706.03762
+author: Vaswani et al. (2017)
+level: advanced
+why: "The paper that introduced the transformer; section 3 is short and readable once the ideas are familiar."
+source: curated
+checked: 2026-10-24

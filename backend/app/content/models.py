@@ -62,7 +62,9 @@ class FamilyFrontmatter(_Frozen):
     title: str
     summary: str
     order: int = Field(ge=1)
-    algorithms: tuple[FamilyAlgorithm, ...]
+    algorithms: tuple[FamilyAlgorithm, ...] = ()
+    #: Guided tracks shown in this family on Learn, for subjects taught as concepts, not packs.
+    tracks: tuple[str, ...] = ()
 
 
 class AlgorithmFrontmatter(_Frozen):
@@ -98,6 +100,7 @@ class ConceptArea(StrEnum):
     EVALUATION = "evaluation"
     FEATURES = "features"
     NEURAL_NETWORKS = "neural-networks"
+    SEQUENCE_MODELS = "sequence-models"
 
 
 CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
@@ -106,6 +109,7 @@ CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
     ConceptArea.EVALUATION: "Evaluation & generalisation",
     ConceptArea.FEATURES: "Features & regularisation",
     ConceptArea.NEURAL_NETWORKS: "Neural networks",
+    ConceptArea.SEQUENCE_MODELS: "Sequence models & transformers",
 }
 
 
@@ -144,6 +148,21 @@ class ConceptFrontmatter(_Frozen):
     prerequisites: tuple[str, ...] = ()
 
 
+class TrackChapter(_Frozen):
+    title: str
+    summary: str
+    concepts: tuple[str, ...] = Field(min_length=1)
+
+
+class TrackFrontmatter(_Frozen):
+    title: str
+    summary: str
+    order: int = Field(ge=1)
+    #: The concept the track leads to; its chapters cover it and everything it builds on.
+    goal: str
+    chapters: tuple[TrackChapter, ...] = Field(min_length=1)
+
+
 class Family(_Frozen):
     id: str = Field(pattern=_SLUG)
     meta: FamilyFrontmatter
@@ -163,3 +182,53 @@ class Concept(_Frozen):
     body: str
     resources: tuple[ResourceLink, ...]
     code: tuple[ConceptCode, ...] = ()
+
+
+class Track(_Frozen):
+    """A guided route to one concept: its whole learning path, cut into authored chapters."""
+
+    id: str = Field(pattern=_SLUG)
+    meta: TrackFrontmatter
+    body: str
+    resources: tuple[ResourceLink, ...]
+
+
+class PaperVideo(_Frozen):
+    """A Manim animation (`scenes/<id>.py`), rendered offline and hosted on YouTube (ADR 0022)."""
+
+    title: str
+    #: Filled in once the render is uploaded; until then the page says the clip is coming.
+    youtube: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{11}$")
+
+
+class PaperFrontmatter(_Frozen):
+    title: str
+    summary: str
+    order: int = Field(ge=1)
+    #: The paper or blog post walked through: a resource id of type paper or blog.
+    source: str
+    #: Concepts the walkthrough leans on; the page lists them under "Before you read".
+    concepts: tuple[str, ...] = Field(min_length=1)
+    #: A guided track that teaches those concepts from scratch.
+    track: str | None = None
+    videos: dict[str, PaperVideo] = {}
+
+
+class PaperSection(_Frozen):
+    """One `## ` section of a walkthrough, usually one section of the original."""
+
+    id: str = Field(pattern=_SLUG)
+    title: str
+    body: str
+
+
+class Paper(_Frozen):
+    """A section-by-section, plain-words walkthrough of one paper or blog post."""
+
+    id: str = Field(pattern=_SLUG)
+    meta: PaperFrontmatter
+    source: Resource
+    #: Text before the first section.
+    intro: str
+    sections: tuple[PaperSection, ...] = Field(min_length=1)
+    resources: tuple[ResourceLink, ...]

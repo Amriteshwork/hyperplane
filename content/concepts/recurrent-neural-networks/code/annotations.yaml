@@ -1,0 +1,144 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the text and loss (Language modeling), embeddings, softmax, the tokenizer and Adam."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [language-modeling, embeddings, softmax, tokenization, adam-optimizer]
+
+  params:
+    span: block
+    short: "Five arrays: input embeddings E, recurrent weights W and bias b, read-out U and c."
+    deep: |
+      $E$ plays the role of the input weights: `E[x]` is the same as `one_hot(x) @ E`.
+      $W$ is scaled by $1/\sqrt d$ so that $h W$ starts out about as large as $h$, neither
+      shrinking nor growing step by step. They're kept in a list so `adam_step` can
+      update them all at once.
+    concepts: [embeddings]
+
+  forward:
+    span: block
+    short: "The recurrence: each new state mixes the current token's embedding with the previous state, through tanh."
+    deep: |
+      $h_t = \tanh(E[x_t] + h_{t-1}W + b)$. The loop is the whole idea: the same weights
+      at every step, and $h$ is the only thing that changes. tanh keeps every entry of
+      $h$ between −1 and 1, however long the text. Stacking the states gives a `(T, d)`
+      matrix, and one matrix product turns all of them into next-token scores.
+    concepts: [neurons, activation-functions]
+
+  bptt:
+    span: block
+    short: "Backpropagation through time: walk from the last step to the first, adding each step's gradient."
+    deep: |
+      `probs − one_hot(target)` is the gradient of softmax + cross-entropy with respect to
+      the logits, as for logistic regression. At step $t$ the gradient reaching the state
+      has two parts: this step's prediction (`d_logits[t] @ U.T`) and every later step,
+      carried back in `d_h_next`. Multiplying by $1 - h_t^2$ goes back through tanh.
+      `dz @ W.T` passes it one step further back.
+
+      $W$, $b$ and $E$ are shared by every step, so their gradients are **sums** over the
+      steps (`+=`). `dE[ids[t]] += dz` only touches the rows of tokens that were read.
+    concepts: [backpropagation, log-loss]
+
+  demo:
+    short: "Runs only when you execute this file, so other files can import its functions."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  grad-check:
+    span: block
+    short: "Nudge one recurrent weight by ±10⁻⁶ and re-run: the slope matches BPTT's gradient."
+    deep: |
+      A central difference $\big(L(w+\epsilon) - L(w-\epsilon)\big)/2\epsilon$ needs no
+      calculus, just two forward passes. It's far too slow to train with, but it's the
+      standard way to catch a mistake in a hand-written backward pass. The weight sits in
+      the middle of the chain, so the check covers every step of the backward loop.
+    concepts: [derivatives]
+
+  vanishing:
+    span: block
+    short: "Multiply 24 step-to-step Jacobians: with W halved the gradient vanishes, with W tripled it explodes."
+    deep: |
+      $\partial h_t / \partial h_{t-1} = \operatorname{diag}(1 - h_t^2)\,W^\top$, so a
+      gradient from $k$ steps back is multiplied by $k$ of these. The spectral norm
+      (`np.linalg.norm(J, 2)`) is the most the product can stretch a vector. With $W/2$,
+      every factor shrinks, and after 24 steps there's about $10^{-6}$ left. With $3W$,
+      it grows to about $2000$. tanh slows the growth, since saturated units have slope
+      near 0, but doesn't stop it.
+
+  train:
+    span: block
+    short: "2,000 Adam steps on random 32-character pieces of the text, with each gradient clipped to ±5."
+    deep: |
+      Each step reads one 32-character piece, starting from $h = 0$. Backpropagating
+      through just those 32 steps is **truncated BPTT**. `np.clip` caps every gradient
+      entry, the same trick as Karpathy's `min-char-rnn`, so a rare exploding gradient
+      can't throw the weights far off.
+    concepts: [adam-optimizer, stochastic-gradient-descent]
+
+  evaluate:
+    span: block
+    short: "On text it never trained on, the RNN's loss is about a quarter of the bigram's."
+    deep: |
+      The validation text is cut into non-overlapping 32-character pieces, each read from
+      $h = 0$. The bigram only knows the previous character. The RNN knows the whole
+      piece so far: which word it's in, and what comes next in the sentence pattern.
+    concepts: [train-test-split]
+
+pytorch:
+  reuse:
+    short: "Reuse the text, the bigram baseline and generation (Language modeling), and the tokenizer."
+    deep: |
+      `generate` works on any model that maps ids to one row of logits per position, so
+      it runs this RNN unchanged.
+    concepts: [language-modeling, tokenization]
+
+  rnn:
+    span: block
+    short: "The same recurrence as the NumPy file, as a module: embed, loop with tanh, read out."
+    deep: |
+      `x[..., t, :]` takes step $t$ whether or not there's a batch dimension, so
+      `generate` can pass a single text. `self.W` is an `nn.Linear`, so it holds both $W$
+      and $b$. There's no backward code: autograd records the loop and runs BPTT itself.
+    concepts: [embeddings, backpropagation]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  check:
+    span: block
+    short: "Copy the weights into PyTorch's nn.RNN: it gives exactly the same states."
+    deep: |
+      `nn.RNN` computes $\tanh(x W_{ih}^\top + b_{ih} + h W_{hh}^\top + b_{hh})$. Setting
+      $W_{ih} = I$ and $b_{ih} = 0$ makes that our loop, since the embedding already is the
+      input projection. In practice use `nn.RNN` (or `nn.LSTM`, `nn.GRU`): the loop runs
+      in fast C++ instead of Python.
+
+  train:
+    span: block
+    short: "The transformer page's exact recipe: 32 random 24-character windows a step, 600 Adam steps."
+    deep: |
+      Same data, same windows, same optimiser and step count as the transformer, so the
+      two models can be compared fairly. `clip_grad_norm_` rescales the whole gradient
+      whenever its length passes 1. It's the usual guard against exploding gradients in
+      RNNs.
+    concepts: [adam-optimizer]
+
+  evaluate:
+    span: block
+    short: "Validation loss about a quarter of the bigram's: memory pays off."
+    deep: |
+      Non-overlapping 24-character windows of unseen text, read from $h = 0$.
+    concepts: [train-test-split]
+
+  forgets:
+    span: block
+    short: "After 'so ', it picks the sentence's name in 8 of 64 tries: exactly chance."
+    deep: |
+      Greedy decoding (temperature near 0) of the three characters after "so ", for every
+      name and food. One right name in eight is what guessing gives. The name was read 17
+      characters earlier, and its trace in $h$ has been multiplied by 17 Jacobians since.
+      Training never got a usable gradient that far back, so the model never learnt to
+      keep it. The transformer looks straight back at the name, and copies it.

@@ -79,10 +79,15 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
         "evaluation",
         "features",
         "neural-networks",
+        "sequence-models",
     ]
     assert areas["neural-networks"].index("neurons") < areas["neural-networks"].index(
         "backpropagation"
     )
+    sequence = areas["sequence-models"]
+    assert sequence.index("tokenization") < sequence.index("self-attention")
+    assert sequence.index("causal-masking") < sequence.index("multi-head-attention")
+    assert sequence[-1] == "transformer"  # everything else on the path comes first
     assert areas["foundations"][0] == "numpy-basics"
     foundations = areas["foundations"]
     assert foundations.index("vectors") < foundations.index("matrix-multiplication")
@@ -172,6 +177,8 @@ def test_unknown_ids_are_404_problems(client: TestClient) -> None:
         "/api/v1/algorithms/knn",
         "/api/v1/algorithms/linear_regression/code/nope",
         "/api/v1/concepts/nope",
+        "/api/v1/tracks/nope",
+        "/api/v1/papers/nope",
     ):
         response = client.get(path)
         assert response.status_code == 404, path
@@ -197,3 +204,59 @@ def test_concept_code_lists_what_it_imports_from_prerequisites(client: TestClien
     assert "from normal_equation_numpy import least_squares" in numpy["code"]
     path = [c["id"] for c in body["learning_path"]]
     assert path.index("mean-squared-error") < path.index("normal-equation")
+
+
+def test_transformers_track_walks_every_prerequisite_to_the_transformer(
+    client: TestClient,
+) -> None:
+    summary, rnn = client.get("/api/v1/tracks").json()["items"]
+    assert summary["id"] == "transformers"
+    families = {f["id"]: f for f in client.get("/api/v1/families").json()["items"]}
+    assert families["sequence-models"]["tracks"] == [summary, rnn]
+    assert families["sequence-models"]["algorithms"] == []
+    assert families["linear-models"]["tracks"] == []
+    assert summary["goal"] == {"id": "transformer", "title": "Transformer"}
+
+    track = client.get("/api/v1/tracks/transformers").json()
+    route = [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
+    path = client.get("/api/v1/concepts/transformer").json()["learning_path"]
+    assert sorted(route) == sorted([c["id"] for c in path] + ["transformer"])
+    assert summary["concept_count"] == len(route)
+    assert route[-1] == "transformer"
+    assert "::figure[attention-heatmap]" in track["body"]
+    assert track["resources"]
+
+
+def test_recurrent_networks_track_ends_at_the_lstm(client: TestClient) -> None:
+    track = client.get("/api/v1/tracks/recurrent-networks").json()
+    assert track["goal"] == {"id": "lstm", "title": "LSTM"}
+    route = [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
+    path = client.get("/api/v1/concepts/lstm").json()["learning_path"]
+    assert sorted(route) == sorted([c["id"] for c in path] + ["lstm"])
+    assert route[-2:] == ["recurrent-neural-networks", "lstm"]
+    assert "self-attention" not in route  # RNNs come before attention, not after
+
+
+def test_attention_paper_walks_through_the_original_section_by_section(client: TestClient) -> None:
+    [summary] = client.get("/api/v1/papers").json()["items"]
+    assert summary["id"] == "attention-is-all-you-need"
+    assert summary["source"]["type"] == "paper"
+    assert summary["source"]["url"] == "https://arxiv.org/abs/1706.03762"
+
+    paper = client.get("/api/v1/papers/attention-is-all-you-need").json()
+    assert summary["section_count"] == len(paper["sections"])
+    ids = [s["id"] for s in paper["sections"]]
+    assert "3-2-1-scaled-dot-product-attention" in ids
+    assert ids.index("3-2-1-scaled-dot-product-attention") < ids.index(
+        "3-5-positional-encoding-where-is-each-word"
+    )
+    assert paper["track"]["id"] == "transformers"
+    concepts = [c["id"] for c in paper["concepts"]]
+    assert (
+        concepts.index("softmax") < concepts.index("self-attention") < concepts.index("transformer")
+    )
+    # Every video the text plays is listed, uploaded or not.
+    videos = {v["id"] for v in paper["videos"]}
+    body = "\n".join(s["body"] for s in paper["sections"])
+    assert all(f"::video[{v}]" in body for v in videos)
+    assert paper["resources"]

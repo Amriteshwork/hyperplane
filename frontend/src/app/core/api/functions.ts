@@ -29,6 +29,14 @@ export type { GetConcept$Params as GetConcept$Params } from './fn/learn/get-conc
 export { getConcept as getConcept } from './fn/learn/get-concept';
 export type { GetConceptCodeBundle$Params as GetConceptCodeBundle$Params } from './fn/learn/get-concept-code-bundle';
 export { getConceptCodeBundle as getConceptCodeBundle } from './fn/learn/get-concept-code-bundle';
+export type { ListTracks$Params as ListTracks$Params } from './fn/learn/list-tracks';
+export { listTracks as listTracks } from './fn/learn/list-tracks';
+export type { GetTrack$Params as GetTrack$Params } from './fn/learn/get-track';
+export { getTrack as getTrack } from './fn/learn/get-track';
+export type { ListPapers$Params as ListPapers$Params } from './fn/learn/list-papers';
+export { listPapers as listPapers } from './fn/learn/list-papers';
+export type { GetPaper$Params as GetPaper$Params } from './fn/learn/get-paper';
+export { getPaper as getPaper } from './fn/learn/get-paper';
 export type { CreateExperiment$Params as CreateExperiment$Params } from './fn/experiments/create-experiment';
 export { createExperiment as createExperiment } from './fn/experiments/create-experiment';
 export type { GetRun$Params as GetRun$Params } from './fn/runs/get-run';

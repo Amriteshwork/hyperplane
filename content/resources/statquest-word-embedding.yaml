@@ -1,0 +1,8 @@
+type: video
+title: "Word Embedding and Word2Vec, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=viZrOnJclY0
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Why words need vectors rather than ids, and how a small network learns them from the words around each word."
+source: curated
+checked: 2026-10-24

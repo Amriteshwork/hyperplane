@@ -1,0 +1,140 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse embeddings, the sigmoid, the tokenizer and the generated training text."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [embeddings, sigmoid, tokenization, language-modeling]
+
+  params:
+    span: block
+    short: "The four gates' weights sit side by side: Wx and Wh have 4d columns, b has 4d entries."
+    deep: |
+      One matrix product then computes all four gates at once, and `np.split` cuts the
+      result into $i, f, g, o$. That's how real implementations do it too. Biases start at
+      0, so every gate starts out half open, $\sigma(0) = ½$.
+
+  step:
+    span: block
+    short: "One LSTM step: three sigmoid gates and a tanh candidate, then c = f·c + i·g and h = o·tanh(c)."
+    deep: |
+      The gates are vectors, one entry per memory unit, so each unit decides for itself
+      whether to forget, write or show. The key line is the cell update: the old memory is
+      scaled by $f$ and new content is **added**. Nothing multiplies $c$ by a weight
+      matrix or squashes it through tanh on its way to the next step. That's what lets
+      memory, and gradients, travel far.
+    concepts: [sigmoid, activation-functions]
+
+  forward:
+    span: block
+    short: "Loop over the tokens like the RNN, but carry two states, h and c, and keep the forget gates to inspect."
+    deep: |
+      Same interface as the RNN page's `rnn_forward`: embeddings in, one row of logits
+      per position out. The forget gates are returned so the demo can multiply them.
+    concepts: [recurrent-neural-networks]
+
+  demo:
+    short: "Runs only when you execute this file, so other files can import its functions."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  gates:
+    span: block
+    short: "25 characters through an untrained LSTM: every gate is strictly between 0 and 1, and |h| < 1."
+    deep: |
+      With zero biases and small random weights, gates start near ½. $|h| < 1$ because
+      it's $o \cdot \tanh(c)$, a number below 1 times another. $c$ itself has no such bound:
+      it's a running sum.
+
+  forget-path:
+    span: block
+    short: "The cell's own path back 24 steps is the product of the forget gates: 10⁻⁷ at bias 0, 0.84 at bias 5."
+    deep: |
+      Along the cell, $\partial c_t / \partial c_{t-1} = \operatorname{diag}(f_t)$, so the
+      gradient over $k$ steps is $\prod f$, entry by entry. With every gate near ½ that's
+      $½^{24} \approx 6\times10^{-8}$: as bad as a plain RNN. With the forget bias at 5,
+      $\sigma(5) \approx 0.993$ and $0.993^{24} \approx 0.84$. The difference from an RNN is
+      that $f$ is **learned and input-dependent**: training opens it for the units that
+      should hold something, and only for as long as they should. (There are other,
+      indirect paths through $h$ too; this one is the motorway.)
+
+  remembers:
+    span: block
+    short: "Change only the first character: at forget bias 5 the cells still differ 24 steps later; at 0 the change is gone."
+    deep: |
+      A direct test with no calculus: run two texts that differ only in their first
+      token, and compare the final cells. The gap is about $10^{-5}$ at bias 0 and about
+      $3$ at bias 5. Here the forget bias is set by hand to show the mechanism. A trained
+      LSTM learns such settings for the units that need them, like the one holding the
+      name in the PyTorch file.
+
+pytorch:
+  reuse:
+    short: "Reuse the RNN to compare against, plus the text, generation and the tokenizer."
+    deep: |
+      `CharRNN` comes from the RNN page unchanged, so the comparison below is the real
+      thing: same embedding size, same training loop, different memory.
+    concepts: [recurrent-neural-networks, language-modeling, tokenization]
+
+  lstm:
+    span: block
+    short: "An LSTM as a module: embed, project to four gates, loop updating h and c, read out."
+    deep: |
+      `x_gates` projects every token at once before the loop: it doesn't depend on $h$, so
+      there's no reason to do it step by step. Inside the loop only $h W_h$ is new.
+      `chunk(4)` splits the result in PyTorch's gate order, $i, f, g, o$, which the check
+      below relies on. Autograd runs backpropagation through time for us.
+
+  cell:
+    span: block
+    short: "The two lines that make it an LSTM: keep some memory, add some new, show some of it."
+    deep: |
+      $c_t = \sigma(f) \odot c_{t-1} + \sigma(i) \odot \tanh(g)$ and $h_t = \sigma(o)
+      \odot \tanh(c_t)$, exactly the NumPy `lstm_step`.
+
+  sentences:
+    span: block
+    short: "Training windows that start at a sentence, so each one holds a name and the place it must be repeated."
+    deep: |
+      A random 24-character window rarely contains both the first name and "so <name>",
+      so most examples can't teach the copy at all. Starting every window at a sentence
+      gives each batch 32 examples of it. The RNN gets exactly the same windows below, so
+      the comparison stays fair.
+
+  copies:
+    span: block
+    short: "For all 64 name/food sentences: does the model repeat the right name after 'so '?"
+    deep: |
+      Greedy decoding (temperature near 0) of the three characters after the prompt.
+      Eight names means guessing gets 8 of 64 right. The RNN page uses the same test.
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  check:
+    span: block
+    short: "Copy the weights into PyTorch's nn.LSTM: it gives exactly the same output."
+    deep: |
+      `nn.LSTM` has an input-to-gates matrix with a bias and a hidden-to-gates matrix with
+      another bias. Ours has no second bias, so it's set to zero. In practice use `nn.LSTM`:
+      the loop runs in C++, several times faster than this Python one.
+
+  train:
+    span: block
+    short: "Train an RNN, then an LSTM, from the same seed on the same batches: 600 Adam steps each."
+    deep: |
+      `torch.manual_seed(0)` before each model means the same random batches, so the
+      only difference is the architecture. One thread is faster here: the tensors are
+      tiny and splitting them between threads costs more than it saves. Gradient clipping
+      as on the RNN page.
+    concepts: [adam-optimizer]
+
+  remembers:
+    span: block
+    short: "The RNN still guesses (about 8 of 64); the LSTM repeats the right name in most sentences."
+    deep: |
+      Same data, same steps, same loss, and the LSTM gets several times chance. Its loss is
+      lower too, since knowing the name makes "so z..." nearly certain. That's the gates
+      at work: write the name, hold it for 17 characters, show it at "so ".

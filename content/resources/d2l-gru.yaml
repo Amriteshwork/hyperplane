@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Gated Recurrent Units (GRU)"
+url: https://d2l.ai/chapter_recurrent-modern/gru.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "The GRU's reset and update gates, the candidate hidden state, and implementations from scratch and with the library."
+source: curated
+checked: 2026-10-26

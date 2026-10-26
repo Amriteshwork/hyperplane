@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-attention
+  note: "The multi-headed attention section: why many heads, and how their outputs add up."
+- id: alammar-illustrated-transformer
+  note: "'The beast with many heads': eight heads, each with its own Q/K/V weights, concatenated and multiplied by Wᴼ."
+- id: d2l-multihead-attention
+  note: "Per-head size d/h, so the cost stays that of one head, and the reshaping trick from the PyTorch code."
+- id: karpathy-build-gpt
+  note: "Watch multi-head attention get added to a working model, and the validation loss drop."
+- id: vaswani-attention-is-all-you-need
+  note: "Section 3.2.2 defines multi-head attention in one paragraph and two equations."

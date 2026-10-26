@@ -1,0 +1,8 @@
+type: video
+title: "Transformers, the tech behind LLMs (Deep learning, chapter 5)"
+url: https://www.youtube.com/watch?v=wjZofJX0v4M
+author: 3Blue1Brown
+level: beginner
+why: "The whole of a GPT at a glance: tokens, embedding vectors whose directions carry meaning, attention and MLP blocks, and softmax with temperature at the end."
+source: curated
+checked: 2026-10-24

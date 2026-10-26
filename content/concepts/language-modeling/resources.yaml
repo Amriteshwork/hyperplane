@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-transformers
+  note: "Start here: a GPT as a next-word predictor run in a loop, and what temperature does to the samples."
+- id: alammar-illustrated-gpt2
+  note: "'What is a language model': next-word prediction as autocomplete, generating one token at a time, and top-k sampling."
+- id: karpathy-makemore
+  note: "The bigram on this page built twice, by counting and as a one-layer network trained with the same loss, exactly as in the code."
+- id: jurafsky-slp3-ngrams
+  note: "The textbook view: n-grams, the chain rule of probability, and perplexity as the standard yardstick."
+- id: transformer-explainer
+  note: "Watch a real model's next-token probabilities, and drag the temperature slider to see sampling change."

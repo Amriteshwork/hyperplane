@@ -1,0 +1,8 @@
+type: course
+title: "LLM Course: Tokenizers"
+url: https://huggingface.co/learn/llm-course/chapter2/4
+author: Hugging Face
+level: beginner
+why: "Word, character and subword tokenization compared, then encoding to ids and decoding back with a real tokenizer."
+source: curated
+checked: 2026-10-24

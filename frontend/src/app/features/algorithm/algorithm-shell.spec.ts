@@ -11,7 +11,7 @@ const algorithm: AlgorithmOut = {
   id: 'linear_regression',
   name: 'Linear Regression',
   summary: 'Fit a line.',
-  family: { id: 'linear-models', title: 'Linear Models', summary: '', algorithms: [] },
+  family: { id: 'linear-models', title: 'Linear Models', summary: '', algorithms: [], tracks: [] },
   task_types: ['regression'],
   difficulty: 1,
   overview: '## Intuition\n\nDraw the **best** line.',

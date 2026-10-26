@@ -57,3 +57,21 @@ def reading_order(prerequisites: Prerequisites, concept_ids: Sequence[str]) -> l
     for concept in concept_ids:
         visit(concept)
     return path
+
+
+def check_route(prerequisites: Prerequisites, goal: str, route: Sequence[str]) -> None:
+    """`route` must hold `goal` and everything it builds on, once each, after what each needs."""
+    if goal not in prerequisites:
+        raise ConceptGraphError(f"unknown goal concept {goal!r}")
+    needed = set(reading_order(prerequisites, [goal]))
+    if missing := sorted(needed - set(route)):
+        raise ConceptGraphError(f"route to {goal!r} is missing {missing}")
+    if extra := sorted(set(route) - needed):
+        raise ConceptGraphError(f"route to {goal!r} has concepts it doesn't need: {extra}")
+    if len(set(route)) != len(route):
+        raise ConceptGraphError(f"route to {goal!r} lists a concept twice")
+    seen: set[str] = set()
+    for concept in route:
+        if early := [p for p in prerequisites[concept] if p not in seen]:
+            raise ConceptGraphError(f"{concept!r} comes before its prerequisites {early}")
+        seen.add(concept)

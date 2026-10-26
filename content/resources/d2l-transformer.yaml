@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: The Transformer Architecture"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/transformer.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "The full encoder–decoder transformer built from its parts: position-wise MLP, residual + layer norm, encoder and decoder blocks."
+source: curated
+checked: 2026-10-24

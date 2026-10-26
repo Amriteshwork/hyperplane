@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: karpathy-rnn-effectiveness
+  note: "Start here: a character-level RNN like this page's, with the same update rule and what it writes once trained on real text."
+- id: statquest-rnn
+  note: "The hidden-state loop on this page drawn out visually, if the equations are new."
+- id: d2l-rnn
+  note: "The equations on this page in matrix form, and a character-level language model built on them."
+- id: d2l-bptt
+  note: "Advanced: the BPTT derivation behind this page's Jacobian product, and why truncation is used."
+- id: karpathy-min-char-rnn
+  note: "The NumPy file's BPTT loop, almost line for line, with clipping and sampling added."
+- id: colah-understanding-lstms
+  note: "What came next (see the LSTM page): how gates fix the forgetting the PyTorch file catches."

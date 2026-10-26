@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -209,3 +210,133 @@ def test_gaps_and_sections(tmp_path: Path) -> None:
         "needs a PyTorch implementation",
     ]
     assert "Math" in missing_sections("## Intuition\n")
+
+
+TRACK = """---
+title: Squared error, from scratch
+summary: Everything MSE needs.
+order: 1
+goal: mse
+chapters:
+  - {title: Basics, summary: What a loss is., concepts: [loss]}
+  - {title: The goal, summary: Squares., concepts: [%s]}
+---
+
+Intro.
+"""
+
+
+def test_tracks_load_and_must_be_a_complete_route_to_their_goal(tmp_path: Path) -> None:
+    write_mse(tmp_path)
+    write(tmp_path / "tracks" / "mse" / "track.md", TRACK % "mse")
+    write(tmp_path / "tracks" / "mse" / "resources.yaml", LINKS)
+
+    [track] = ContentCatalog.load(tmp_path).tracks()
+    assert [c.title for c in track.meta.chapters] == ["Basics", "The goal"]
+    assert track.resources[0].resource.id == "mse-video"
+
+    write(
+        tmp_path / "families" / "losses.md",
+        "---\ntitle: L\nsummary: s\norder: 1\ntracks: [nope]\n---\n",
+    )
+    with pytest.raises(ContentError, match="unknown tracks \\['nope'\\]"):
+        ContentCatalog.load(tmp_path)
+
+    write(
+        tmp_path / "families" / "losses.md",
+        "---\ntitle: L\nsummary: s\norder: 1\ntracks: [mse]\n---\n",
+    )
+    [family] = ContentCatalog.load(tmp_path).families()
+    assert family.meta.tracks == ("mse",)
+    assert family.meta.algorithms == ()
+
+    write(tmp_path / "tracks" / "mse" / "track.md", TRACK % "")
+    with pytest.raises(ContentError, match="tracks/mse"):
+        ContentCatalog.load(tmp_path)
+
+
+PAPER = """---
+title: The MSE paper, explained
+summary: Why squares.
+order: 1
+source: %s
+concepts: [mse]
+videos:
+  squared-area: {title: Squares as areas, youtube: dQw4w9WgXcQ}
+---
+
+Why read it.
+
+## 1 · Introduction
+
+The idea.
+
+::video[squared-area]
+
+## 2 · Results
+
+It worked.
+"""
+SCENE = "from manim import Scene\n\n\nclass SquaredArea(Scene):\n    pass\n"
+
+
+def write_paper(root: Path, source: str = "mse-paper") -> Path:
+    write_mse(root)
+    write(root / "resources" / "mse-paper.yaml", RESOURCE.replace("type: video", "type: paper"))
+    folder = root / "papers" / "mse"
+    write(folder / "paper.md", PAPER % source)
+    write(folder / "resources.yaml", LINKS)
+    write(folder / "scenes" / "squared_area.py", SCENE)
+    return folder
+
+
+def test_papers_split_into_sections_with_videos_backed_by_scenes(tmp_path: Path) -> None:
+    write_paper(tmp_path)
+
+    [paper] = ContentCatalog.load(tmp_path).papers()
+
+    assert paper.source.id == "mse-paper"
+    assert paper.intro == "Why read it.\n"
+    assert [(s.id, s.title) for s in paper.sections] == [
+        ("1-introduction", "1 · Introduction"),
+        ("2-results", "2 · Results"),
+    ]
+    assert "::video[squared-area]" in paper.sections[0].body
+    assert paper.meta.videos["squared-area"].youtube == "dQw4w9WgXcQ"
+
+
+@pytest.mark.parametrize(
+    ("change", "match"),
+    [
+        (lambda f: (f / "scenes" / "squared_area.py").unlink(), "not with a scene"),
+        (lambda f: write(f / "scenes" / "extra.py", ""), "with a scene but not declared"),
+        (lambda f: write(f / "scenes" / "squared_area.py", "class Other: ..."), "SquaredArea"),
+        (lambda f: _edit(f, "::video[squared-area]", ""), "not used in the text"),
+        (
+            lambda f: _edit(f, "It worked.", "It worked.\n\n::video[nope]"),
+            "used in the text but not declared",
+        ),
+        (lambda f: _edit(f, "2 · Results", "1 · Introduction"), "same heading"),
+        (lambda f: _edit(f, "[mse]", "[nope]"), "unknown concepts"),
+        (lambda f: _edit(f, "videos:", "track: nope\nvideos:"), "unknown track"),
+        (lambda f: _edit(f, "dQw4w9WgXcQ", "not-an-id"), "invalid frontmatter"),
+    ],
+)
+def test_invalid_papers_fail_loading(
+    tmp_path: Path, change: Callable[[Path], object], match: str
+) -> None:
+    change(write_paper(tmp_path))
+    with pytest.raises(ContentError, match=match):
+        ContentCatalog.load(tmp_path)
+
+
+@pytest.mark.parametrize("source", ["mse-video", "missing"])
+def test_paper_source_must_be_a_paper_or_blog(tmp_path: Path, source: str) -> None:
+    write_paper(tmp_path, source)
+    with pytest.raises(ContentError, match="not a paper or blog"):
+        ContentCatalog.load(tmp_path)
+
+
+def _edit(folder: Path, old: str, new: str) -> None:
+    path = folder / "paper.md"
+    path.write_text(path.read_text().replace(old, new))

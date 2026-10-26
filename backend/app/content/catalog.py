@@ -1,7 +1,7 @@
 """Read-only, validated index of `content/`. Loading fails loudly on malformed files."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import TypedDict
 
@@ -9,7 +9,13 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from app.content.code_imports import code_uses
-from app.content.graph import ConceptGraphError, check_graph, learning_path, reading_order
+from app.content.graph import (
+    ConceptGraphError,
+    check_graph,
+    check_route,
+    learning_path,
+    reading_order,
+)
 from app.content.models import (
     AlgorithmContent,
     AlgorithmFrontmatter,
@@ -19,14 +25,24 @@ from app.content.models import (
     ConceptFrontmatter,
     Family,
     FamilyFrontmatter,
+    Paper,
+    PaperFrontmatter,
+    PaperSection,
     Resource,
     ResourceLink,
+    ResourceType,
+    Track,
+    TrackFrontmatter,
     code_module,
 )
 from app.ml.base import Annotation
 from app.ml.codegen import AnchorMismatchError, strip_anchors
 
 _FRONTMATTER = re.compile(r"\A---\n(?P<meta>.*?)\n---\n?(?P<body>.*)\Z", re.DOTALL)
+_SECTION = re.compile(r"^## (.+)$", re.MULTILINE)
+#: `::video[name]` on its own line, like `::figure[name]` (ADR 0020, 0022).
+_VIDEO = re.compile(r"^::video\[([a-z0-9-]+)\]", re.MULTILINE)
+_SOURCE_TYPES = {ResourceType.PAPER, ResourceType.BLOG}
 
 
 class _ResourceRef(BaseModel):
@@ -49,7 +65,7 @@ class ContentError(ValueError):
 
 
 class UnknownContentError(KeyError):
-    """No family/algorithm/concept (or concept code in that library) with this id."""
+    """No family/algorithm/concept/track/paper (or concept code in that library) with this id."""
 
 
 class ContentCatalog:
@@ -59,11 +75,15 @@ class ContentCatalog:
         algorithms: Sequence[AlgorithmContent] = (),
         concepts: Sequence[Concept] = (),
         resources: Sequence[Resource] = (),
+        tracks: Sequence[Track] = (),
+        papers: Sequence[Paper] = (),
     ) -> None:
         self._families = {f.id: f for f in sorted(families, key=lambda f: f.meta.order)}
         self._algorithms = {a.id: a for a in algorithms}
         self._concepts = {c.id: c for c in concepts}
         self._resources = {r.id: r for r in resources}
+        self._tracks = {t.id: t for t in sorted(tracks, key=lambda t: t.meta.order)}
+        self._papers = {p.id: p for p in sorted(papers, key=lambda p: p.meta.order)}
 
     @classmethod
     def load(cls, root: Path) -> ContentCatalog:
@@ -95,7 +115,22 @@ class ContentCatalog:
             )
             for folder in _folders(root / "concepts")
         ]
-        return cls(families, algorithms, _link_concepts(concepts), list(resources.values()))
+        tracks = [
+            Track(
+                id=folder.name,
+                **_parts(folder / "track.md", TrackFrontmatter),
+                resources=_resource_refs(folder / "resources.yaml", resources),
+            )
+            for folder in _folders(root / "tracks")
+        ]
+        papers = [_paper(folder, resources) for folder in _folders(root / "papers")]
+        concepts = _link_concepts(concepts)
+        _check_tracks(tracks, concepts)
+        track_ids = {t.id for t in tracks}
+        if unknown := {t for f in families for t in f.meta.tracks} - track_ids:
+            raise ContentError(f"families list unknown tracks {sorted(unknown)}")
+        _check_papers(papers, {c.id for c in concepts}, track_ids)
+        return cls(families, algorithms, concepts, list(resources.values()), tracks, papers)
 
     def families(self) -> Sequence[Family]:
         return list(self._families.values())
@@ -155,6 +190,18 @@ class ContentCatalog:
             _get(self._concepts, concept_id)
         prerequisites = {c.id: c.meta.prerequisites for c in self._concepts.values()}
         return [self._concepts[i] for i in reading_order(prerequisites, concept_ids)]
+
+    def tracks(self) -> Sequence[Track]:
+        return list(self._tracks.values())
+
+    def track(self, track_id: str) -> Track:
+        return _get(self._tracks, track_id)
+
+    def papers(self) -> Sequence[Paper]:
+        return list(self._papers.values())
+
+    def paper(self, paper_id: str) -> Paper:
+        return _get(self._papers, paper_id)
 
     def has_concept(self, concept_id: str) -> bool:
         return concept_id in self._concepts
@@ -233,6 +280,79 @@ def _link_concepts(concepts: list[Concept]) -> list[Concept]:
         return linked
     except ConceptGraphError as exc:
         raise ContentError(str(exc)) from exc
+
+
+def _check_tracks(tracks: Sequence[Track], concepts: Sequence[Concept]) -> None:
+    """Each track's chapters, read in order, are a complete route to its goal."""
+    prerequisites = {c.id: c.meta.prerequisites for c in concepts}
+    for track in tracks:
+        route = [c for chapter in track.meta.chapters for c in chapter.concepts]
+        try:
+            check_route(prerequisites, track.meta.goal, route)
+        except ConceptGraphError as exc:
+            raise ContentError(f"tracks/{track.id}: {exc}") from exc
+
+
+def _paper(folder: Path, resources: dict[str, Resource]) -> Paper:
+    """A walkthrough: `paper.md` split into sections at `## `, plus its Manim scenes."""
+    path = folder / "paper.md"
+    parts = _parts(path, PaperFrontmatter)
+    meta, body = parts["meta"], parts["body"]
+    source = resources.get(meta.source)
+    if source is None or source.type not in _SOURCE_TYPES:
+        raise ContentError(f"{path}: source {meta.source!r} is not a paper or blog resource")
+    intro, *rest = _SECTION.split(body)
+    try:
+        sections = tuple(
+            PaperSection(id=_slug(title), title=title.strip(), body=text.strip() + "\n")
+            for title, text in zip(rest[::2], rest[1::2], strict=True)
+        )
+        paper = Paper(
+            id=folder.name,
+            meta=meta,
+            source=source,
+            intro=intro.strip() + "\n",
+            sections=sections,
+            resources=_resource_refs(folder / "resources.yaml", resources),
+        )
+    except ValidationError as exc:
+        raise ContentError(f"{path}: {exc}") from exc
+    if len({s.id for s in sections}) != len(sections):
+        raise ContentError(f"{path}: two sections have the same heading")
+    _check_videos(folder, meta.videos.keys(), set(_VIDEO.findall(body)))
+    return paper
+
+
+def _check_videos(folder: Path, videos: Iterable[str], used: set[str]) -> None:
+    """Videos declared, used in the text, and backed by a scene are the same set (ADR 0022)."""
+    declared = set(videos)
+    scenes = {p.stem.replace("_", "-") for p in (folder / "scenes").glob("*.py")}
+    for name, names in (("used in the text", used), ("with a scene", scenes)):
+        if missing := sorted(declared - names):
+            raise ContentError(f"{folder}: videos not {name}: {missing}")
+        if extra := sorted(names - declared):
+            raise ContentError(f"{folder}: videos {name} but not declared: {extra}")
+    for video in declared:
+        source = _read(folder / "scenes" / f"{video.replace('-', '_')}.py")
+        if f"class {scene_class(video)}(" not in source:
+            raise ContentError(f"{folder}/scenes: {video} must define class {scene_class(video)}")
+
+
+def scene_class(video_id: str) -> str:
+    """The Manim scene a video renders: `qkv-lookup` → `QkvLookup` in `scenes/qkv_lookup.py`."""
+    return "".join(part.capitalize() for part in video_id.split("-"))
+
+
+def _check_papers(papers: Sequence[Paper], concepts: set[str], tracks: set[str]) -> None:
+    for paper in papers:
+        if unknown := [c for c in paper.meta.concepts if c not in concepts]:
+            raise ContentError(f"papers/{paper.id}: unknown concepts {unknown}")
+        if paper.meta.track is not None and paper.meta.track not in tracks:
+            raise ContentError(f"papers/{paper.id}: unknown track {paper.meta.track!r}")
+
+
+def _slug(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 
 
 def _with_uses(

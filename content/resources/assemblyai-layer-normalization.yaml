@@ -1,0 +1,8 @@
+type: video
+title: "What is Layer Normalization?"
+url: https://www.youtube.com/watch?v=2V3Uduw1zwQ
+author: AssemblyAI
+level: beginner
+why: "How layer normalization works, how it differs from batch normalization, and when each is used."
+source: curated
+checked: 2026-10-24

@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: colah-understanding-lstms
+  note: "Start here: the gates on this page drawn step by step, with the cell state as a conveyor belt running along the top."
+- id: statquest-lstm
+  note: "The same LSTM explained visually, if the equations are new."
+- id: d2l-lstm
+  note: "This page's equations, gate by gate, and an LSTM written from scratch like the PyTorch file."
+- id: d2l-gru
+  note: "The lighter two-gate variant from this page's practical notes."

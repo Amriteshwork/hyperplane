@@ -45,7 +45,10 @@ async function open() {
     input.dispatchEvent(new Event('input'));
     await settle();
   };
-  const links = () => [...el.querySelectorAll('section a')].map((a) => a.getAttribute('href'));
+  const links = () =>
+    [...el.querySelectorAll('section[aria-labelledby^="area-"] a')].map((a) =>
+      a.getAttribute('href'),
+    );
   return { el, search, links };
 }
 

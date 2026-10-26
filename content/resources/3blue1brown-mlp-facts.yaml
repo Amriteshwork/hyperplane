@@ -1,0 +1,8 @@
+type: video
+title: "How might LLMs store facts (Deep learning, chapter 7)"
+url: https://www.youtube.com/watch?v=9-Jl0dxWQs8
+author: 3Blue1Brown
+level: beginner
+why: "What the MLP half of a transformer block computes, and how facts could be stored in its weights."
+source: curated
+checked: 2026-10-24

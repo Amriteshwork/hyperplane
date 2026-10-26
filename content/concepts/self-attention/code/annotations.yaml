@@ -1,0 +1,102 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse the row-wise, overflow-safe softmax (Softmax)."
+    deep: |
+      Each row of the score table becomes a set of weights that sum to 1. Download with
+      dependencies to get `softmax` and the `logsumexp` it builds on.
+    concepts: [softmax]
+
+  attention: &attention
+    span: block
+    short: "The whole of attention in four lines: score, (mask), softmax, blend."
+    deep: |
+      $$\text{Attention}(Q,K,V) = \operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V$$
+
+      `Q @ K.T` is a $T \times T$ table: row $t$ holds query $t$ dotted with every key.
+      After softmax, row $t$ says how much token $t$ takes from each token. Multiplying
+      by `V` (shape $T \times d_v$) blends the value rows with those weights.
+
+      The `mask` is a boolean $T \times T$ table, where `True` means "may look". A
+      $-\infty$ score becomes $e^{-\infty} = 0$ weight. **Causal masking** uses it next.
+    concepts: [matrix-multiplication, softmax]
+
+  demo: &demo
+    short: "Runs only when you execute this file; later concepts import `attention` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  lookup:
+    span: block
+    short: "Attention as a soft dictionary: a sharp query fetches one value; a vague one gets the average."
+    deep: |
+      The query that equals key 1 scores $16/\sqrt3 \approx 9.2$ against it and 0 against
+      the others, so softmax puts essentially all the weight on key 1 and the output is
+      value 1. That's a dictionary lookup.
+
+      The all-zero query scores 0 against every key, gets equal weights, and returns the
+      mean of the values. Real queries land in between, and because everything is
+      smooth, gradient descent can learn *what to look for*.
+
+  projections: &projections
+    span: block
+    short: "Five random token vectors, projected into queries, keys and values by three matrices."
+    deep: |
+      $Q = XW_Q$, $K = XW_K$, $V = XW_V$: the same token plays three roles through three
+      different learned lenses. These three matrices are the only parameters attention
+      has. Dividing the random weights by $\sqrt d$ keeps the projections at a sensible
+      scale.
+
+  loop:
+    span: block
+    short: "The same thing one token at a time, to check the matrix version: score every key, softmax, blend."
+    deep: |
+      This is $\text{out}_t = \sum_s a_{ts} v_s$ written out literally, with the softmax
+      inlined (subtracting the max first, for stability). The matrix version computes
+      all $T$ rows at once, which is why attention runs so well on GPUs.
+
+  scaling:
+    span: block
+    short: "A dot product of d unit-variance numbers has spread √d; dividing by √d brings it back to 1."
+    deep: |
+      $\operatorname{Var}(q\cdot k) = \sum_{i=1}^{d}\operatorname{Var}(q_i k_i) = d$ for
+      independent unit-variance entries, so the standard deviation is $\sqrt d$: 2, 8, 32
+      for $d$ = 4, 64, 1024. Without the scaling, softmax of scores that spread out
+      gives one token nearly all the weight. A saturated softmax has a near-zero
+      gradient, so the attention pattern stops learning. The PyTorch tab measures that
+      gradient.
+
+  order:
+    span: block
+    short: "Shuffle the tokens and the outputs shuffle the same way, but don't otherwise change."
+    deep: |
+      Nothing in the formula refers to positions: token $t$'s output depends on its query
+      and on the *set* of keys and values. Mathematically, attention is **permutation
+      equivariant**. Language is not: "dog bites man" ≠ "man bites dog". That's why
+      transformers add **positional encodings** to the embeddings.
+
+pytorch:
+  reuse: *reuse
+  attention:
+    <<: *attention
+    short: "The whole of attention in four lines; `masked_fill` writes −∞ wherever the mask is False."
+  demo: *demo
+  projections: *projections
+
+  builtin:
+    span: block
+    short: "PyTorch's fused kernel computes exactly the same thing, only faster."
+    deep: |
+      `F.scaled_dot_product_attention` picks an efficient implementation (e.g.
+      FlashAttention on GPUs) that never stores the full $T \times T$ weight table. The
+      maths, and therefore the result, is the same as our four lines.
+
+  gradients:
+    span: block
+    short: "Measure it: without √d the softmax saturates and the gradient reaching the scores is ~1000× smaller."
+    deep: |
+      The softmax's slope with respect to a score is $a_s(\mathbb 1[s{=}j] - a_j)$. When
+      one weight is ≈ 1 and the rest ≈ 0, every term is ≈ 0. So the scores, and
+      therefore $W_Q$ and $W_K$, stop learning. This is the reason given for the scaling
+      in *Attention Is All You Need*.
+    concepts: [derivatives, backpropagation]

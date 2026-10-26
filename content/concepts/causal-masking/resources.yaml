@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-attention
+  note: "The masking section shows why later tokens must not influence earlier ones, and what setting scores to −∞ does."
+- id: alammar-illustrated-transformer
+  note: "The decoder section: future positions masked to −inf before the softmax."
+- id: karpathy-build-gpt
+  note: "'The mathematical trick in self-attention' builds the running mean on this page with a triangular matrix, then makes it learnable."
+- id: harvard-annotated-transformer
+  note: "Advanced: `subsequent_mask`, the same triangle, drawn as a picture, inside a full PyTorch transformer."

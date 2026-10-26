@@ -5,4 +5,9 @@
  * Where a concept sits on the concept index, in display order.
  */
 export type ConceptArea =
-  'foundations' | 'optimisation' | 'evaluation' | 'features' | 'neural-networks';
+  | 'foundations'
+  | 'optimisation'
+  | 'evaluation'
+  | 'features'
+  | 'neural-networks'
+  | 'sequence-models';

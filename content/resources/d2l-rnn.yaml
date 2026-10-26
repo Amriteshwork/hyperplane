@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Recurrent Neural Networks"
+url: https://d2l.ai/chapter_recurrent-neural-networks/rnn.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Hidden states, the RNN equations in matrix form, and an RNN-based character-level language model."
+source: curated
+checked: 2026-10-26

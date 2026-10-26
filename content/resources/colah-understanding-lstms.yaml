@@ -1,0 +1,8 @@
+type: blog
+title: "Understanding LSTM Networks"
+url: https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+author: Christopher Olah
+level: beginner
+why: "RNNs drawn unrolled, why long-term dependencies are hard, then the LSTM's gates step by step, and GRU as a variant."
+source: curated
+checked: 2026-10-26

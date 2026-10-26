@@ -1,0 +1,8 @@
+type: course
+title: "LLM Course: Byte-Pair Encoding tokenization"
+url: https://huggingface.co/learn/llm-course/chapter6/5
+author: Hugging Face
+level: intermediate
+why: "The BPE training algorithm on a small corpus, merge by merge, then implemented in Python."
+source: curated
+checked: 2026-10-24

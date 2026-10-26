@@ -1,0 +1,8 @@
+type: video
+title: "Why ResNets Work (C4W2L04)"
+url: https://www.youtube.com/watch?v=RYth6EbBUqM
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: "Why a residual block can easily learn the identity, so extra layers don't hurt."
+source: curated
+checked: 2026-10-24

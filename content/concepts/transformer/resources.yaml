@@ -1,0 +1,19 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-transformers
+  note: "Start here: the whole GPT pipeline from tokens to next-word probabilities, animated."
+- id: alammar-illustrated-gpt2
+  note: "The decoder-only transformer on this page, drawn block by block, including how generation feeds outputs back in."
+- id: bbycroft-llm-visualization
+  note: "Fly through every matrix of a small GPT in 3-D; the same blocks as this page's code, at real scale."
+- id: 3blue1brown-mlp-facts
+  note: "The 'think' half of each block: what the MLP computes and how it might store facts."
+- id: statquest-transformers
+  note: "Every step of a transformer with actual numbers, slowly, if the formulas still feel abstract."
+- id: karpathy-build-gpt
+  note: "The definitive companion: builds this page's PyTorch model from an empty file, piece by piece (2 hours)."
+- id: d2l-transformer
+  note: "The original encoder–decoder transformer, for comparison with the decoder-only GPT on this page."
+- id: vaswani-attention-is-all-you-need
+  note: "Section 3 and Figure 1: the architecture as first published (post-LN, encoder–decoder)."
+- id: karpathy-nanogpt
+  note: "Advanced: the same model as production-quality training code, up to reproducing GPT-2."

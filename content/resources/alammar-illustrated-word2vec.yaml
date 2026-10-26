@@ -1,0 +1,8 @@
+type: blog
+title: "The Illustrated Word2vec"
+url: https://jalammar.github.io/illustrated-word2vec/
+author: Jay Alammar
+level: beginner
+why: "Embeddings as personality-test scores: vectors you can compare with cosine similarity and do king − man + woman arithmetic on."
+source: curated
+checked: 2026-10-24

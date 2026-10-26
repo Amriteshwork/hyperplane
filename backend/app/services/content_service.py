@@ -14,7 +14,9 @@ from app.content.models import (
     Concept,
     ConceptCode,
     Family,
+    Paper,
     ResourceLink,
+    Track,
     code_module,
 )
 from app.core.errors import NotFoundError
@@ -35,7 +37,15 @@ from app.schemas.content import (
     ConceptSummaryOut,
     FamilyAlgorithmOut,
     FamilyOut,
+    PaperOut,
+    PaperSectionOut,
+    PaperSourceOut,
+    PaperSummaryOut,
+    PaperVideoOut,
     ResourceOut,
+    TrackChapterOut,
+    TrackOut,
+    TrackSummaryOut,
 )
 
 #: Placeholder data for showing a training template outside a run.
@@ -116,20 +126,33 @@ class ContentService:
             ConceptAreaOut(
                 id=area,
                 title=CONCEPT_AREA_TITLES[area],
-                concepts=[
-                    ConceptSummaryOut(
-                        id=c.id,
-                        title=c.meta.title,
-                        summary=c.meta.summary,
-                        algorithms=self._algorithms_using(c.id),
-                    )
-                    for c in index
-                    if c.meta.area is area
-                ],
+                concepts=[self._concept_summary(c) for c in index if c.meta.area is area],
             )
             for area in CONCEPT_AREA_TITLES
             if any(c.meta.area is area for c in index)
         ]
+
+    def list_tracks(self) -> Sequence[TrackSummaryOut]:
+        return [self._track_summary(t) for t in self._catalog.tracks()]
+
+    def get_track(self, track_id: str) -> TrackOut:
+        track = self._track(track_id)
+        return TrackOut(
+            id=track.id,
+            title=track.meta.title,
+            summary=track.meta.summary,
+            body=track.body,
+            goal=self._concept_refs([track.meta.goal])[0],
+            chapters=[
+                TrackChapterOut(
+                    title=ch.title,
+                    summary=ch.summary,
+                    concepts=[self._concept_summary(self._concept(i)) for i in ch.concepts],
+                )
+                for ch in track.meta.chapters
+            ],
+            resources=_resources(track.resources),
+        )
 
     def get_concept(self, concept_id: str) -> ConceptOut:
         concept = self._concept(concept_id)
@@ -226,6 +249,43 @@ class ContentService:
             for s in rendered.spans
         ]
 
+    def list_papers(self) -> Sequence[PaperSummaryOut]:
+        return [
+            PaperSummaryOut(
+                id=p.id,
+                title=p.meta.title,
+                summary=p.meta.summary,
+                source=_paper_source(p),
+                section_count=len(p.sections),
+            )
+            for p in self._catalog.papers()
+        ]
+
+    def get_paper(self, paper_id: str) -> PaperOut:
+        try:
+            paper = self._catalog.paper(paper_id)
+        except UnknownContentError:
+            raise NotFoundError(f"Unknown paper {paper_id!r}.") from None
+        concepts = {c.id: c for c in self._catalog.concept_index()}
+        return PaperOut(
+            id=paper.id,
+            title=paper.meta.title,
+            summary=paper.meta.summary,
+            source=_paper_source(paper),
+            intro=paper.intro,
+            sections=[PaperSectionOut(id=s.id, title=s.title, body=s.body) for s in paper.sections],
+            videos=[
+                PaperVideoOut(id=name, title=v.title, youtube_id=v.youtube)
+                for name, v in paper.meta.videos.items()
+            ],
+            # In index order, so prerequisites come before what builds on them.
+            concepts=[
+                self._concept_summary(c) for c in concepts.values() if c.id in paper.meta.concepts
+            ],
+            track=self._track_summary(self._track(paper.meta.track)) if paper.meta.track else None,
+            resources=_resources(paper.resources),
+        )
+
     def _family(self, family: Family) -> FamilyOut:
         entries = []
         for entry in family.meta.algorithms:
@@ -241,7 +301,20 @@ class ContentService:
                 )
             )
         return FamilyOut(
-            id=family.id, title=family.meta.title, summary=family.meta.summary, algorithms=entries
+            id=family.id,
+            title=family.meta.title,
+            summary=family.meta.summary,
+            algorithms=entries,
+            tracks=[self._track_summary(self._track(t)) for t in family.meta.tracks],
+        )
+
+    def _track_summary(self, track: Track) -> TrackSummaryOut:
+        return TrackSummaryOut(
+            id=track.id,
+            title=track.meta.title,
+            summary=track.meta.summary,
+            goal=self._concept_refs([track.meta.goal])[0],
+            concept_count=sum(len(ch.concepts) for ch in track.meta.chapters),
         )
 
     def _summary(self, algorithm_id: str) -> str | None:
@@ -257,6 +330,14 @@ class ContentService:
             if concept_id in p.spec.concepts
         ]
 
+    def _concept_summary(self, concept: Concept) -> ConceptSummaryOut:
+        return ConceptSummaryOut(
+            id=concept.id,
+            title=concept.meta.title,
+            summary=concept.meta.summary,
+            algorithms=self._algorithms_using(concept.id),
+        )
+
     def _concept_refs(self, ids: Sequence[str]) -> list[ConceptRefOut]:
         return [ConceptRefOut(id=i, title=self._concept(i).meta.title) for i in ids]
 
@@ -271,6 +352,19 @@ class ContentService:
             return self._catalog.concept(concept_id)
         except UnknownContentError:
             raise NotFoundError(f"Unknown concept {concept_id!r}.") from None
+
+    def _track(self, track_id: str) -> Track:
+        try:
+            return self._catalog.track(track_id)
+        except UnknownContentError:
+            raise NotFoundError(f"Unknown track {track_id!r}.") from None
+
+
+def _paper_source(paper: Paper) -> PaperSourceOut:
+    source = paper.source
+    return PaperSourceOut(
+        type=source.type, title=source.title, url=source.url, author=source.author
+    )
 
 
 def _resources(links: Sequence[ResourceLink]) -> list[ResourceOut]:

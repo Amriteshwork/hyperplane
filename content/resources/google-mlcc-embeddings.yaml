@@ -1,0 +1,9 @@
+type: course
+title: "Machine Learning Crash Course: Embeddings"
+url: https://developers.google.com/machine-learning/crash-course/embeddings
+author: Google for Developers
+level: beginner
+duration_min: 45
+why: "Why one-hot vectors don't scale, what an embedding space is, and static versus contextual embeddings, with interactive exercises."
+source: curated
+checked: 2026-10-24

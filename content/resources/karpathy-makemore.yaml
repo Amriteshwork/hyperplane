@@ -1,0 +1,8 @@
+type: video
+title: "The spelled-out intro to language modeling: building makemore"
+url: https://www.youtube.com/watch?v=PaCmpygFfXo
+author: Andrej Karpathy
+level: intermediate
+why: "A character-level bigram language model built twice, by counting and as a neural network, with sampling and the negative log-likelihood loss."
+source: curated
+checked: 2026-10-24

@@ -1,0 +1,81 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `attention` (Self-attention); it already accepts a mask."
+    deep: |
+      `attention(Q, K, V, mask)` replaces the scores where `mask` is False with $-\infty$
+      before the softmax. This page only has to build the right mask.
+    concepts: [self-attention]
+
+  mask: &mask
+    span: block
+    short: "The lower triangle (diagonal included) of a T × T matrix of True."
+    deep: |
+      `tril` keeps entries on and below the diagonal. Row $t$, column $s$ answers "may
+      token $t$ look at token $s$?", which is True exactly when $s \le t$. Every row has at
+      least one True (the diagonal), so no row's softmax is all $-\infty$, which would give
+      NaN.
+
+  demo: &demo
+    short: "Runs only when you execute this file; later concepts import `causal_mask` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  weights: &weights
+    span: block
+    short: "The attention weights form a lower triangle: each row splits its weight over the past only."
+    deep: |
+      Row 0 has one choice, itself, so its weight is exactly 1. Row 4 spreads its weight
+      over all five tokens. The zeros above the diagonal are exact, not merely small,
+      because $e^{-\infty} = 0$.
+
+  no-peeking:
+    span: block
+    short: "Rewrite tokens 3 and 4: the outputs for tokens 0–2 don't change at all."
+    deep: |
+      This is the guarantee causal masking exists for. When the model predicts token 3
+      from position 2, nothing from token 3 or later has leaked into position 2's
+      vector. Training is honest, and generation (where the future doesn't exist yet)
+      sees the same situation as training.
+
+  running-mean:
+    span: block
+    short: "Zero queries make all allowed scores equal, so masked attention becomes a running average."
+    deep: |
+      With $q_t = 0$ every allowed score is 0, so softmax gives $1/(t+1)$ to each of the
+      $t+1$ visible tokens: $\text{out}_t = \frac{1}{t+1}\sum_{s\le t} v_s$. That's
+      `cumsum` divided by the count.
+
+      Real queries turn this uniform average into a **learned, weighted** average of the
+      past. That's all masked self-attention is.
+
+pytorch:
+  reuse: *reuse
+  mask: *mask
+  demo: *demo
+  weights: *weights
+
+  builtin:
+    span: block
+    short: "`is_causal=True` makes PyTorch's fused kernel apply the same triangle."
+    deep: |
+      Fused kernels can skip computing the masked half of the score table entirely,
+      which matters when $T$ is in the thousands.
+
+  conventions:
+    span: block
+    short: "A classic bug: `nn.MultiheadAttention` reads a boolean mask the opposite way round."
+    deep: |
+      For `F.scaled_dot_product_attention`, `True` means "take part in attention". For
+      `nn.MultiheadAttention`'s `attn_mask`, `True` means "**not** allowed to attend". Pass
+      the wrong one and your model sees *only* the future (and row $T{-}1$ sees nothing).
+      Always check the weights of a new model, as this code does.
+
+  one-pass:
+    span: block
+    short: "One masked pass gives the same outputs as running every prefix separately: T predictions for the price of one."
+    deep: |
+      Position $t$'s output with the mask equals the last output of attention run on
+      tokens $0..t$ alone. Training therefore gets a prediction for every position in
+      one pass. Generation still runs one new token at a time, but it can reuse the keys
+      and values it already computed (the **KV cache**).

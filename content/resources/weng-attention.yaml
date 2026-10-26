@@ -1,0 +1,8 @@
+type: blog
+title: "Attention? Attention!"
+url: https://lilianweng.github.io/posts/2018-06-24-attention/
+author: Lilian Weng
+level: advanced
+why: "Where attention came from (seq2seq translation) and the family of scoring functions, ending at self-attention and multi-head attention."
+source: curated
+checked: 2026-10-24

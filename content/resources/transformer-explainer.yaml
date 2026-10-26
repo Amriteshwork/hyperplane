@@ -1,0 +1,8 @@
+type: interactive
+title: "Transformer Explainer"
+url: https://poloclub.github.io/transformer-explainer/
+author: Polo Club of Data Science, Georgia Tech
+level: beginner
+why: "GPT-2 running live in the browser: type a prompt and inspect its embeddings, attention heads and next-token probabilities."
+source: curated
+checked: 2026-10-24

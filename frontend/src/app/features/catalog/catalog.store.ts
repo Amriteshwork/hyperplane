@@ -4,7 +4,7 @@ import { Api } from '../../core/api/api';
 import { listFamilies } from '../../core/api/fn/learn/list-families';
 import { errorMessage } from '../../core/http/http-errors';
 
-/** Families with their algorithms, available and upcoming. Provided by the catalog route. */
+/** Families with their tracks and algorithms, available and upcoming. Provided by the catalog route. */
 @Injectable()
 export class CatalogStore {
   private readonly api = inject(Api);

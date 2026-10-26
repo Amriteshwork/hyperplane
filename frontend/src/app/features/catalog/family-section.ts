@@ -4,11 +4,12 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 
 import { FamilyOut } from '../../core/api/models/family-out';
 import { TASK_LABELS } from '../../shared/learn/labels';
+import { TrackCard } from '../../shared/learn/track-card';
 
-/** One family: available algorithms link to their page; upcoming ones are listed, greyed. */
+/** One family: its guided tracks, then algorithms (available ones link; upcoming are greyed). */
 @Component({
   selector: 'app-family-section',
-  imports: [RouterLink, HlmBadge],
+  imports: [RouterLink, HlmBadge, TrackCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section [attr.aria-labelledby]="'family-' + family().id">
@@ -17,6 +18,9 @@ import { TASK_LABELS } from '../../shared/learn/labels';
       </h2>
       <p class="mt-1 max-w-prose text-sm text-muted-foreground">{{ family().summary }}</p>
       <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        @for (track of family().tracks; track track.id) {
+          <li><app-track-card [track]="track" /></li>
+        }
         @for (algorithm of family().algorithms; track algorithm.id) {
           <li>
             @if (algorithm.available) {

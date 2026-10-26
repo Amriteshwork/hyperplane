@@ -1,0 +1,107 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse: &reuse
+    short: "Reuse `attention` (Self-attention) and `causal_mask` (Causal masking)."
+    deep: |
+      Multi-head attention adds no new maths: it's `attention` run several times on
+      slices, plus one extra matrix.
+    concepts: [self-attention, causal-masking]
+
+  mha:
+    span: block
+    short: "Project once, cut the columns into heads, attend in each, glue the outputs back together, mix with W_O."
+    deep: |
+      Head $h$ uses columns $h\cdot\frac{d}{n} \dots (h+1)\cdot\frac{d}{n}$ of $Q$, $K$ and
+      $V$. Slicing columns of $XW_Q$ is the same as multiplying by a block of columns of
+      $W_Q$, so this *is* $h$ separate projections, stored in one matrix.
+
+      `zip(*heads)` splits the list of (output, weights) pairs into all outputs and all
+      weights. The concatenated outputs are $T \times d$ again, and $W_O$ lets the heads'
+      findings mix.
+
+  demo: &demo
+    short: "Runs only when you execute this file; later concepts import `multi_head_attention` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  shapes:
+    span: block
+    short: "Four heads of size 4 on 16-dimensional tokens: the output has the same shape as the input."
+    deep: |
+      Same shape in and out, $(T, d) \to (T, d)$, is what lets a transformer stack the
+      same kind of block dozens of times, and add each block's output to its input.
+
+  one-head:
+    span: block
+    short: "With one head, multi-head attention is plain attention followed by W_O."
+    deep: |
+      A useful sanity check whenever you generalise code: the new version must reduce
+      to the old one in the simplest case.
+
+  params:
+    span: block
+    short: "W_Q, W_K, W_V, W_O: 4d² parameters, no matter how many heads."
+    deep: |
+      More heads means more, smaller attention patterns, not more weights. What changes
+      is that the softmax normalises each head's scores separately, so heads can attend
+      to different tokens.
+
+  specialists:
+    span: block
+    short: "Two hand-wired heads on the same input: one finds the previous token, the other finds itself."
+    deep: |
+      Each token is the one-hot vector of its position, $x_t = e_t$. Both heads use the
+      query $10\,e_t$: "find position $t$".
+
+      - Head 1's keys are $e_s$, so query $t$ matches key $t$: itself.
+      - Head 0's keys are shifted, $e_s \mapsto e_{s+1}$, so query $t$ matches the token
+        whose key *says* $t$: position $t-1$, the previous token.
+
+      Trained models learn previous-token heads like head 0 on their own, early in
+      training. Combined with a later head, they form **induction heads**, which copy
+      patterns from earlier in the text.
+
+pytorch:
+  reuse:
+    <<: *reuse
+    short: "Reuse `attention` and `causal_mask`, to check the batched version against a loop."
+
+  mha:
+    span: block
+    short: "All heads at once: reshape (T, d) into (heads, T, d/heads) and let one batched matmul do every head."
+    deep: |
+      `view(T, n_heads, d // n_heads)` cuts each row into head-sized pieces;
+      `transpose(0, 1)` puts the head first. `Q @ K.transpose(1, 2)` then multiplies
+      each head's $(T, d/h)$ by its $(d/h, T)$, giving a $(h, T, T)$ stack of score
+      tables. The $(T, T)$ mask broadcasts across heads. Undoing the reshape
+      concatenates the heads.
+
+      This is how real implementations work: no Python loop over heads, one GPU kernel.
+      Indexing from the end (`-3`, `-2`, `-1`) lets the same code take a batch of
+      sequences, `(B, T, d)`, as the Transformer page needs for training.
+
+  demo: *demo
+
+  loop:
+    span: block
+    short: "Check: the reshaped version equals looping `attention` over column blocks."
+    deep: |
+      Reshapes and transposes are where multi-head bugs hide: a `view` without the
+      `transpose` silently mixes heads and positions. Comparing against the obvious loop
+      catches that.
+
+  builtin:
+    span: block
+    short: "Copy our weights into `nn.MultiheadAttention` and get identical outputs."
+    deep: |
+      PyTorch's layers compute $x W^\top$ (weights stored as (out, in)), so our matrices
+      go in transposed. It packs $W_Q, W_K, W_V$ into one `in_proj_weight`, and its
+      boolean mask means "blocked", hence `~causal_mask(T)` (see Causal masking).
+    concepts: [causal-masking]
+
+  batch:
+    span: block
+    short: "Three sequences in one call: each comes out exactly as if it had been run alone."
+    deep: |
+      Attention mixes positions *within* a sequence, never across the batch. Training
+      runs many sequences at once only for speed.

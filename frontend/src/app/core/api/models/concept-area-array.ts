@@ -12,4 +12,5 @@ export const CONCEPT_AREA: ConceptArea[] = [
   'evaluation',
   'features',
   'neural-networks',
+  'sequence-models',
 ];

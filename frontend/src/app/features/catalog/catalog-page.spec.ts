@@ -10,6 +10,7 @@ const families: FamilyOut[] = [
     id: 'linear-models',
     title: 'Linear Models',
     summary: 'Weighted sums.',
+    tracks: [],
     algorithms: [
       {
         id: 'linear_regression',
@@ -62,5 +63,37 @@ describe('CatalogPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Couldn’t load the catalog');
     expect(fixture.nativeElement.textContent).toContain('Try again');
+  });
+
+  it('shows a family’s guided tracks before its algorithms', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideApiTesting()] });
+    const fixture = TestBed.createComponent(CatalogPage);
+    const sequence: FamilyOut = {
+      id: 'sequence-models',
+      title: 'Sequence Models',
+      summary: 'Attention.',
+      algorithms: [],
+      tracks: [
+        {
+          id: 'transformers',
+          title: 'Transformers, from scratch',
+          summary: 'NumPy to GPT.',
+          goal: { id: 'transformer', title: 'Transformer' },
+          concept_count: 33,
+        },
+      ],
+    };
+    await respond('/api/v1/families?limit=100', {
+      items: [...families, sequence],
+      total: 2,
+      limit: 100,
+      offset: 0,
+    });
+    const el = fixture.nativeElement as HTMLElement;
+    const section = el.querySelector('section[aria-labelledby="family-sequence-models"]');
+    expect(section?.querySelector('h2')?.textContent).toContain('Sequence Models');
+    const card = section?.querySelector('a[href="/tracks/transformers"]');
+    expect(card?.textContent?.replace(/\s+/g, ' ')).toContain('33 concepts · ends at Transformer');
+    expect(el.querySelectorAll('a[href^="/tracks/"]')).toHaveLength(1);
   });
 });

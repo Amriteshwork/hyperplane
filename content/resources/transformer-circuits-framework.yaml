@@ -1,0 +1,8 @@
+type: paper
+title: "A Mathematical Framework for Transformer Circuits"
+url: https://transformer-circuits.pub/2021/framework/index.html
+author: Elhage et al. (Anthropic, 2021)
+level: advanced
+why: "Transformers read as a residual stream that every layer reads from and writes to; also where induction heads are explained."
+source: curated
+checked: 2026-10-24

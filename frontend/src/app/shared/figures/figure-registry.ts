@@ -18,6 +18,13 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
   'early-stopping': () => import('./early-stopping-figure').then((m) => m.EarlyStoppingFigure),
   'boundary-playground': () =>
     import('./boundary-playground-figure').then((m) => m.BoundaryPlaygroundFigure),
+  'attention-heatmap': () =>
+    import('./attention-heatmap-figure').then((m) => m.AttentionHeatmapFigure),
+  'positional-encoding-explorer': () =>
+    import('./positional-encoding-explorer-figure').then((m) => m.PositionalEncodingExplorerFigure),
+  'transformer-block': () =>
+    import('./transformer-block-figure').then((m) => m.TransformerBlockFigure),
+  'bptt-unrolled': () => import('./bptt-unrolled-figure').then((m) => m.BpttUnrolledFigure),
 };
 
 export const FIGURES = new InjectionToken<Readonly<Record<string, FigureLoader>>>('FIGURES', {

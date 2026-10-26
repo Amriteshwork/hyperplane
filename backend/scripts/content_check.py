@@ -19,9 +19,12 @@ from app.core.config import get_settings
 from app.ml.registry import AlgorithmRegistry
 
 SECTIONS = ("algorithms", "concepts", "families", "resources")
+OPTIONAL_SECTIONS = ("tracks", "papers")
 REQUIRED_FILES = {
     "algorithms": ("overview.md", "resources.yaml"),
     "concepts": ("concept.md", "resources.yaml"),
+    "tracks": ("track.md", "resources.yaml"),
+    "papers": ("paper.md", "resources.yaml"),
 }
 IGNORED = {"README.md", ".gitkeep", ".DS_Store"}
 
@@ -45,7 +48,7 @@ def check_layout(root: Path) -> list[Issue]:
 
     issues: list[Issue] = []
     for entry in sorted(root.iterdir()):
-        if entry.name not in IGNORED and entry.name not in SECTIONS:
+        if entry.name not in IGNORED and entry.name not in SECTIONS + OPTIONAL_SECTIONS:
             issues.append(Issue(Level.WARNING, entry, "unexpected entry"))
 
     for section in SECTIONS:
@@ -120,10 +123,17 @@ def check_content(root: Path, registry: AlgorithmRegistry) -> list[Issue]:
 
     used = {link.resource.id for a in catalog.algorithms() for link in a.resources}
     used |= {link.resource.id for c in catalog.concepts() for link in c.resources}
+    used |= {link.resource.id for t in catalog.tracks() for link in t.resources}
+    used |= {link.resource.id for p in catalog.papers() for link in p.resources}
+    used |= {p.source.id for p in catalog.papers()}
     for resource in catalog.resources():
         if resource.id not in used:
             path = root / "resources" / f"{resource.id}.yaml"
-            issues.append(Issue(Level.WARNING, path, "not referenced by any algorithm or concept"))
+            issues.append(
+                Issue(
+                    Level.WARNING, path, "not referenced by any algorithm, concept, track or paper"
+                )
+            )
 
     for gap in content_gaps(catalog, pack_ids):
         issues.append(Issue(Level.WARNING, root / gap.item, f"backlog: {gap.message}"))

@@ -1,0 +1,19 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: 3blue1brown-attention
+  note: "Start here: queries as questions and keys as answers, with the attention pattern animated."
+- id: alammar-illustrated-transformer
+  note: "The self-attention section computes one token's output step by step, then the matrix form on this page."
+- id: statquest-attention
+  note: "Where attention came from: dot-product similarity and softmax, before transformers existed."
+- id: d2l-queries-keys-values
+  note: "Attention as a differentiable dictionary lookup, the same picture as this page's first demo."
+- id: d2l-attention-scoring
+  note: "Why the √d: the variance argument from this page, plus other scoring functions."
+- id: weng-attention
+  note: "Advanced: the history of attention mechanisms that led to self-attention."
+- id: vaswani-attention-is-all-you-need
+  note: "Section 3.2.1 is the four-line definition on this page, and footnote 4 the variance argument."
+- id: statquest-transformers
+  note: "Self-attention worked with actual numbers on a tiny example, as part of a whole transformer."
+- id: transformer-explainer
+  note: "Type a prompt and inspect GPT-2's real attention patterns, head by head."

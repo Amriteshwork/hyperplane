@@ -1,0 +1,8 @@
+type: video
+title: "Neural Networks Part 10: Long Short-Term Memory (LSTM)"
+url: https://www.youtube.com/watch?v=YCzL96nL7j0
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Part 10 of StatQuest's neural-network series: the LSTM, the follow-on to the basic RNN of part 9, explained visually."
+source: curated
+checked: 2026-10-26

@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: deeplearningai-resnets
+  note: "Start here: the skip connection drawn out, and training error rising with depth for plain networks but not residual ones."
+- id: deeplearningai-why-resnets-work
+  note: "Why 'do nothing' is easy for a residual block: the argument behind this page's identity check."
+- id: d2l-resnet
+  note: "The 'deeper should never be worse' argument and the residual block, with code."
+- id: karpathy-build-gpt
+  note: "Watch residual connections go into a transformer and rescue a model that had stopped improving as it got deeper."
+- id: he-resnet
+  note: "The original paper: Figure 1 shows the degradation problem; section 3.1 introduces residual learning."
+- id: transformer-circuits-framework
+  note: "Advanced: the 'residual stream' view of a transformer, with every layer reading from it and writing back."

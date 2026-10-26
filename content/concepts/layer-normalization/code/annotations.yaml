@@ -1,0 +1,91 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse `residual` (Residual connections), to build a deep stack of pre-LN blocks."
+    deep: |
+      Download with dependencies to get `residual_connections_numpy.py` and what it
+      imports.
+    concepts: [residual-connections]
+
+  layer-norm: &layer-norm
+    span: block
+    short: "Standardise each row across its features, then scale by γ and shift by β, feature by feature."
+    deep: |
+      `axis=-1` means "across the last axis": the features of each token. `keepdims=True`
+      keeps the means as a column, so they broadcast back against `X`. The same code
+      works for one token `(d,)`, a sequence `(T, d)`, or a batch `(B, T, d)`.
+
+      Compare feature scaling, which uses `axis=0`: statistics per *column*, across
+      examples.
+    concepts: [feature-scaling, probability]
+
+  demo:
+    short: "Runs only when you execute this file; the Transformer page imports `layer_norm` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  rows:
+    span: block
+    short: "Four tokens on wildly different scales (from 0.1 to 1000) all come out with mean 0 and std 1."
+    deep: |
+      The last check feeds in a constant row. Its variance is 0, so without $\epsilon$
+      this would be $0/0$, NaN. With $\epsilon$ it's $0/\sqrt\epsilon = 0$.
+
+  invariance:
+    span: block
+    short: "Scale a token by 7 and shift it by 3: layer norm's output doesn't change."
+    deep: |
+      Shifting moves the mean by the same amount, and scaling multiplies the standard
+      deviation by the same factor, so both cancel. The previous layer can drift in
+      overall scale without the next layer noticing. (The tolerance is for $\epsilon$,
+      which matters very slightly at different scales.)
+
+  not-columns:
+    span: block
+    short: "Replace every other token: row 0's layer norm is unchanged, but its column-standardised version changes."
+    deep: |
+      Layer norm's statistics come from the token alone. Column standardisation (feature
+      scaling, batch norm) uses statistics from all rows, so row 0's result depends on
+      its neighbours.
+    concepts: [feature-scaling]
+
+  stream:
+    span: block
+    short: "48 pre-LN residual blocks: the stream grows from about 11 to about 57, yet every branch reads a vector of length exactly 8."
+    deep: |
+      Each block adds a random update to the stream, so its size grows roughly like
+      $\sqrt{\text{depth}}$. Each branch reads `layer_norm(h)` instead: mean 0, variance
+      1 across 64 features, so its length is always $\sqrt{64} = 8$, at block 1 or block
+      48.
+    concepts: [residual-connections]
+
+pytorch:
+  layer-norm:
+    <<: *layer-norm
+    short: "Standardise each row across its features (dim=-1), then × γ + β. Variance divides by d, not d − 1."
+    deep: |
+      `dim=-1` is the feature dimension of a `(T, d)` or `(B, T, d)` tensor. The variance
+      is the plain mean of squared deviations, dividing by $d$, which is what
+      `nn.LayerNorm` uses. `torch.var` divides by $d - 1$ by default (the "unbiased"
+      estimate), a classic source of tiny mismatches.
+
+  demo:
+    short: "The demo: check against nn.LayerNorm, then compare with batch norm."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  builtin:
+    span: block
+    short: "Random γ and β copied into nn.LayerNorm: identical outputs on a (batch, tokens, features) tensor."
+    deep: |
+      `nn.LayerNorm(d)` holds $\gamma$ as `weight` and $\beta$ as `bias`, starting at 1 and
+      0. We randomise them to make sure the comparison covers the learned part too.
+
+  batch-norm:
+    span: block
+    short: "The same sentence in two batches: layer norm's output is identical; batch norm's depends on the neighbours."
+    deep: |
+      `BatchNorm1d` in training mode standardises each feature using the mean and
+      variance over every token in the batch, so the second sentence in the batch
+      changes the first one's output. Layer norm only looks at each token's own
+      features.

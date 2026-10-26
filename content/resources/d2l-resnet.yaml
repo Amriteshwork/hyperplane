@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Residual Networks (ResNet)"
+url: https://d2l.ai/chapter_convolutional-modern/resnet.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Why adding layers should never hurt in principle, and the residual block that makes it true in practice."
+source: curated
+checked: 2026-10-24

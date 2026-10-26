@@ -1,0 +1,147 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the tokenizer (Tokenization), softmax (Softmax) and binary log-loss (Log-loss)."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [tokenization, softmax, log-loss]
+
+  corpus: &corpus
+    span: block
+    short: "A generated training text: 'zoe likes jam, so zoe eats jam. ', with random names and foods."
+    deep: |
+      Generated text is reproducible (seeded) and has no licence question. More
+      importantly, it has a known structure: the name and food in the second half
+      **repeat** the first half. Predicting them needs looking back about 17 characters, so
+      it separates models that can attend from models that can't.
+
+      Python's `random.Random(seed)` generates the same text in the NumPy and PyTorch
+      files.
+
+  bigram:
+    span: block
+    short: "Count every (current, next) pair, add smoothing, divide by the row totals: P[a, b] = P(next = b | current = a)."
+    deep: |
+      `np.add.at(counts, (ids[:-1], ids[1:]), 1)` adds 1 at every (current, next) pair,
+      repeats included. Each row of the result is a probability distribution over what
+      follows one character. Counting *is* maximum likelihood here: these are exactly the
+      probabilities that make the training text most likely.
+    concepts: [probability]
+
+  cross-entropy: &cross-entropy
+    span: block
+    short: "−log of the probability the model gave to the true next token, averaged."
+    deep: |
+      `probs[np.arange(N), targets]` picks, from each row, the probability of the token
+      that really came next. Confident and right costs ≈ 0; confident and wrong costs a
+      lot; uniform costs $\log V$.
+    concepts: [log-loss]
+
+  sample:
+    span: block
+    short: "Generation: look up the distribution after the last token, apply temperature, draw, append, repeat."
+    deep: |
+      `np.log(P[...]) / temperature` turns probabilities back into scores and rescales
+      them; `softmax` turns them into probabilities again. At temperature 1 that's a
+      no-op. Lower temperatures make big scores dominate; higher ones even everything
+      out.
+    concepts: [softmax]
+
+  demo: &demo
+    short: "Runs only when you execute this file; the Transformer page imports the corpus and loss without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  fit:
+    span: block
+    short: "1,000 sentences, a 90/10 split, and a bigram counted on the first 90%."
+    deep: |
+      As always, judge the model on text it didn't learn from.
+    concepts: [train-test-split]
+
+  scores:
+    span: block
+    short: "Uniform guessing scores 3.18 nats; the bigram 1.32 (perplexity 3.8). With two tokens, cross-entropy is log-loss."
+    deep: |
+      Perplexity $e^{1.32} \approx 3.8$: on average the bigram is as unsure as a fair
+      choice among about four characters. The last check shows that cross-entropy over
+      two tokens is the binary log-loss from logistic regression.
+
+  blind-spot:
+    span: block
+    short: "After 'so ', the bigram gives each name's first letter about 3%, whoever the sentence is about."
+    deep: |
+      The bigram's only evidence is the previous character, a space. It can't see that
+      the sentence started with "zoe", so it can never be confident about the name. Its
+      most likely character after a space is under 50%. A transformer, which can look
+      back, gets the name almost always right.
+
+  temperature:
+    span: block
+    short: "Temperature 1 samples honestly; near 0 it always takes the most likely token, and gets stuck: 'eats eats eats'."
+    deep: |
+      At $\tau = 0.001$ every pick is a most-likely token (the assert checks each step).
+      That's **greedy decoding**, and with only one character of memory it loops.
+
+      It isn't fully deterministic: after "e", the next letter is "s" (as in "likes") or
+      "a" (as in "eats") exactly equally often, since every sentence has one of each.
+      An exact tie stays a coin flip at any temperature.
+
+pytorch:
+  reuse:
+    short: "Reuse the tokenizer (Tokenization)."
+    concepts: [tokenization]
+    deep: |
+      `encode` returns a `torch.long` tensor, which is what embeddings and
+      `F.cross_entropy` expect.
+  corpus: *corpus
+
+  bigram:
+    span: block
+    short: "The counted bigram in PyTorch, as log-probabilities: the baseline the transformer must beat."
+    deep: |
+      `index_put_(..., accumulate=True)` is PyTorch's `np.add.at`. Returned as
+      log-probabilities, so `-table[a, b]` is the loss for predicting `b` after `a`.
+
+  generate:
+    span: block
+    short: "Generic generation: works for any model that maps token ids to one row of logits per position."
+    deep: |
+      Only the last row of logits matters: it's the prediction for the next token.
+      `torch.multinomial` draws one index from the probabilities. `@torch.no_grad()` skips
+      building the backward graph, since we aren't training. The Transformer page reuses
+      this function unchanged.
+
+  demo: *demo
+
+  data:
+    span: block
+    short: "The same 1,000 sentences, the same 90/10 split."
+    deep: |
+      `make_corpus` uses Python's own seeded random generator, so this text is
+      character-for-character the NumPy file's.
+
+  model:
+    span: block
+    short: "A bigram as a neural network: an embedding table whose row a holds the scores for what follows a."
+    deep: |
+      `nn.Embedding(V, V)` maps each token straight to $V$ logits. `F.cross_entropy` applies
+      softmax and the log-loss in one numerically safe step. No counting anywhere, just
+      gradient descent on cross-entropy.
+    concepts: [embeddings, adam-optimizer]
+
+  counts:
+    span: block
+    short: "Gradient descent finds the same answer as counting: both maximise the likelihood."
+    deep: |
+      With no smoothing, the counted probabilities are the maximum-likelihood solution,
+      so they have the lowest possible training loss. The trained network gets within
+      0.01 of it. Neural language models are trained exactly like this, just with a
+      far more capable function than a lookup table.
+
+  sampling:
+    span: block
+    short: "Sample 40 characters at temperatures 0.5, 1 and 2: from repetitive to random."
+    deep: |
+      A seeded `torch.Generator` makes the samples reproducible. Higher temperature means
+      more surprising characters. With a bigram, none of them read well.

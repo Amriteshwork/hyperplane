@@ -9,9 +9,11 @@ from app.api.v1.routes import (
     experiments,
     families,
     health,
+    papers,
     recommendations,
     runs,
     samples,
+    tracks,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -25,5 +27,7 @@ for module in (
     experiments,
     runs,
     concepts,
+    tracks,
+    papers,
 ):
     api_router.include_router(module.router)

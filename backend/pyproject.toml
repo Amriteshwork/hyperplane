@@ -38,6 +38,8 @@ dev = [
 ]
 # Runs the PyTorch concept snippets in content/ (tests skip them without it). Not in the image.
 torch = ["torch>=2.14.1"]
+# Renders the Manim scenes in content/papers (ADR 0022). Dev-only; needs cairo/pango headers.
+videos = ["manim>=0.22.0"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }

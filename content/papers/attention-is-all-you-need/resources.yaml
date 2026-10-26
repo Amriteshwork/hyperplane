@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each adds to this walkthrough (ADR 0016).
+- id: alammar-illustrated-transformer
+  note: "The classic illustrated tour of this exact paper, encoder and decoder included, with the same translation example."
+- id: 3blue1brown-transformers
+  note: "Watch first if you prefer video: the whole architecture, animated, for a GPT-style model."
+- id: harvard-annotated-transformer
+  note: "Advanced: the paper's text, line by line, next to the PyTorch code that implements it."
+- id: statquest-transformers
+  note: "Encoder, decoder and cross-attention worked through with real numbers on a tiny translation."
+- id: transformer-explainer
+  note: "Type a prompt and inspect a real GPT-2's attention, head by head."
+- id: karpathy-build-gpt
+  note: "Build the decoder-only half of this paper in PyTorch, from an empty file, in two hours."

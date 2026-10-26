@@ -15,6 +15,9 @@ content/
     code/numpy.py, pytorch.py  the concept from scratch on random data (see below)
     code/annotations.yaml      explanations for their `# @a:<anchor>` comments
   families/<family_id>.md      one page per family (e.g. linear-models.md)
+  papers/<paper_id>/           a paper or blog post explained section by section (below)
+    paper.md, resources.yaml
+    scenes/<name>.py           one Manim scene per `::video[name]`
   resources/<resource_id>.yaml one file per curated link, shared by any page (ADR 0014)
 ```
 
@@ -141,3 +144,18 @@ The loader checks every such import without running code:
 The page lists what each file uses, with links, and offers "Download with dependencies": a
 zip of the file, everything it imports (transitively) and a README with the run command. The
 tests run every file next to the files it imports, and run a downloaded bundle.
+
+## Papers
+
+`paper.md` frontmatter: `title`, `summary`, `order`, `source` (a `paper` or `blog` resource id),
+`concepts` (what to know first), optional `track`, and `videos` (`name: {title, youtube}`).
+After a short intro, write one `## ` section per section of the original, each in the same
+shape: **The paper says** (a short quote), **In plain words**, a `::figure` or `::video`,
+**Why it mattered**, and **Go deeper** links to `/concepts/<id>`. Quote briefly and never
+embed the paper's own figures.
+
+Videos are ManimCE scenes: `::video[qkv-lookup]` is class `QkvLookup` in
+`scenes/qkv_lookup.py`. Use `Text`, not `MathTex` (no LaTeX needed). Render with
+`make videos paper=<id> [scene=<name>] [q=l]` (needs `libcairo2-dev libpango1.0-dev`), upload
+the MP4 from `build/videos/` to YouTube, and set its id as `youtube:`. Until then the page
+shows "Animation coming soon".

@@ -1,0 +1,8 @@
+type: blog
+title: "The Illustrated GPT-2 (Visualizing Transformer Language Models)"
+url: https://jalammar.github.io/illustrated-gpt2/
+author: Jay Alammar
+level: beginner
+why: "A decoder-only transformer drawn step by step: masked self-attention, the block stack, and producing one token at a time."
+source: curated
+checked: 2026-10-24

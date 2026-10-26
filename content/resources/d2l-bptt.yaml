@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Backpropagation Through Time"
+url: https://d2l.ai/chapter_recurrent-neural-networks/bptt.html
+author: Zhang, Lipton, Li & Smola
+level: advanced
+why: "The gradients of an unrolled RNN worked out in full: why powers of the weight matrix vanish or explode, and full vs truncated vs randomly truncated BPTT."
+source: curated
+checked: 2026-10-26

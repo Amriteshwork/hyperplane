@@ -1,0 +1,96 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse `attention` (Self-attention), to show it can't see word order on its own."
+    deep: |
+      Download with dependencies to get `self_attention_numpy.py` and the softmax it
+      builds on.
+    concepts: [self-attention]
+
+  sinusoidal: &sinusoidal
+    span: block
+    short: "Even columns are sines, odd columns cosines; each pair spins at its own frequency ω."
+    deep: |
+      $$p_{t,2i} = \sin(t\,\omega_i), \quad p_{t,2i+1} = \cos(t\,\omega_i), \quad
+      \omega_i = 10000^{-2i/d}.$$
+
+      `t * freq` is a $(T, d/2)$ table of angles by broadcasting a column of positions
+      against a row of frequencies. Frequencies run from 1 radian per token down to
+      about $1/10000$, so the fast clocks distinguish neighbours and the slow ones
+      distinguish far-apart positions. Every value stays in $[-1, 1]$, whatever the
+      length.
+    concepts: [numpy-basics]
+
+  demo: &demo
+    short: "Runs only when you execute this file; the Transformer page imports `sinusoidal` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  word-order:
+    span: block
+    short: "'dog bites man' vs 'man bites dog': without positions, 'dog' comes out identical; with them, it doesn't."
+    deep: |
+      `read` runs self-attention over a three-word sentence and returns the output vector
+      at the word "dog". Without positional encodings, the dog that bites and the dog
+      that is bitten get exactly the same vector: attention only sees the set
+      {dog, bites, man}. Adding $p_t$ to each embedding makes the two sentences
+      different inputs, so the outputs differ too.
+    concepts: [self-attention]
+
+  unique:
+    span: block
+    short: "All 100 positions have distinct vectors, and no value exceeds 1."
+    deep: |
+      `PE[:, None] - PE[None]` is every pairwise difference (a $100 \times 100 \times d$
+      array by broadcasting). Adding `np.eye(100)` hides the zero distance from each
+      position to itself. Small, bounded values matter because $p_t$ is *added* to the
+      embeddings; a raw position number like 573 would drown out the token's meaning.
+
+  relative:
+    span: block
+    short: "Moving 3 positions forward is one fixed rotation R, the same at every position."
+    deep: |
+      For one clock pair, the angle-addition formulas give
+      $$\begin{aligned}\sin((t{+}k)\omega) &= \sin(t\omega)\cos(k\omega) + \cos(t\omega)\sin(k\omega)\\
+      \cos((t{+}k)\omega) &= \cos(t\omega)\cos(k\omega) - \sin(t\omega)\sin(k\omega)\end{aligned}$$
+      so the pair moves by a $2\times2$ rotation that depends on $k$ but not on $t$. `R`
+      stacks one such rotation per pair on its diagonal.
+
+      Because rotations preserve dot products, $p_t\cdot p_{t+k}$ is also the same for
+      every $t$: the diagonal of `dots`. Similarity between positions depends only on how
+      far apart they are.
+
+pytorch:
+  sinusoidal: *sinusoidal
+
+  rope:
+    span: block
+    short: "RoPE: instead of adding a vector, rotate each (even, odd) pair of a query or key by angle t·ω."
+    deep: |
+      For each pair $(x_1, x_2)$ at position $t$:
+      $$\begin{pmatrix}x_1'\\x_2'\end{pmatrix} = \begin{pmatrix}\cos t\omega & -\sin t\omega\\ \sin t\omega & \cos t\omega\end{pmatrix}\begin{pmatrix}x_1\\x_2\end{pmatrix}.$$
+
+      Apply it to queries and keys (not values) inside attention. A dot product of two
+      vectors rotated by angles $a$ and $b$ equals the dot product with one of them
+      rotated by $a - b$, so the score sees only the relative position.
+
+  demo: *demo
+
+  learned:
+    span: block
+    short: "Learned positions: an `nn.Embedding` with one row per position, added to the token embeddings."
+    deep: |
+      This is GPT-2's choice: positions are looked up exactly like tokens and learned by
+      backpropagation. The drawback is a hard maximum length: there is no row for
+      position 1025 if the table has 1024 rows. The last line checks the sinusoidal
+      table's first column is $\sin(t)$, the fastest clock ($\omega_0 = 1$).
+    concepts: [embeddings]
+
+  relative:
+    span: block
+    short: "With RoPE, the same query and key score identically at positions (5, 2) and (20, 17): only the distance matters."
+    deep: |
+      `score(t, s)` puts the same query vector at position $t$ and the same key vector at
+      position $s$. Distance 3 gives the same score at both places; distance 1 gives a
+      different one. Rotations also keep every vector's length, so RoPE changes
+      directions only, never magnitudes.

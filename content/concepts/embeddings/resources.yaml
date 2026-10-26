@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-illustrated-word2vec
+  note: "Start here: embeddings as personality-test scores, compared with cosine similarity, ending in king − man + woman."
+- id: statquest-word-embedding
+  note: "Why ids aren't enough, and how a network learns word vectors from the words around each word, as in this page's PyTorch code."
+- id: 3blue1brown-transformers
+  note: "The embedding section animates directions that carry meaning, and why the vectors are learnt rather than designed."
+- id: google-mlcc-embeddings
+  note: "One-hot versus embeddings, and static versus contextual embeddings: the gap self-attention fills."

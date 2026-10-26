@@ -1,0 +1,100 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  vocab: &vocab
+    span: block
+    short: "The vocabulary: every distinct character, numbered 0, 1, 2, … in sorted order."
+    deep: |
+      `sorted(set(text))` lists each character once. Sorting matters: a `set` has no
+      reliable order, and a model trained with "a" = 1 is useless if tomorrow "a" = 7. Real
+      tokenizers ship their vocabulary as a file for exactly this reason.
+
+  encode: &encode
+    span: block
+    short: "Encoding: swap every character for its id."
+    deep: |
+      A character missing from the vocabulary raises a `KeyError`: this tokenizer only
+      knows the text it was built from. Byte-level BPE avoids that, since every string is
+      made of the 256 possible bytes.
+
+  decode: &decode
+    span: block
+    short: "Decoding: flip the dictionary (id → character) and join the pieces."
+    deep: |
+      `itos` reads "integer to string". Because every character has exactly one id and
+      vice versa, decoding undoes encoding perfectly.
+
+  bpe:
+    span: block
+    short: "Byte-pair encoding in two functions: find the most frequent neighbouring pair, then glue it everywhere."
+    deep: |
+      `zip(ids[:-1], ids[1:])` walks the sequence two at a time: (t, h), (h, e), (e, ␣)…
+      `Counter` tallies the pairs. `merge` scans left to right, replacing each occurrence
+      with one new id. It skips ahead by two after a match, so "aaa" with pair (a, a)
+      becomes [aa, a], not [aa, aa].
+
+      Real BPE (GPT-2 onwards) starts from the 256 possible **bytes** rather than
+      characters, so any text in any language can be encoded, and it runs tens of
+      thousands of merges on a huge corpus.
+
+  demo: &demo
+    short: "Runs only when you execute this file; importing it from later concepts runs nothing."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run, so `from tokenization_numpy
+      import encode` in another file skips this block.
+
+  round-trip: &round-trip
+    span: block
+    short: "Encode a sentence, decode it again, and check nothing changed."
+    deep: |
+      11 distinct characters (including the space and the full stop) cover the whole
+      sentence. This is a **character-level** tokenizer: tiny vocabulary, long sequences.
+
+  merges:
+    span: block
+    short: "Five BPE merges: watch 'the ' become a single token and the sequence shrink."
+    deep: |
+      Each merge adds one token to the vocabulary and removes every occurrence of a pair
+      from the sequence. On this sentence, "a"+"t" goes first (cat, sat, mat, hat), and
+      after four merges the whole word "the " is one token. The model would then see
+      22 tokens instead of 44: half the attention cost, and a common word as one unit.
+
+  unmerge:
+    span: block
+    short: "Undo the merges newest-first: we get back exactly the original character ids."
+    deep: |
+      Each merged token expands into the pair it came from. Undoing them in reverse
+      order expands "the " → "th" + "e " → "t" + "h" + "e" + " ". So subword tokens are
+      lossless too.
+
+pytorch:
+  vocab: *vocab
+  encode:
+    span: block
+    short: "Encoding: swap every character for its id, as a `torch.long` tensor."
+    deep: |
+      Embedding layers (`nn.Embedding`) index with integers, so token ids are always
+      64-bit integer tensors, never floats.
+  decode: *decode
+
+  windows:
+    span: block
+    short: "Training pairs for free: the target is the same text shifted one token to the left."
+    deep: |
+      `unfold(0, length + 1, 1)` makes every window of `length + 1` consecutive tokens.
+      Dropping the last token gives the input `x`; dropping the first gives the target
+      `y`. At every position $t$, the model reads $x_{\le t}$ and must predict $y_t =
+      x_{t+1}$.
+
+      This is **self-supervised** learning: no labels to collect, because text labels
+      itself. One window of 8 tokens holds 8 prediction problems.
+
+  demo: *demo
+  round-trip: *round-trip
+
+  targets:
+    span: block
+    short: "Print the prediction problems hidden in the first window, then check the shift."
+    deep: |
+      After "t" comes "h", after "th" comes "e", after "the" comes " ". A model that
+      predicts these well has learnt spelling, then words, then (with enough data and
+      parameters) grammar and facts.

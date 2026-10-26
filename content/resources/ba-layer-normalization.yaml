@@ -1,0 +1,8 @@
+type: paper
+title: "Layer Normalization"
+url: https://arxiv.org/abs/1607.06450
+author: Ba, Kiros & Hinton (2016)
+level: advanced
+why: "The paper that introduced layer normalization: per-example statistics, so it works for any batch size and for recurrent networks."
+source: curated
+checked: 2026-10-24

@@ -1,0 +1,8 @@
+type: paper
+title: "RoFormer: Enhanced Transformer with Rotary Position Embedding"
+url: https://arxiv.org/abs/2104.09864
+author: Su et al. (2021)
+level: advanced
+why: "The paper that introduced rotary position embeddings, now used by most open LLMs."
+source: curated
+checked: 2026-10-24

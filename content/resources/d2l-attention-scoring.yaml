@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Attention Scoring Functions"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/attention-scoring-functions.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Scaled dot-product attention derived, why the √d appears, and the masked softmax, with code."
+source: curated
+checked: 2026-10-24

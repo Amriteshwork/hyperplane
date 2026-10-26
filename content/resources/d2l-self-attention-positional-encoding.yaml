@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Self-Attention and Positional Encoding"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/self-attention-and-positional-encoding.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Self-attention compared with CNNs and RNNs, then sinusoidal positional encoding with plots and its relative-position property."
+source: curated
+checked: 2026-10-24

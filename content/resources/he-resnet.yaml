@@ -1,0 +1,8 @@
+type: paper
+title: "Deep Residual Learning for Image Recognition"
+url: https://arxiv.org/abs/1512.03385
+author: He et al. (2015)
+level: advanced
+why: "The ResNet paper: deeper plain networks train worse, and identity shortcuts fix it. Figure 1 and section 3.1 are the core."
+source: curated
+checked: 2026-10-24

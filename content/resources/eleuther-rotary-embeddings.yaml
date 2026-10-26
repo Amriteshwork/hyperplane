@@ -1,0 +1,8 @@
+type: blog
+title: "Rotary Embeddings: A Relative Revolution"
+url: https://blog.eleuther.ai/rotary-embeddings/
+author: EleutherAI
+level: advanced
+why: "Rotary position embeddings (RoPE) derived and compared with learned and sinusoidal positions."
+source: curated
+checked: 2026-10-24

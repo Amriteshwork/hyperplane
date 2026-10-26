@@ -1,0 +1,8 @@
+type: video
+title: "Recurrent Neural Networks (RNNs), Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=AsNTP8Kwu80
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Part 9 of StatQuest's neural-network series: the basic RNN architecture, explained visually, leading into the LSTM in part 10."
+source: curated
+checked: 2026-10-26

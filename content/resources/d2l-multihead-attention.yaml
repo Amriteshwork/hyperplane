@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Multi-Head Attention"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/multihead-attention.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Multi-head attention with per-head size d/h, so the cost stays that of one head, and all heads computed in parallel by reshaping."
+source: curated
+checked: 2026-10-24

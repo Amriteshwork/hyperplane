@@ -41,11 +41,20 @@ class FamilyAlgorithmOut(BaseModel):
     difficulty: int | None
 
 
+class TrackSummaryOut(BaseModel):
+    id: str
+    title: str
+    summary: str
+    goal: ConceptRefOut
+    concept_count: int
+
+
 class FamilyOut(BaseModel):
     id: str
     title: str
     summary: str
     algorithms: list[FamilyAlgorithmOut]
+    tracks: list[TrackSummaryOut]
 
 
 class CodeVariantOut(BaseModel):
@@ -138,3 +147,71 @@ class ConceptOut(BaseModel):
     resources: list[ResourceOut]
     algorithms: list[AlgorithmRefOut]
     code: list[ConceptCodeOut]
+
+
+class TrackChapterOut(BaseModel):
+    title: str
+    summary: str
+    concepts: list[ConceptSummaryOut]
+
+
+class TrackOut(BaseModel):
+    """A guided route to one concept: everything it builds on, in authored chapters."""
+
+    id: str
+    title: str
+    summary: str
+    body: str
+    goal: ConceptRefOut
+    chapters: list[TrackChapterOut]
+    resources: list[ResourceOut]
+
+
+class PaperSourceOut(BaseModel):
+    """The original paper or blog post a walkthrough explains."""
+
+    type: ResourceType
+    title: str
+    url: str
+    author: str | None
+
+
+class PaperSummaryOut(BaseModel):
+    id: str
+    title: str
+    summary: str
+    source: PaperSourceOut
+    section_count: int
+
+
+class PaperSectionOut(BaseModel):
+    #: Anchor for the outline, from the heading.
+    id: str
+    title: str
+    #: Markdown + KaTeX, with `::figure[name]` and `::video[name]` directives.
+    body: str
+
+
+class PaperVideoOut(BaseModel):
+    """A Manim animation, keyed by the name `::video[name]` uses (ADR 0022)."""
+
+    id: str
+    title: str
+    #: Null until the render is uploaded.
+    youtube_id: str | None
+
+
+class PaperOut(BaseModel):
+    """A section-by-section, plain-words walkthrough of one paper or blog post."""
+
+    id: str
+    title: str
+    summary: str
+    source: PaperSourceOut
+    intro: str
+    sections: list[PaperSectionOut]
+    videos: list[PaperVideoOut]
+    #: What to know first, in reading order.
+    concepts: list[ConceptSummaryOut]
+    track: TrackSummaryOut | None
+    resources: list[ResourceOut]

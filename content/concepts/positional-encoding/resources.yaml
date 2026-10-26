@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-illustrated-transformer
+  note: "Start here: the positional encoding section shows the sinusoid pattern as a coloured grid, added to each embedding."
+- id: statquest-transformers
+  note: "The positional encoding part draws the sine and cosine squiggles and adds them to word embeddings, number by number."
+- id: kazemnejad-positional-encoding
+  note: "The binary-counting intuition, and a proof of the 'shift = rotation' property this page's code checks."
+- id: d2l-self-attention-positional-encoding
+  note: "Why self-attention needs positions at all, then the sinusoidal encoding plotted column by column."
+- id: eleuther-rotary-embeddings
+  note: "Advanced: RoPE, the rotate-don't-add approach in this page's PyTorch code, and how it compares with learned and sinusoidal positions."
+- id: su-rope
+  note: "Advanced: the RoPE paper, which derives the rotation from wanting scores that depend only on t − s."

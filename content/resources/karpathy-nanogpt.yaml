@@ -1,0 +1,8 @@
+type: course
+title: "nanoGPT"
+url: https://github.com/karpathy/nanoGPT
+author: Andrej Karpathy
+level: advanced
+why: "A complete, readable GPT training codebase in a few hundred lines of PyTorch, from character-level Shakespeare up to reproducing GPT-2."
+source: curated
+checked: 2026-10-24

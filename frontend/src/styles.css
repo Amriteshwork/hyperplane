@@ -164,8 +164,9 @@
   .prose-hp .math-display {
     @apply overflow-x-auto py-1;
   }
-  /* `::figure[name]` placeholders become interactive figures (shared/figures). */
-  .prose-hp .figure-slot {
+  /* `::figure[name]` and `::video[name]` placeholders become components (MarkdownView). */
+  .prose-hp .figure-slot,
+  .prose-hp .video-slot {
     @apply block;
   }
 }

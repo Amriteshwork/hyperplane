@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this track (ADR 0016).
+- id: 3blue1brown-transformers
+  note: "Watch first: the whole journey in one animated overview, so every chapter has a place to fit."
+- id: 3blue1brown-neural-network
+  note: "If chapter 3 is new: neurons and layers drawn out before any formula."
+- id: 3blue1brown-attention
+  note: "The best single explanation of chapter 5, attention, with the pictures to match."
+- id: karpathy-build-gpt
+  note: "When you've finished the track: build the same kind of model again, live, in two hours of PyTorch."
+- id: transformer-explainer
+  note: "Afterwards, poke at a real GPT-2 and recognise every part you've just learnt."

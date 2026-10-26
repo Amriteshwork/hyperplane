@@ -1,0 +1,8 @@
+type: blog
+title: "Transformer Architecture: The Positional Encoding"
+url: https://kazemnejad.com/blog/transformer_architecture_positional_encoding/
+author: Amirhossein Kazemnejad
+level: intermediate
+why: "The sinusoidal encoding explained through binary counting, with the proof that shifting by k positions is a linear transformation."
+source: curated
+checked: 2026-10-24

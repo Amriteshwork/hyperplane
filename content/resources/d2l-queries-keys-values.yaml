@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Queries, Keys, and Values"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/queries-keys-values.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "Attention as a differentiable database lookup: a query scored against every key, and values mixed by the scores."
+source: curated
+checked: 2026-10-24

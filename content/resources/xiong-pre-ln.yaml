@@ -1,0 +1,8 @@
+type: paper
+title: "On Layer Normalization in the Transformer Architecture"
+url: https://arxiv.org/abs/2002.04745
+author: Xiong et al. (2020)
+level: advanced
+why: "Why pre-LN transformers train stably without the learning-rate warm-up post-LN ones need."
+source: curated
+checked: 2026-10-24

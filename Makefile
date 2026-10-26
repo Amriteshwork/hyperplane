@@ -13,7 +13,7 @@ BACKEND := cd backend &&
 FRONTEND := cd frontend &&
 
 .PHONY: help env up down logs backend-dev worker datasets frontend-dev \
-        test backend-test frontend-test lint backend-lint frontend-lint \
+        videos test backend-test frontend-test lint backend-lint frontend-lint \
         format api-generate hooks
 
 help: ## List targets
@@ -38,6 +38,9 @@ backend-dev: env ## Run the API with reload on :8000
 
 worker: env ## Run an RQ worker on the host
 	$(BACKEND) uv run rq worker --url "$(REDIS_URL)" "$(JOB_QUEUE_NAME)"
+
+videos: ## Render a paper's Manim scenes: make videos paper=<id> [scene=<name>] [q=l|m|h]
+	$(BACKEND) uv run --group videos python -m scripts.render_videos $(paper) $(if $(scene),--scene $(scene)) --quality $(or $(q),h)
 
 datasets: ## Fetch the sample datasets that are not committed (licence unverified)
 	$(BACKEND) uv run python -m scripts.sample_datasets

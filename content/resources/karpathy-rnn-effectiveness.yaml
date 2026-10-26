@@ -1,0 +1,8 @@
+type: blog
+title: "The Unreasonable Effectiveness of Recurrent Neural Networks"
+url: https://karpathy.github.io/2015/05/21/rnn-effectiveness/
+author: Andrej Karpathy
+level: beginner
+why: "The classic introduction: what an RNN computes, character-level language models, and samples from RNNs trained on Shakespeare, Wikipedia and Linux source code."
+source: curated
+checked: 2026-10-26

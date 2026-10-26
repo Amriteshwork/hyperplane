@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: assemblyai-layer-normalization
+  note: "Start here: rows versus columns, layer norm versus batch norm, in a few minutes."
+- id: alammar-illustrated-transformer
+  note: "The residuals section shows where 'Add & Normalize' sits in the original (post-LN) transformer."
+- id: karpathy-build-gpt
+  note: "Layer norm added to a GPT in the pre-LN position, with a from-scratch version compared with batch norm."
+- id: ba-layer-normalization
+  note: "Advanced: the original paper; section 3 defines the per-example statistics on this page."
+- id: xiong-pre-ln
+  note: "Advanced: why the pre-LN layout on this page trains more stably than the original post-LN."

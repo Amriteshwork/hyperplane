@@ -1,0 +1,8 @@
+type: video
+title: "Let's build the GPT Tokenizer"
+url: https://www.youtube.com/watch?v=zduSFxRajkE
+author: Andrej Karpathy
+level: intermediate
+why: "Byte-pair encoding built from scratch on UTF-8 bytes, and the LLM oddities that trace back to tokenization."
+source: curated
+checked: 2026-10-24

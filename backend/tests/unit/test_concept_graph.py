@@ -3,7 +3,13 @@
 import pytest
 
 from app.content.code_imports import code_uses
-from app.content.graph import ConceptGraphError, check_graph, learning_path, reading_order
+from app.content.graph import (
+    ConceptGraphError,
+    check_graph,
+    check_route,
+    learning_path,
+    reading_order,
+)
 from app.content.models import CodeLibrary, CodeUse
 
 NUMPY, PYTORCH = CodeLibrary.NUMPY, CodeLibrary.PYTORCH
@@ -102,3 +108,23 @@ def test_imported_files_must_keep_their_demo_under_main() -> None:
     sources = {"mse": {NUMPY: MSE + "print('demo at import time')\n"}}
     with pytest.raises(ConceptGraphError, match=r"mse_numpy.py:\d+: .*__main__"):
         code_uses("x.py", "from mse_numpy import mse\n", NUMPY, {"mse"}, sources)
+
+
+def test_a_route_may_reorder_the_path_but_never_put_a_concept_before_its_prerequisites() -> None:
+    route = ["loss", "mse", "derivatives", "gradient-descent", "vectors", "matrices"]
+    check_route(GRAPH, "neural-network", [*route, "neural-network"])
+
+
+@pytest.mark.parametrize(
+    ("goal", "route", "match"),
+    [
+        ("nope", ["nope"], "unknown goal"),
+        ("mse", ["mse"], "missing \\['loss'\\]"),
+        ("mse", ["loss", "vectors", "mse"], "doesn't need: \\['vectors'\\]"),
+        ("mse", ["loss", "loss", "mse"], "twice"),
+        ("mse", ["mse", "loss"], "'mse' comes before its prerequisites \\['loss'\\]"),
+    ],
+)
+def test_bad_routes_say_what_is_wrong(goal: str, route: list[str], match: str) -> None:
+    with pytest.raises(ConceptGraphError, match=match):
+        check_route(GRAPH, goal, route)

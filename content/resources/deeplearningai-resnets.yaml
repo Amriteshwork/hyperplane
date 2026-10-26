@@ -1,0 +1,8 @@
+type: video
+title: "Resnets (C4W2L03)"
+url: https://www.youtube.com/watch?v=ZILIbUvp5lk
+author: DeepLearningAI (Andrew Ng)
+level: beginner
+why: "The residual block drawn out, and the training-error curves of plain versus residual networks as depth grows."
+source: curated
+checked: 2026-10-24

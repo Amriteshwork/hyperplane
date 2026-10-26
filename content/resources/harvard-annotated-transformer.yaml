@@ -1,0 +1,8 @@
+type: blog
+title: "The Annotated Transformer"
+url: https://nlp.seas.harvard.edu/annotated-transformer/
+author: Harvard NLP
+level: advanced
+why: "The original paper interleaved with a line-by-line PyTorch implementation, including the attention function and the subsequent (causal) mask."
+source: curated
+checked: 2026-10-24

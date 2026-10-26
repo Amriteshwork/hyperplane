@@ -1,0 +1,146 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Every earlier concept in one import list: the transformer is assembly, not new maths."
+    deep: |
+      Tokenizer, embeddings, positional encoding, multi-head attention with a causal
+      mask, residual connections, layer norm, ReLU, softmax and cross-entropy. "Download
+      with dependencies" bundles all of them so this file runs on its own.
+    concepts: [tokenization, embeddings, positional-encoding, multi-head-attention, causal-masking, residual-connections, layer-normalization, language-modeling]
+
+  params:
+    span: block
+    short: "All the weights of a tiny GPT: embedding table, per-block norms, attention and MLP, a final norm and the unembedding."
+    deep: |
+      Weights are scaled by $1/\sqrt{\text{fan-in}}$ so signals keep their size. Layer
+      norms start as plain standardisation ($\gamma = 1, \beta = 0$). The output layer
+      starts 100× smaller, so every logit is near 0 and the untrained model predicts
+      roughly uniformly. A model that starts out confidently wrong wastes its first
+      training steps unlearning that.
+    concepts: [neurons]
+
+  block:
+    span: block
+    short: "One block: x + attention(LN(x)), then x + MLP(LN(x)). Talk, then think."
+    deep: |
+      `talk` is the only place tokens exchange information: pre-LN, then causal
+      multi-head attention. `think` is a two-layer MLP with ReLU, widened 4× in the
+      middle, applied to each token's row separately. Each is wrapped in `residual`, so
+      it adds an update to the stream instead of replacing it.
+    concepts: [multi-head-attention, layer-normalization, residual-connections, activation-functions]
+
+  gpt:
+    span: block
+    short: "Embed + positions, run the blocks, normalise, unembed: one row of next-token scores per position."
+    deep: |
+      $$\text{logits} = \text{LN}\big(\text{blocks}(E[\text{ids}] + P)\big)\,W_\text{out}$$
+
+      Row $t$ of the output is the model's prediction for token $t + 1$, using tokens
+      $0..t$ only.
+    concepts: [embeddings, positional-encoding]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  forward:
+    span: block
+    short: "Run 40 characters of the corpus through an untrained 2-block, 4-head, 32-dimensional model: (40, 24) logits."
+    deep: |
+      24 is the vocabulary size: every character in the generated corpus. One forward
+      pass gives 40 predictions, one per position, which is why training is efficient.
+
+  causal:
+    span: block
+    short: "Rewrite tokens 25 onwards: logits at positions 0–24 are identical. No layer leaks the future."
+    deep: |
+      Each layer is causal (its attention is masked; LN, the MLP and residuals work per
+      token), so the whole stack is causal. If this check ever failed, the model could
+      cheat in training by reading its answers.
+    concepts: [causal-masking]
+
+  untrained:
+    span: block
+    short: "Before training, the loss is log V ≈ 3.18: exactly the uniform-guessing baseline."
+    deep: |
+      This is the first thing to check on any new language model. A starting loss far
+      above $\log V$ means the initial outputs are confidently wrong (too-large output
+      weights); far below means something is leaking the answer.
+    concepts: [language-modeling]
+
+  count:
+    span: block
+    short: "Count every parameter and check the formula: 2Vd for embedding and unembedding, ≈ 12d² per block."
+    deep: |
+      Per block: $4d^2$ for $W_Q, W_K, W_V, W_O$; $8d^2$ for the MLP's $d\times4d$ and
+      $4d\times d$; $5d$ for its biases; $4d$ for two layer norms' $\gamma, \beta$. The
+      $12d^2$ term dominates as $d$ grows: GPT-2 small spends $12 \times 768^2 \approx
+      7.1$M parameters per block.
+
+pytorch:
+  reuse:
+    short: "The PyTorch versions of the earlier concepts' functions, including `generate` and the bigram baseline."
+    deep: |
+      `multi_head_attention` takes a batch dimension (see Multi-head attention), so the
+      model trains on 32 sequences at once with the same function.
+    concepts: [tokenization, positional-encoding, multi-head-attention, causal-masking, layer-normalization, language-modeling]
+
+  block:
+    span: block
+    short: "The block as an nn.Module: our attention and layer norm functions, with their weights as learnable Parameters."
+    deep: |
+      `self.attn` stacks $W_Q, W_K, W_V, W_O$ into one `(4, d, d)` parameter; `*self.attn`
+      unpacks it into the four arguments. Each layer norm's $\gamma$ and $\beta$ are the
+      two rows of a `(2, d)` parameter. The MLP uses GELU, the smooth ReLU that GPT-2
+      uses. Autograd differentiates straight through our own functions.
+    concepts: [activation-functions, backpropagation]
+
+  gpt:
+    span: block
+    short: "TinyGPT: embeddings + sinusoidal positions → 2 blocks → LayerNorm → logits. Only sees the last 24 tokens."
+    deep: |
+      `register_buffer` stores the position table with the model without making it
+      trainable. `ids[..., -self.context:]` crops the input to the context window, so
+      `generate` can keep appending tokens forever while the model always sees the
+      most recent 24.
+
+  demo:
+    short: "The demo: train on the generated corpus, compare with the bigram, then test copying."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  data:
+    span: block
+    short: "The same corpus and split as Language modeling, cut into 24-character windows, plus the bigram's validation loss."
+    deep: |
+      24 characters are enough to hold "zoe likes jam, so " (18) and the name that has to
+      be predicted after it. `windows` pairs each window with itself shifted by one.
+    concepts: [tokenization, language-modeling]
+
+  train:
+    span: block
+    short: "600 AdamW steps on random batches of 32 windows, each window giving 24 predictions at once."
+    deep: |
+      `F.cross_entropy` wants (predictions, classes), so the (batch, time, vocab) logits
+      are flattened to (batch × time, vocab). AdamW is Adam with weight decay applied
+      directly to the weights, the standard optimiser for transformers.
+    concepts: [adam-optimizer, epochs]
+
+  evaluate:
+    span: block
+    short: "Validation loss on unseen text: about 0.27 for the transformer against 1.32 for the bigram."
+    deep: |
+      The remaining loss is mostly the genuinely random parts: which name and food start
+      each sentence. Everything predictable from what came before, the model now
+      predicts.
+
+  copy:
+    span: block
+    short: "Prompt with 'raj likes figs, so ' and it writes 'raj eats figs.': it looks back and copies."
+    deep: |
+      To get the name right, the model must find the name at the start of the sentence,
+      about 17 characters back, and copy it. A bigram, which sees only the last
+      character, can't. This is the induction-head behaviour from Multi-head attention,
+      learnt from scratch in two blocks and twenty seconds.
+    concepts: [multi-head-attention]

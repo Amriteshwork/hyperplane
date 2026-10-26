@@ -1,0 +1,8 @@
+type: video
+title: "Let's build GPT: from scratch, in code, spelled out."
+url: https://www.youtube.com/watch?v=kCc8FmEb1nY
+author: Andrej Karpathy
+level: intermediate
+why: "Builds a character-level GPT in PyTorch from an empty file: tokenizer, bigram baseline, masked self-attention, heads, residuals, layer norm."
+source: curated
+checked: 2026-10-24

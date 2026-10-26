@@ -1,4 +1,4 @@
-"""Every `::figure[name]` in content/ names a figure the frontend registers."""
+"""Every `::figure[name]` in content/ names a figure the frontend registers; directives stand alone."""
 
 import re
 from pathlib import Path
@@ -9,6 +9,8 @@ ROOT = Path(__file__).parents[3]
 CONTENT = ROOT / "content"
 REGISTRY = ROOT / "frontend/src/app/shared/figures/figure-registry.ts"
 DIRECTIVE = re.compile(r"^::figure\[([a-z0-9-]+)\]", re.MULTILINE)
+#: Figures and Manim videos (ADR 0022) are both block directives.
+ANY_DIRECTIVE = re.compile(r"^::(figure|video)\[")
 # Keys of DEFAULT_FIGURES: `'name': () => import(...)`.
 ENTRY = re.compile(r"^\s*'([a-z0-9-]+)':\s*\(\)\s*=>", re.MULTILINE)
 
@@ -34,7 +36,7 @@ def test_figure_directives_are_whole_lines() -> None:
     for page in CONTENT.rglob("*.md"):
         lines = page.read_text().splitlines()
         for i, line in enumerate(lines):
-            if DIRECTIVE.match(line):
+            if ANY_DIRECTIVE.match(line):
                 assert i == 0 or not lines[i - 1].strip(), (
                     f"{page}:{i + 1} needs a blank line before"
                 )

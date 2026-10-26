@@ -1,0 +1,8 @@
+type: video
+title: "Attention for Neural Networks, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=PSs6nxngL6k
+author: StatQuest with Josh Starmer
+level: beginner
+why: "The idea of attention before transformers: score similarity with a dot product, softmax the scores, mix by the weights."
+source: curated
+checked: 2026-10-24

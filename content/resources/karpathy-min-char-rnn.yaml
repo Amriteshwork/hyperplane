@@ -1,0 +1,8 @@
+type: blog
+title: "min-char-rnn.py: a minimal character-level RNN in NumPy"
+url: https://gist.github.com/karpathy/d4dee566867f8291f086
+author: Andrej Karpathy
+level: intermediate
+why: "About 100 lines of NumPy: forward pass, backpropagation through time, gradient clipping, Adagrad and sampling. Written for Python 2."
+source: curated
+checked: 2026-10-26

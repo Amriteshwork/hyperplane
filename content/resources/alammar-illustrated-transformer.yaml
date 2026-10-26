@@ -1,0 +1,8 @@
+type: blog
+title: "The Illustrated Transformer"
+url: https://jalammar.github.io/illustrated-transformer/
+author: Jay Alammar
+level: beginner
+why: "The classic picture-by-picture walk through a transformer: Q/K/V vectors, the √dₖ scaling, multiple heads, positional encodings, residuals and the decoder's mask."
+source: curated
+checked: 2026-10-24

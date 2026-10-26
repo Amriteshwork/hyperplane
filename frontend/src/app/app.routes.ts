@@ -32,6 +32,23 @@ export const routes: Routes = [
     loadChildren: () => import('./features/concept/concept.routes').then((m) => m.CONCEPT_ROUTES),
   },
   {
+    path: 'tracks/:trackId',
+    title: 'Track · Hyperplane',
+    loadChildren: () => import('./features/track/track.routes').then((m) => m.TRACK_ROUTES),
+  },
+  {
+    path: 'papers',
+    pathMatch: 'full',
+    title: 'Papers · Hyperplane',
+    loadChildren: () =>
+      import('./features/paper-index/paper-index.routes').then((m) => m.PAPER_INDEX_ROUTES),
+  },
+  {
+    path: 'papers/:paperId',
+    title: 'Paper · Hyperplane',
+    loadChildren: () => import('./features/paper/paper.routes').then((m) => m.PAPER_ROUTES),
+  },
+  {
     path: 'lab',
     title: 'Lab · Hyperplane',
     loadChildren: () => import('./features/lab/lab.routes').then((m) => m.LAB_ROUTES),

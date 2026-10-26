@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Long Short-Term Memory (LSTM)"
+url: https://d2l.ai/chapter_recurrent-modern/lstm.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "The gated memory cell piece by piece: input, forget and output gates, input node, cell and hidden state, then an implementation from scratch and a concise one."
+source: curated
+checked: 2026-10-26

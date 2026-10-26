@@ -1,12 +1,16 @@
 import { Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { AttentionHeatmapFigure } from './attention-heatmap-figure';
 import { BackpropStepsFigure } from './backprop-steps-figure';
 import { BoundaryPlaygroundFigure } from './boundary-playground-figure';
+import { BpttUnrolledFigure } from './bptt-unrolled-figure';
 import { EarlyStoppingFigure } from './early-stopping-figure';
 import { DEFAULT_FIGURES } from './figure-registry';
 import { NetworkShapeFigure } from './network-shape-figure';
+import { PositionalEncodingExplorerFigure } from './positional-encoding-explorer-figure';
 import { ReluSumFigure } from './relu-sum-figure';
+import { TransformerBlockFigure } from './transformer-block-figure';
 import { XorNetworkFigure } from './xor-network-figure';
 
 async function mount<T>(type: Type<T>): Promise<[ComponentFixture<T>, HTMLElement]> {
@@ -136,5 +140,64 @@ describe('figures', () => {
     expect(el.textContent).toMatch(
       new RegExp(`fit at epoch ${Math.round(Number(best?.[2]) / 5) * 5}\\b`),
     );
+  });
+
+  it('attention heatmap: "it" finds "animal", and the mask hides the future', async () => {
+    const [fixture, el] = await mount(AttentionHeatmapFigure);
+    const label = () => el.querySelector('svg')?.getAttribute('aria-label') ?? '';
+    expect(label()).toContain('"it" puts');
+    expect(label()).toContain('on "animal"');
+    expect(el.textContent).not.toContain('✕');
+    button(el, 'Causal mask off').click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('✕');
+    button(el, 'the').click();
+    slide(el, 'Sharpness', 0);
+    await fixture.whenStable();
+    expect(label()).toContain('"the" puts 100% of its attention on "the"'); // masked: only itself
+  });
+
+  it('positional encoding: similarity peaks at the chosen position', async () => {
+    const [fixture, el] = await mount(PositionalEncodingExplorerFigure);
+    slide(el, 'Position t', 30);
+    await fixture.whenStable();
+    const curve = el.querySelectorAll('svg')[2].getAttribute('aria-label') ?? '';
+    expect(curve).toContain('Similarity of position 30');
+    expect(curve).toContain('30 vs 33');
+  });
+
+  it('transformer block: walks the stages and counts GPT-2 exactly', async () => {
+    const [fixture, el] = await mount(TransformerBlockFigure);
+    expect(el.textContent).toContain('124,439,808');
+    button(el, 'MLP').click();
+    await fixture.whenStable();
+    expect(el.querySelector('[aria-live]')?.textContent).toContain('768 → 3,072');
+    button(el, 'GPT-3').click();
+    await fixture.whenStable();
+    expect(el.querySelector('[aria-live]')?.textContent).toContain('12,288 → 49,152');
+  });
+
+  it('BPTT unrolled: the gradient walks back and vanishes or explodes with w', async () => {
+    const [fixture, el] = await mount(BpttUnrolledFigure);
+    const live = () => el.querySelector('[aria-live]')?.textContent ?? '';
+    const bars = () => el.querySelectorAll('svg rect').length;
+    expect(bars()).toBe(1);
+    button(el, 'Step back').click();
+    await fixture.whenStable();
+    expect(bars()).toBe(2);
+    expect(live()).toContain('δ₉ is');
+
+    button(el, 'No activation').click();
+    slide(el, 'Recurrent weight w', 0.5);
+    button(el, 'Show all').click();
+    await fixture.whenStable();
+    expect(bars()).toBe(10);
+    expect(live()).toContain('δ₁ is 2.0e−3 × δ₁₀'); // 0.5⁹
+    expect(live()).toContain('barely shapes');
+
+    slide(el, 'Recurrent weight w', 1.5);
+    await fixture.whenStable();
+    expect(live()).toContain('38.44 × δ₁₀'); // 1.5⁹
+    expect(live()).toContain('exploding');
   });
 });

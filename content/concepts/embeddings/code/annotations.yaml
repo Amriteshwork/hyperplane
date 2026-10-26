@@ -1,0 +1,122 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the character tokenizer (Tokenization) and the dot product and norm (Vectors)."
+    deep: |
+      Download with dependencies to get `tokenization_numpy.py` and `vectors_numpy.py`
+      alongside this file.
+    concepts: [tokenization, vectors]
+
+  one-hot:
+    span: block
+    short: "One-hot: row i of the identity matrix. Every token is perpendicular to every other."
+    deep: |
+      `np.eye(size)` is the $V \times V$ identity; indexing it with `ids` picks one row per
+      token. Two different one-hot vectors always have dot product 0, so one-hot encoding
+      says "all tokens are equally unrelated". Embeddings exist to do better.
+
+  embed:
+    span: block
+    short: "The entire embedding layer: index the table with the ids."
+    deep: |
+      `E[ids]` with an array of ids returns one row per id, in order: shape
+      `(len(ids), d)`. Rows are tokens, columns are the learned features. Every later
+      concept keeps this layout: `X` is `(T, d)`, one row per position.
+
+  cosine: &cosine
+    span: block
+    short: "Cosine similarity: the dot product with the lengths divided out, so only direction counts."
+    deep: |
+      $$\cos\theta = \frac{u \cdot v}{\lVert u\rVert\,\lVert v\rVert}.$$
+
+      Embeddings are compared by angle rather than distance because a vector's length
+      often tracks how frequent a word is, not what it means.
+    concepts: [vectors]
+
+  demo:
+    short: "Runs only when you execute this file; importing `embed` from later concepts runs nothing."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  lookup: &lookup
+    span: block
+    short: "Embed 'the cat sat' and check that the lookup equals one-hot × E."
+    deep: |
+      $$\text{onehot}(i)^\top E = E_{i,:}$$
+
+      The one-hot row has a single 1, so the product picks out one row of $E$. That's why
+      an embedding layer is a linear layer in disguise. The two t's in "the" and "sat"
+      get identical vectors: the table knows nothing about context.
+    concepts: [matrix-multiplication]
+
+  gradient:
+    span: block
+    short: "Backprop into the table: each row receives the summed gradient of its occurrences; unused rows get zero."
+    deep: |
+      Through $X = \text{onehot}\cdot E$, the chain rule gives
+      $\partial L/\partial E = \text{onehot}^\top\,\partial L/\partial X$. Row $i$ of that
+      is the sum of the gradients at every position holding token $i$. `np.add.at` does
+      the sum without building the one-hot matrix (plain `dE[ids] += dX` would count a
+      repeated id only once).
+
+      Rare tokens are therefore updated rarely, which is one reason they end up with
+      poorer embeddings.
+    concepts: [backpropagation]
+
+  meaning:
+    span: block
+    short: "A hand-made 3-D embedding where king − man + woman lands exactly on queen."
+    deep: |
+      Here we chose the features by hand (royalty, maleness, edibility) so the arithmetic
+      is visible: subtracting "man" removes maleness, adding "woman" adds the opposite.
+      A trained model's features are not labelled and not this clean, but similar
+      directions do appear, because they help it predict text.
+
+pytorch:
+  reuse:
+    short: "Reuse the tokenizer (Tokenization)."
+    deep: |
+      `build_vocab` and `encode` work on any sequence of hashable items, so the same
+      functions handle characters and, later, whole words.
+    concepts: [tokenization]
+
+  lookup:
+    <<: *lookup
+    short: "nn.Embedding is a table of learnable rows; the lookup equals one-hot × weight."
+
+  gradient:
+    span: block
+    short: "After backward(), only the rows of tokens that appeared have a nonzero gradient."
+    deep: |
+      Autograd computes $\text{onehot}^\top\,\partial L/\partial X$ for us. 7 distinct
+      characters appear in "the cat sat", so 7 rows have gradients and 20 don't.
+    concepts: [backpropagation]
+
+  corpus:
+    span: block
+    short: "Eight tiny sentences: cats and dogs share contexts, and so do cars and buses."
+    deep: |
+      "cat" and "dog" are always followed by the same words (eats, sleeps), and so are
+      "car" and "bus" (needs, drives). Nothing tells the model which words are related.
+      `pairs` lists every (word, next word) pair.
+
+  train:
+    span: block
+    short: "Learn an 8-number vector per word by predicting the next word from it."
+    deep: |
+      The model is an embedding followed by one linear layer: a tiny language model
+      that only sees the current word. Cross-entropy is the log-loss over the
+      vocabulary.
+
+      Words followed by the same words need the same output, so the gradients push their
+      embeddings to the same place. The small weight decay removes directions that
+      don't affect any prediction, so equal behaviour becomes equal vectors.
+    concepts: [log-loss, adam-optimizer]
+
+  similarity:
+    <<: *cosine
+    short: "cat ≈ dog and car ≈ bus emerge from usage alone; cat and car point different ways."
+    deep: |
+      "You shall know a word by the company it keeps" (J. R. Firth, 1957). This is the
+      idea behind word2vec, and behind the embedding layer of every language model: no
+      one labels meaning; the prediction task forces it into the geometry.

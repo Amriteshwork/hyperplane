@@ -1,0 +1,112 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse tanh and its slope (Activation functions) and the numerical gradient (Derivatives)."
+    deep: |
+      `ACTIVATIONS["tanh"]` is a pair: the function, and its slope written in terms of the
+      output, $1 - a^2$. `numerical_gradient` checks the hand-written backward pass.
+    concepts: [activation-functions, derivatives]
+
+  residual:
+    span: block
+    short: "The entire idea: output = input + layer(input)."
+    deep: |
+      `f` can be any function with the same input and output shape: one layer, an MLP,
+      or a whole attention block. The shape requirement is why every transformer block
+      maps $(T, d) \to (T, d)$.
+
+  deep:
+    span: block
+    short: "A stack of tanh layers, with or without skips, and backprop of ∂(sum of outputs)/∂input."
+    deep: |
+      `forward` keeps every layer's output, as in Backpropagation. Going back, a plain
+      layer sends the gradient only through its tanh and its weights:
+      $g \leftarrow (g \odot f'(a))\,W^\top$. A residual layer *also* passes the
+      incoming gradient straight through the addition:
+      $g \leftarrow g + (g \odot f'(a))\,W^\top$. That `g +` is the identity term in
+      $I + \partial f/\partial x$.
+
+      With a skip, the tanh's own output is `h_out - h_in`, since the block's output is
+      input plus branch.
+    concepts: [backpropagation]
+
+  demo:
+    short: "Runs only when you execute this file; later concepts import `residual` without running it."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  identity:
+    span: block
+    short: "A layer that outputs zeros leaves its input untouched: a residual block starts out harmless."
+    deep: |
+      In a plain network, "do nothing" means learning an identity matrix through a
+      non-linearity: hard. In a residual network, it means weights at zero: easy. So an
+      extra block can only help, or at worst be ignored.
+
+  check:
+    span: block
+    short: "Check the hand-written backward pass against the numerical gradient, with and without skips."
+    concepts: [derivatives]
+    deep: |
+      Perturb each input number a tiny bit both ways and measure the change in the
+      output: that's $\partial(\text{sum})/\partial x$ by brute force. It matches the
+      backward pass to six decimals.
+
+  vanishing:
+    span: block
+    short: "Through 50 tanh layers: plain, the gradient reaching the input is ~10⁻²⁷; with skips, about the output's own size."
+    deep: |
+      Each plain layer multiplies the gradient by roughly $0.3$ here (small weights times
+      tanh slopes ≤ 1), so 50 layers give about $0.3^{50} \approx 10^{-26}$. With skips,
+      each factor is $I$ plus that small term, so the gradient keeps its size and even
+      grows a little.
+
+      The printed numbers are relative to the gradient at the output: 1.0 means the
+      first layer hears the loss as loudly as the last.
+
+pytorch:
+  block:
+    span: block
+    short: "A tanh layer as an nn.Module, with a switch for the skip connection."
+    deep: |
+      `return x + out if self.skip else out`: the only difference between the two
+      networks being compared is this one addition.
+
+  network:
+    span: block
+    short: "1 → 32 numbers, 30 blocks, 32 → 1. Seeded, so both versions start from identical weights."
+    deep: |
+      `torch.manual_seed(0)` inside the function makes the comparison fair: the plain
+      and residual networks have exactly the same initial weights.
+
+  demo:
+    short: "The demo: compare first-block gradients, then train both networks."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  data:
+    span: block
+    short: "A sine curve: easy for a small network, so any failure is the depth's fault."
+    concepts: [mean-squared-error]
+    deep: |
+      Predicting 0 everywhere scores an MSE of about 0.5 (the variance of $\sin$), so
+      that's the "learnt nothing" baseline.
+
+  first-layer:
+    span: block
+    short: "After one backward pass, the plain network's first block gets a gradient ~10⁹ times smaller than its last."
+    deep: |
+      Same weights, same data, same loss. Only the skips differ. The plain network's
+      first block would need a billion times the learning rate to move as fast as its
+      last. With skips, the first block's gradient is large, larger than the last
+      block's even, because the residual stream has grown along the way. Layer
+      normalization fixes that.
+
+  train:
+    span: block
+    short: "200 Adam steps each: the residual network fits the curve; the plain one stays at 'predict the mean'."
+    deep: |
+      The plain 30-layer network ends near MSE 0.5: it has learnt to output a constant.
+      Its early layers barely moved. The residual network, with identical layers and
+      starting weights, fits the curve almost exactly.
+    concepts: [adam-optimizer]
