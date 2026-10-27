@@ -83,4 +83,16 @@ describe('MarkdownView videos and links', () => {
     click(external);
     expect(navigate).not.toHaveBeenCalled();
   });
+
+  it('opens a figure image full size in a new tab', async () => {
+    const el = await renderWith('![A V neuron](/paper-media/clean/v.webp)');
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+
+    el.querySelector('img')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(open).toHaveBeenCalledWith(
+      expect.stringContaining('/paper-media/clean/v.webp'),
+      '_blank',
+      'noopener',
+    );
+  });
 });

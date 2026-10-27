@@ -161,6 +161,13 @@
   .prose-hp td {
     @apply border px-3 py-1.5 text-left;
   }
+  /* Screenshots of a source's figures keep their own light background in both themes. */
+  .prose-hp img {
+    @apply h-auto max-w-full cursor-zoom-in rounded-lg border bg-white;
+  }
+  .prose-hp p:has(> img) + p > em:only-child {
+    @apply block text-sm text-muted-foreground;
+  }
   .prose-hp .math-display {
     @apply overflow-x-auto py-1;
   }

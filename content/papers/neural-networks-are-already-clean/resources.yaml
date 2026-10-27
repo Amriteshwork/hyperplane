@@ -1,0 +1,17 @@
+# Curated links in display order; `note` says what each adds to this walkthrough (ADR 0016).
+- id: goodfire-already-clean
+  note: "The original essay this walkthrough is derived from. Read it for the interactive figures: neuron grids, circuits, the ConvNeXt microscope and 1,000 neuron write-ups."
+- id: 3blue1brown-mlp-facts
+  note: "Watch first: what a transformer's MLP neurons compute, ending with the superposition idea this essay pushes back on."
+- id: distill-zoom-in
+  note: "The 2020 essay where the cat-and-car neuron and the car-into-dogs 'superposition' circuit first appeared."
+- id: distill-feature-visualization
+  note: "How the 'what does this neuron want to see?' images are made, the tool the essay finds was reward hacking in late layers."
+- id: distill-multimodal-neurons
+  note: "Where 'conjoined features', the first name for recursive generalization, appears, and the Trump neuron's widening rings."
+- id: anthropic-toy-models-superposition
+  note: "Advanced: the best case for superposition, in toy models. The essay's appendix says where it agrees and where real networks differ."
+- id: anthropic-towards-monosemanticity
+  note: "Advanced: the sparse-autoencoder approach the essay calls 'untangle first', and its 'arbitrary mixture' neuron that may be a don't-say-a-dot neuron."
+- id: openai-neuron-explainer
+  note: "The 2023 automated interpretability project that found about 1.7% of GPT-2's neurons interpretable, the baseline the essay revisits."

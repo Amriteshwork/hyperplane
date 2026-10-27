@@ -1,0 +1,8 @@
+type: paper
+title: "Language models can explain neurons in language models"
+url: https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html
+author: Bills, Cammarata et al. (OpenAI, 2023)
+level: intermediate
+why: "GPT-4 writes a label for each GPT-2 neuron, then is scored on predicting the neuron's activations from that label alone."
+source: curated
+checked: 2026-10-26

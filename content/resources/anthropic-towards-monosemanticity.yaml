@@ -1,0 +1,8 @@
+type: paper
+title: "Towards Monosemanticity: Decomposing Language Models With Dictionary Learning"
+url: https://transformer-circuits.pub/2023/monosemantic-features/index.html
+author: Bricken et al. (Anthropic, 2023)
+level: advanced
+why: "Sparse autoencoders trained on a one-layer transformer's neurons, turning 'polysemantic' neurons into thousands of readable features."
+source: curated
+checked: 2026-10-26

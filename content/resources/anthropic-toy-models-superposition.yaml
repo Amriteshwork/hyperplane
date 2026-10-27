@@ -1,0 +1,8 @@
+type: paper
+title: "Toy Models of Superposition"
+url: https://transformer-circuits.pub/2022/toy_model/index.html
+author: Elhage et al. (Anthropic, 2022)
+level: advanced
+why: "The careful case for superposition: tiny models that squeeze many sparse features into fewer dimensions and copy them back out."
+source: curated
+checked: 2026-10-26

@@ -238,7 +238,7 @@ def test_recurrent_networks_track_ends_at_the_lstm(client: TestClient) -> None:
 
 
 def test_attention_paper_walks_through_the_original_section_by_section(client: TestClient) -> None:
-    [summary] = client.get("/api/v1/papers").json()["items"]
+    summary, *_ = client.get("/api/v1/papers").json()["items"]
     assert summary["id"] == "attention-is-all-you-need"
     assert summary["source"]["type"] == "paper"
     assert summary["source"]["url"] == "https://arxiv.org/abs/1706.03762"
@@ -260,3 +260,10 @@ def test_attention_paper_walks_through_the_original_section_by_section(client: T
     body = "\n".join(s["body"] for s in paper["sections"])
     assert all(f"::video[{v}]" in body for v in videos)
     assert paper["resources"]
+
+
+def test_blog_walkthrough_credits_the_post_it_is_derived_from(client: TestClient) -> None:
+    paper = client.get("/api/v1/papers/neural-networks-are-already-clean").json()
+    assert paper["source"]["type"] == "blog"
+    assert paper["source"]["url"] == "https://already-clean.goodfire.com/"
+    assert "derived from" in paper["intro"] and paper["source"]["url"] in paper["intro"]

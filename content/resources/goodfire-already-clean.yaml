@@ -1,0 +1,8 @@
+type: blog
+title: "Neural Networks Are Already Clean"
+url: https://already-clean.goodfire.com/
+author: Nick Cammarata (Goodfire, 2026)
+level: advanced
+why: "Argues that most 'polysemantic' neurons were misread: networks group related things (recursive generalization), they don't pack unrelated ones (superposition)."
+source: curated
+checked: 2026-10-26

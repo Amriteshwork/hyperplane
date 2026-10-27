@@ -1,0 +1,8 @@
+type: blog
+title: "Zoom In: An Introduction to Circuits"
+url: https://distill.pub/2020/circuits/zoom-in/
+author: Olah et al. (Distill, 2020)
+level: intermediate
+why: "The founding essay of circuits work: neurons as features, weights as circuits, and the first proposal of superposition."
+source: curated
+checked: 2026-10-26

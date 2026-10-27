@@ -86,7 +86,7 @@ import { PaperStore } from './paper.store';
 
         <app-markdown-view class="mt-8 block max-w-3xl" [content]="paper.intro" />
 
-        <div class="mt-10 grid gap-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <div class="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
           <nav aria-labelledby="outline" class="lg:sticky lg:top-6 lg:self-start">
             <h2 id="outline" class="text-sm font-semibold">In this walkthrough</h2>
             <ol class="mt-2 grid gap-1 border-l text-sm">
@@ -107,7 +107,7 @@ import { PaperStore } from './paper.store';
             </ol>
           </nav>
 
-          <div class="grid min-w-0 gap-14">
+          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-14">
             @for (section of store.sections(); track section.id) {
               <section #section [id]="section.id" [attr.aria-labelledby]="section.id + '-h'">
                 <h2 [id]="section.id + '-h'" class="text-2xl font-semibold tracking-tight">

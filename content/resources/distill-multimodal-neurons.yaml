@@ -1,0 +1,8 @@
+type: blog
+title: "Multimodal Neurons in Artificial Neural Networks"
+url: https://distill.pub/2021/multimodal-neurons/
+author: Goh, Cammarata et al. (Distill, 2021)
+level: intermediate
+why: "CLIP neurons that fire for a concept as a photo, a drawing or a written word; the first mention of 'conjoined features'."
+source: curated
+checked: 2026-10-26

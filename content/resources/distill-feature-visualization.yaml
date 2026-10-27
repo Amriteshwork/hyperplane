@@ -1,0 +1,8 @@
+type: blog
+title: "Feature Visualization"
+url: https://distill.pub/2017/feature-visualization/
+author: Olah, Mordvintsev & Schubert (Distill, 2017)
+level: intermediate
+why: "How to render the image a neuron wants to see by gradient ascent on the input, and why it needs regularisation to look natural."
+source: curated
+checked: 2026-10-26

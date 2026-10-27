@@ -62,7 +62,13 @@ export class MarkdownView {
   }
 
   protected onClick(event: MouseEvent): void {
-    const link = (event.target as Element | null)?.closest('a');
+    const target = event.target as Element | null;
+    if (target instanceof HTMLImageElement && !target.closest('a')) {
+      // Figures are scaled down to the reading column; open the full-size file.
+      window.open(target.src, '_blank', 'noopener');
+      return;
+    }
+    const link = target?.closest('a');
     const href = link?.getAttribute('href');
     if (!href?.startsWith('/') || href.startsWith('//')) return;
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
