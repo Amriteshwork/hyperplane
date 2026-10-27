@@ -1,7 +1,7 @@
 import { CurvePlot } from '../../core/api/models/curve-plot';
 import { HeatmapPlot } from '../../core/api/models/heatmap-plot';
 import { ScatterPlot } from '../../core/api/models/scatter-plot';
-import { plotOptions } from './plot-options';
+import { barOptions, plotOptions } from './plot-options';
 
 const plot: ScatterPlot = {
   kind: 'scatter',
@@ -123,5 +123,54 @@ describe('plotOptions for classification', () => {
     expect(loss.xAxis.min).toBeUndefined();
     expect(loss.xAxis.scale).toBe(true);
     expect(loss.yAxis.max).toBeUndefined();
+  });
+});
+
+describe('curve markers', () => {
+  const loss: CurvePlot = {
+    kind: 'curve',
+    id: 'loss-curve',
+    title: 'T',
+    description: 'D',
+    x_label: 'Epoch',
+    y_label: 'Loss',
+    series: [
+      {
+        name: 'Loss',
+        points: [
+          [1, 2],
+          [2, 1],
+        ],
+      },
+    ],
+    axes: 'data',
+  };
+
+  it('draws a labelled vertical line at the marker', () => {
+    const options = plotOptions({ ...loss, marker: { x: 2, label: 'Weights kept (epoch 2)' } });
+    expect(series(options).markLine?.data).toEqual([
+      {
+        xAxis: 2,
+        label: { formatter: 'Weights kept (epoch 2)', position: 'end' },
+      },
+    ]);
+  });
+
+  it('draws nothing without a marker or reference', () => {
+    expect(series(plotOptions(loss)).markLine).toBeUndefined();
+  });
+});
+
+describe('barOptions', () => {
+  it('puts the first bar at the top', () => {
+    const options = barOptions(
+      [
+        { label: 'bmi', value: 3 },
+        { label: 'age', value: 1 },
+      ],
+      'Weight',
+    ) as { yAxis: { data: string[] }; series: { data: number[] }[] };
+    expect(options.yAxis.data).toEqual(['age', 'bmi']);
+    expect(options.series[0].data).toEqual([1, 3]);
   });
 });

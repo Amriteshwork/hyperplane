@@ -5,11 +5,16 @@ from collections.abc import Sequence
 import numpy as np
 
 from app.ml.base import TrainingCurve
-from app.ml.evaluation.models import CurvePlot, CurveSeries
+from app.ml.evaluation.models import CurveMarker, CurvePlot, CurveSeries
 from app.ml.evaluation.numbers import evenly, points
 
 
 def training_curve_plots(curve: TrainingCurve) -> list[CurvePlot]:
+    marker = None
+    if curve.validation is not None:
+        # scikit-learn keeps the weights of the first epoch with the best validation score.
+        best = int(np.argmax(curve.validation)) + 1
+        marker = CurveMarker(x=best, label=f"Weights kept (epoch {best})")
     plots = [
         _per_epoch(
             "loss-curve",
@@ -18,6 +23,7 @@ def training_curve_plots(curve: TrainingCurve) -> list[CurvePlot]:
             "quickly, then flatten; training stops once it stops improving.",
             "Training loss",
             curve.loss,
+            marker,
         )
     ]
     if curve.validation is not None:
@@ -29,13 +35,19 @@ def training_curve_plots(curve: TrainingCurve) -> list[CurvePlot]:
                 "when it stopped improving, and kept the weights from its best epoch.",
                 curve.validation_label,
                 curve.validation,
+                marker,
             )
         )
     return plots
 
 
 def _per_epoch(
-    plot_id: str, title: str, description: str, label: str, values: Sequence[float]
+    plot_id: str,
+    title: str,
+    description: str,
+    label: str,
+    values: Sequence[float],
+    marker: CurveMarker | None,
 ) -> CurvePlot:
     y = np.asarray(values, dtype=float)
     keep = evenly(len(y))
@@ -47,4 +59,5 @@ def _per_epoch(
         y_label=label,
         series=[CurveSeries(name=label, points=points((keep + 1).astype(float), y[keep]))],
         axes="data",
+        marker=marker,
     )

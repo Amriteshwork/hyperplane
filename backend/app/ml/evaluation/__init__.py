@@ -5,15 +5,19 @@ from collections.abc import Callable
 from app.ml.evaluation.classification import evaluate_classification
 from app.ml.evaluation.curves import training_curve_plots
 from app.ml.evaluation.models import (
+    CurveMarker,
     CurvePlot,
     CurveSeries,
     Evaluation,
     HeatmapPlot,
     Metric,
+    NetworkLayer,
+    NetworkSummary,
     Plot,
     Predictions,
     ScatterPlot,
 )
+from app.ml.evaluation.network import summarise_network
 from app.ml.evaluation.regression import evaluate_regression
 from app.ml.types import TaskType
 
@@ -28,14 +32,18 @@ EVALUATORS: dict[TaskType, Evaluator] = {
 
 __all__ = [
     "EVALUATORS",
+    "CurveMarker",
     "CurvePlot",
     "CurveSeries",
     "Evaluation",
     "Evaluator",
     "HeatmapPlot",
     "Metric",
+    "NetworkLayer",
+    "NetworkSummary",
     "Plot",
     "Predictions",
     "ScatterPlot",
+    "summarise_network",
     "training_curve_plots",
 ]

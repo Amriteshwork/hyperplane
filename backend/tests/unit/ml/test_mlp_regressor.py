@@ -115,6 +115,22 @@ def test_runs_report_their_loss_curve_and_validation_scores() -> None:
     assert {"loss-curve", "validation-curve"}.isdisjoint(p.id for p in lbfgs)  # no epochs
 
 
+def test_runs_report_the_network_and_how_much_it_weighs_each_input() -> None:
+    report = train(frame(), config(hidden_layers=2, hidden_units=12), PACK).report
+    assert report.network is not None
+    assert [(layer.kind, layer.units) for layer in report.network.layers] == [
+        ("input", 2),
+        ("hidden", 12),
+        ("hidden", 12),
+        ("output", 1),
+    ]
+    assert report.network.layers[-1].shown == ["prediction"]
+    assert report.network.parameters == 3 * 12 + 13 * 12 + 13 * 1
+    importance = [i.value for i in report.feature_importance]
+    assert {i.feature for i in report.feature_importance} == {"numeric__a", "numeric__b"}
+    assert importance == sorted(importance, reverse=True)
+
+
 def test_target_is_standardised_and_predictions_come_back_in_its_units() -> None:
     result = train(frame(), config(), PACK)
     wrapper = result.pipeline.named_steps["model"]

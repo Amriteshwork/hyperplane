@@ -22,7 +22,9 @@ SPEC = AlgorithmSpec(
         "r-squared",
         "train-test-split",
     ),
-    supports=frozenset({Capability.TRAINING_CURVE}),
+    supports=frozenset(
+        {Capability.TRAINING_CURVE, Capability.NETWORK, Capability.FEATURE_IMPORTANCE}
+    ),
     max_rows_default=200_000,
     content_path="content/algorithms/mlp_regressor",
 )

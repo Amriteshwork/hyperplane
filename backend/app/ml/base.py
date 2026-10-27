@@ -24,6 +24,7 @@ class Capability(StrEnum):
     COEFFICIENTS = "coefficients"
     CLASS_COEFFICIENTS = "class_coefficients"
     TRAINING_CURVE = "training_curve"
+    NETWORK = "network"
     SPARSE = "sparse"
 
 
@@ -101,6 +102,19 @@ class TrainingCurve:
     validation_label: str = "Validation score"
 
 
+@dataclass(frozen=True, slots=True)
+class Network:
+    """A fitted feed-forward network: its units, layer by layer, and the weights between them."""
+
+    input_names: Sequence[str]
+    #: `weights[i]` has a row per unit of layer i and a column per unit of layer i + 1.
+    weights: Sequence[NDArray[Any]]
+    #: The hidden layers' activation, e.g. "relu".
+    activation: str
+    output_activation: str
+    output_names: Sequence[str]
+
+
 class Estimator(Protocol):
     """The subset of the scikit-learn estimator API the platform relies on."""
 
@@ -172,6 +186,13 @@ class ReportsTrainingCurve(Protocol):
     """
 
     def training_curve(self, fitted: Estimator) -> TrainingCurve | None: ...
+
+
+@runtime_checkable
+class ReportsNetwork(Protocol):
+    """Neural networks, whose layers and weights the Lab draws."""
+
+    def network(self, fitted: Estimator, feature_names: list[str]) -> Network: ...
 
 
 @runtime_checkable

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { type Page, expect, test } from '@playwright/test';
 
 /**
  * Trains both MLP packs through the real Lab (sample → profile → train → results), so it needs
@@ -25,6 +25,7 @@ for (const name of ['Diabetes', 'California Housing']) {
     await expect(page.getByRole('heading', { name: /Test-set metrics/ })).toBeVisible();
     await expect(page.getByLabel(lossCurve)).toBeVisible();
     await expect(page.getByRole('table', { name: 'Learned coefficients' })).toHaveCount(0);
+    await expectNetworkViews(page);
   });
 }
 
@@ -53,5 +54,13 @@ for (const { name, solver, curve } of CLASSIFIER_RUNS) {
     await expect(page.getByLabel(/^Each point is a threshold/)).toBeVisible(); // ROC curve
     const loss = page.getByLabel(lossCurve);
     await (curve ? expect(loss).toBeVisible() : expect(loss).toHaveCount(0));
+    await expectNetworkViews(page);
   });
+}
+
+/** The diagram of the trained network and its first-layer weights. */
+async function expectNetworkViews(page: Page): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'The trained network' })).toBeVisible();
+  await expect(page.getByRole('img', { name: /^Diagram of the trained network/ })).toBeVisible();
+  await expect(page.getByLabel(/^Bar chart of mean absolute first-layer weight/)).toBeVisible();
 }

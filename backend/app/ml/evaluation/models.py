@@ -64,6 +64,13 @@ class CurveSeries(_Frozen):
     points: list[tuple[float, float]]
 
 
+class CurveMarker(_Frozen):
+    """A labelled vertical guide, e.g. the epoch whose weights early stopping kept."""
+
+    x: float
+    label: str
+
+
 class CurvePlot(_Frozen):
     """One or more lines on shared axes, e.g. ROC curves or a loss per epoch."""
 
@@ -78,6 +85,7 @@ class CurvePlot(_Frozen):
     reference: Literal["diagonal"] | None = None
     #: `unit`: both axes run 0–1 (rates, e.g. ROC); `data`: axes fit the points (e.g. a loss).
     axes: Literal["unit", "data"] = "unit"
+    marker: CurveMarker | None = None
 
 
 Plot = Annotated[ScatterPlot | HeatmapPlot | CurvePlot, Field(discriminator="kind")]
@@ -86,3 +94,22 @@ Plot = Annotated[ScatterPlot | HeatmapPlot | CurvePlot, Field(discriminator="kin
 class Evaluation(_Frozen):
     metrics: list[Metric]
     plots: list[Plot]
+
+
+class NetworkLayer(_Frozen):
+    kind: Literal["input", "hidden", "output"]
+    units: int
+    #: None for the inputs, which pass their values on unchanged.
+    activation: str | None
+    #: Labels of the units drawn (at most `MAX_SHOWN`): feature or class names, else "neuron k".
+    shown: list[str]
+
+
+class NetworkSummary(_Frozen):
+    """A fitted network to draw: every layer's size, and the weights between the units shown."""
+
+    layers: list[NetworkLayer]
+    #: Weights and biases, all layers.
+    parameters: int
+    #: `weights[i][a][b]` joins shown unit a of layer i to shown unit b of layer i + 1.
+    weights: list[list[list[float]]]

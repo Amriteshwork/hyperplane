@@ -21,6 +21,7 @@ from app.ml.base import (
     ReportsClassCoefficients,
     ReportsCoefficients,
     ReportsFeatureImportance,
+    ReportsNetwork,
     ReportsTrainingCurve,
 )
 from app.ml.codegen import CodegenContext, find_anchors, render
@@ -55,6 +56,7 @@ def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     assert (Capability.CLASS_COEFFICIENTS in supports) == isinstance(pack, ReportsClassCoefficients)
     assert (Capability.FEATURE_IMPORTANCE in supports) == isinstance(pack, ReportsFeatureImportance)
     assert (Capability.TRAINING_CURVE in supports) == isinstance(pack, ReportsTrainingCurve)
+    assert (Capability.NETWORK in supports) == isinstance(pack, ReportsNetwork)
 
 
 @pytest.mark.parametrize("pack", PACKS)

@@ -21,15 +21,26 @@ from sklearn.pipeline import Pipeline
 from app.ml.base import (
     Buildable,
     CoefTable,
+    Estimator,
+    ImportanceTable,
     Parameterised,
     Progress,
     ProgressFn,
     ReportsClassCoefficients,
     ReportsCoefficients,
+    ReportsFeatureImportance,
+    ReportsNetwork,
     ReportsTrainingCurve,
 )
 from app.ml.codegen import CodegenContext
-from app.ml.evaluation import EVALUATORS, Evaluation, Predictions, training_curve_plots
+from app.ml.evaluation import (
+    EVALUATORS,
+    Evaluation,
+    NetworkSummary,
+    Predictions,
+    summarise_network,
+    training_curve_plots,
+)
 from app.ml.preprocessing import PreprocessingConfig, build_preprocessor
 from app.ml.types import TaskType
 
@@ -62,6 +73,13 @@ class Coefficient(BaseModel):
     target_class: str | None = None
 
 
+class Importance(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    feature: str
+    value: float
+
+
 class TrainingReport(BaseModel):
     """The JSON-safe outcome of a run, stored on it and returned by the API."""
 
@@ -72,6 +90,10 @@ class TrainingReport(BaseModel):
     evaluation: Evaluation
     #: Largest absolute effect first (per class, in class order); empty if not reported.
     coefficients: list[Coefficient] = []
+    #: Largest first; empty if not reported.
+    feature_importance: list[Importance] = []
+    #: The fitted network's layers and weights (neural networks only).
+    network: NetworkSummary | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,9 +137,9 @@ def train(
     evaluation = EVALUATORS[config.task_type](
         Predictions(y_test, predictions, probabilities, classes)
     )
-    if isinstance(pack, ReportsTrainingCurve) and (
-        curve := pack.training_curve(pipeline.named_steps["model"])
-    ):
+    model = pipeline.named_steps["model"]
+    names = [str(n) for n in pipeline.named_steps["preprocess"].get_feature_names_out()]
+    if isinstance(pack, ReportsTrainingCurve) and (curve := pack.training_curve(model)):
         plots = [*evaluation.plots, *training_curve_plots(curve)]
         evaluation = evaluation.model_copy(update={"plots": plots})
     return TrainingResult(
@@ -126,7 +148,16 @@ def train(
             n_train=len(X_train),
             n_test=len(X_test),
             evaluation=evaluation,
-            coefficients=_coefficients(pack, pipeline),
+            coefficients=_coefficients(pack, model, names),
+            feature_importance=[
+                Importance(feature=n, value=v)
+                for n, v in _ranked(pack.feature_importance(model, names))
+            ]
+            if isinstance(pack, ReportsFeatureImportance)
+            else [],
+            network=summarise_network(pack.network(model, names))
+            if isinstance(pack, ReportsNetwork)
+            else None,
         ),
         X_test=X_test,
         predictions=predictions,
@@ -181,9 +212,7 @@ def _reporter(progress: ProgressFn | None) -> Callable[[int], None]:
     return report
 
 
-def _coefficients(pack: Trainable, pipeline: Pipeline) -> list[Coefficient]:
-    names = [str(n) for n in pipeline.named_steps["preprocess"].get_feature_names_out()]
-    model = pipeline.named_steps["model"]
+def _coefficients(pack: Trainable, model: Estimator, names: list[str]) -> list[Coefficient]:
     if isinstance(pack, ReportsClassCoefficients):
         return [
             Coefficient(feature=name, value=value, target_class=label)
@@ -197,5 +226,5 @@ def _coefficients(pack: Trainable, pipeline: Pipeline) -> list[Coefficient]:
     return []
 
 
-def _ranked(table: CoefTable) -> list[tuple[str, float]]:
+def _ranked(table: CoefTable | ImportanceTable) -> list[tuple[str, float]]:
     return sorted(table.items(), key=lambda item: abs(item[1]), reverse=True)

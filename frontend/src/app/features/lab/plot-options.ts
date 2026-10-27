@@ -81,7 +81,8 @@ function curveOptions(plot: CurvePlot): EChartsCoreOption {
   const range = (name: string) =>
     plot.axes === 'data' ? axis(name) : { ...axis(name), scale: false, min: 0, max: 1 };
   return {
-    grid: { left: 56, right: 16, top: several ? 40 : 16, bottom: 48 },
+    // Room above the plot for the legend or the marker's label.
+    grid: { left: 56, right: 16, top: several || plot.marker ? 40 : 16, bottom: 48 },
     tooltip: { trigger: 'item' },
     legend: several ? { top: 0 } : undefined,
     xAxis: range(plot.x_label),
@@ -91,16 +92,41 @@ function curveOptions(plot: CurvePlot): EChartsCoreOption {
       name: line.name,
       data: line.points,
       showSymbol: false,
-      markLine:
-        i === 0 && plot.reference === 'diagonal'
-          ? {
-              silent: true,
-              symbol: 'none',
-              lineStyle: { type: 'dashed' },
-              data: [[{ coord: [0, 0] }, { coord: [1, 1] }]],
-            }
-          : undefined,
+      markLine: i === 0 ? curveGuides(plot) : undefined,
     })),
+  };
+}
+
+/** The diagonal (ROC) and a labelled vertical marker (e.g. the epoch early stopping kept). */
+function curveGuides(plot: CurvePlot): object | undefined {
+  const data: unknown[] = [];
+  if (plot.reference === 'diagonal') data.push([{ coord: [0, 0] }, { coord: [1, 1] }]);
+  if (plot.marker) {
+    data.push({
+      xAxis: plot.marker.x,
+      label: { formatter: plot.marker.label, position: 'end' },
+    });
+  }
+  if (!data.length) return undefined;
+  return { silent: true, symbol: 'none', lineStyle: { type: 'dashed' }, data };
+}
+
+/** Horizontal bars, largest at the top (e.g. how much a model weighs each input). */
+export function barOptions(
+  bars: readonly { label: string; value: number }[],
+  valueLabel: string,
+): EChartsCoreOption {
+  const ordered = [...bars].reverse(); // ECharts draws the first category at the bottom
+  return {
+    grid: { left: 16, right: 24, top: 8, bottom: 40, containLabel: true },
+    tooltip: { trigger: 'item' },
+    xAxis: { ...axis(valueLabel), scale: false, min: 0 },
+    yAxis: {
+      type: 'category',
+      data: ordered.map((bar) => bar.label),
+      axisLabel: { interval: 0 },
+    },
+    series: [{ type: 'bar', data: ordered.map((bar) => bar.value) }],
   };
 }
 

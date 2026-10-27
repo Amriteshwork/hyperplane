@@ -1,24 +1,29 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { TrainingReport } from '../../core/api/models/training-report';
 import { Chart } from '../../shared/ui/chart/chart';
 import { DataTable, TableColumn } from '../../shared/ui/data-table/data-table';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
-import { plotOptions } from './plot-options';
+import { featureLabel } from './feature-label';
+import { NetworkDiagram } from './network-diagram';
+import { barOptions, plotOptions } from './plot-options';
 
 const COEFFICIENT_COLUMNS: readonly TableColumn[] = [
   { label: 'Feature' },
   { label: 'Coefficient', align: 'end' },
 ];
+/** Bars drawn in the importance chart; the rest are listed as a count. */
+const MAX_BARS = 15;
 const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
   { label: 'Class' },
   ...COEFFICIENT_COLUMNS,
 ];
 
-/** Metrics, evaluation plots and coefficients of a finished run. */
+/** Metrics, evaluation plots, coefficients and (for networks) the trained network of a run. */
 @Component({
   selector: 'app-run-results',
-  imports: [Chart, DataTable, StatCard],
+  imports: [DecimalPipe, Chart, DataTable, NetworkDiagram, StatCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section aria-labelledby="metrics-heading">
@@ -57,6 +62,44 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
         }
       </div>
     </section>
+
+    @if (report().network; as network) {
+      <section class="mt-10" aria-labelledby="network-heading">
+        <h2 id="network-heading" class="text-lg font-semibold">The trained network</h2>
+        <p class="mt-1 max-w-prose text-sm text-muted-foreground">
+          {{ shape() }}: {{ network.parameters | number }} weights and biases, all learned by
+          backpropagation.
+        </p>
+        <app-network-diagram class="mt-3 block" [network]="network" />
+      </section>
+    }
+
+    @if (importance().length) {
+      <section class="mt-10" aria-labelledby="importance-heading">
+        <h2 id="importance-heading" class="text-lg font-semibold">
+          What the first layer listens to
+        </h2>
+        <p class="mt-1 max-w-prose text-sm text-muted-foreground">
+          The average size of the weights from each input into the first hidden layer. Inputs are
+          scaled first, so they compare, but a one-hot column (0 or 1) is on a different scale. This
+          shows what the network reads most, not which way a feature moves the prediction.
+        </p>
+        <app-chart
+          class="mt-3 block"
+          caption="Mean |weight| into the first hidden layer"
+          [label]="importanceLabel()"
+          [options]="importanceOptions()"
+          [height]="importanceHeight()"
+          [dark]="dark()"
+        >
+          @if (importanceTotal() > importance().length) {
+            <p class="text-xs text-muted-foreground">
+              The {{ importance().length }} largest of {{ importanceTotal() }} inputs.
+            </p>
+          }
+        </app-chart>
+      </section>
+    }
 
     @if (coefficientRows().length) {
       <section class="mt-10" aria-labelledby="coefficients-heading">
@@ -100,22 +143,32 @@ export class RunResults {
     }),
   );
 
+  protected readonly shape = computed(() =>
+    (this.report().network?.layers ?? [])
+      .map((l) => (l.kind === 'hidden' ? `${l.units} ${l.activation}` : `${l.units}`))
+      .join(' → '),
+  );
+  protected readonly importance = computed(() =>
+    (this.report().feature_importance ?? [])
+      .slice(0, MAX_BARS)
+      .map((i) => ({ label: featureLabel(i.feature), value: i.value })),
+  );
+  protected readonly importanceTotal = computed(
+    () => this.report().feature_importance?.length ?? 0,
+  );
+  protected readonly importanceOptions = computed(() =>
+    barOptions(this.importance(), 'Mean |weight|'),
+  );
+  protected readonly importanceHeight = computed(() => `${80 + 24 * this.importance().length}px`);
+  protected readonly importanceLabel = computed(
+    () =>
+      'Bar chart of mean absolute first-layer weight per input: ' +
+      this.importance()
+        .map((i) => `${i.label} ${this.format(i.value)}`)
+        .join(', '),
+  );
+
   protected format(value: number): string {
     return Number(value.toPrecision(4)).toLocaleString('en', { maximumFractionDigits: 4 });
   }
-}
-
-/**
- * `numeric__age` → `age`, and a product term `numeric__age numeric__bmi` → `age × bmi`: drop each
- * preprocessing prefix. Only a space before another `step__` prefix separates factors, since column
- * names may contain spaces.
- */
-export function featureLabel(name: string): string {
-  return name
-    .split(/ (?=[a-z]+__)/)
-    .map((factor) => {
-      const split = factor.indexOf('__');
-      return split === -1 ? factor : factor.slice(split + 2);
-    })
-    .join(' × ');
 }

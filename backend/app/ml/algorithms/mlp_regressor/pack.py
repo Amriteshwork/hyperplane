@@ -7,11 +7,20 @@ from pydantic import BaseModel
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.neural_network import MLPRegressor
 
+from app.ml.algorithms.mlp_inspect import input_weight_importance, mlp_network
 from app.ml.algorithms.mlp_regressor import recommend
 from app.ml.algorithms.mlp_regressor.estimator import build_estimator
 from app.ml.algorithms.mlp_regressor.params import MLPRegressorParams
 from app.ml.algorithms.mlp_regressor.spec import SPEC
-from app.ml.base import Estimator, ExplainedTemplate, Suitability, TaskType, TrainingCurve
+from app.ml.base import (
+    Estimator,
+    ExplainedTemplate,
+    ImportanceTable,
+    Network,
+    Suitability,
+    TaskType,
+    TrainingCurve,
+)
 from app.ml.codegen import TemplateFile, load_templates
 from app.ml.profiling import DatasetProfile
 
@@ -44,7 +53,7 @@ class MLPRegressorPack:
         return recommend.score(profile, task)
 
     def training_curve(self, fitted: Estimator) -> TrainingCurve | None:
-        model = cast(MLPRegressor, cast(TransformedTargetRegressor, fitted).regressor_)
+        model = _mlp(fitted)
         if not hasattr(model, "loss_curve_"):  # lbfgs: full-batch, no epochs
             return None
         return TrainingCurve(
@@ -52,3 +61,14 @@ class MLPRegressorPack:
             validation=model.validation_scores_,
             validation_label="Validation R²",
         )
+
+    def network(self, fitted: Estimator, feature_names: list[str]) -> Network:
+        # The output is the standardised target; TransformedTargetRegressor unscales it.
+        return mlp_network(_mlp(fitted), feature_names, ["prediction"])
+
+    def feature_importance(self, fitted: Estimator, feature_names: list[str]) -> ImportanceTable:
+        return input_weight_importance(_mlp(fitted), feature_names)
+
+
+def _mlp(fitted: Estimator) -> MLPRegressor:
+    return cast(MLPRegressor, cast(TransformedTargetRegressor, fitted).regressor_)

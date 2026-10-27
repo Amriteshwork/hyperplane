@@ -101,6 +101,18 @@ def test_runs_report_probabilities_and_a_validation_accuracy_curve() -> None:
     assert {"confusion-matrix", "roc", "loss-curve", "validation-curve"} <= set(plots)
     assert plots["validation-curve"].y_label == "Validation accuracy"
     assert result.report.coefficients == []  # a network has no coefficients to report
+    assert result.report.network is not None
+    assert result.report.network.layers[-1].shown == ["P(out)"]  # one logistic output
+    assert len(result.report.feature_importance) == 2
+
+
+@pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")  # capped on purpose
+def test_multiclass_networks_have_an_output_per_class() -> None:
+    X, y = classes(3)
+    model = PACK.build_estimator(PACK.params_model(max_iter=50)).fit(X, y)
+    network = PACK.network(model, [f"x{i}" for i in range(5)])
+    assert network.output_names == ["ant", "bee", "cat"]
+    assert network.output_activation == "softmax"
 
 
 def profile(rows: int) -> DatasetProfile:

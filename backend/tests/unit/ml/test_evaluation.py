@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
 
-from app.ml.evaluation import EVALUATORS, Predictions
+from app.ml.base import Network, TrainingCurve
+from app.ml.evaluation import EVALUATORS, Predictions, summarise_network, training_curve_plots
 from app.ml.evaluation.classification import evaluate_classification
+from app.ml.evaluation.network import MAX_SHOWN
 from app.ml.evaluation.numbers import MAX_POINTS
 from app.ml.evaluation.regression import evaluate_regression
 from app.ml.types import TaskType
@@ -102,3 +104,35 @@ def test_roc_is_skipped_when_a_class_is_missing_from_the_test_rows() -> None:
     evaluation = evaluate_classification(Predictions([0, 0], [0, 0], proba, (0, 1)))
     assert "roc_auc" not in {m.id for m in evaluation.metrics}
     assert "log_loss" in {m.id for m in evaluation.metrics}
+
+
+def test_network_summary_draws_the_strongest_inputs_and_counts_every_parameter() -> None:
+    inputs = [f"x{i}" for i in range(10)]
+    first = np.full((10, 20), 0.1)
+    first[7] = 2.0  # the input the first layer weighs most
+    first[3] = -1.0  # sign doesn't matter, size does
+    second = np.arange(20.0).reshape(20, 1)
+    summary = summarise_network(
+        Network(inputs, [first, second], "relu", "identity", ["prediction"])
+    )
+
+    assert [(layer.kind, layer.units) for layer in summary.layers] == [
+        ("input", 10),
+        ("hidden", 20),
+        ("output", 1),
+    ]
+    assert summary.layers[0].shown[:2] == ["x7", "x3"]
+    assert [len(layer.shown) for layer in summary.layers] == [MAX_SHOWN, MAX_SHOWN, 1]
+    assert summary.layers[1].activation == "relu" and summary.layers[0].activation is None
+    assert summary.parameters == (10 + 1) * 20 + (20 + 1) * 1
+    assert summary.weights[0][0][0] == 2.0  # x7 → neuron 1
+    assert [row[0] for row in summary.weights[1]] == list(range(MAX_SHOWN))
+
+
+def test_early_stopping_marks_the_epoch_whose_weights_were_kept() -> None:
+    curve = TrainingCurve(loss=[3.0, 2.0, 1.0, 0.5], validation=[0.5, 0.9, 0.9, 0.8])
+    plots = training_curve_plots(curve)
+    assert [p.marker.x if p.marker else None for p in plots] == [2, 2]  # the first best
+
+    plain = training_curve_plots(TrainingCurve(loss=[3.0, 2.0]))
+    assert plain[0].marker is None

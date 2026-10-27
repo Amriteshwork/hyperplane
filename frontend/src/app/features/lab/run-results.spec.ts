@@ -3,7 +3,8 @@ import { TestBed } from '@angular/core/testing';
 
 import { TrainingReport } from '../../core/api/models/training-report';
 import { Chart } from '../../shared/ui/chart/chart';
-import { featureLabel, RunResults } from './run-results';
+import { featureLabel } from './feature-label';
+import { RunResults } from './run-results';
 
 /** jsdom can't draw on a canvas; plot options have their own unit test. */
 @Component({ selector: 'app-chart', template: '<ng-content />' })
@@ -12,6 +13,7 @@ class StubChart {
   readonly label = input('');
   readonly caption = input<string>();
   readonly dark = input(false);
+  readonly height = input('');
 }
 
 function render(report: TrainingReport): HTMLElement {
@@ -51,6 +53,42 @@ describe('RunResults coefficients', () => {
     const headers = [...element.querySelectorAll('th')].map((th) => th.textContent?.trim());
     expect(headers).toEqual(['Feature', 'Coefficient']);
     expect(element.textContent).toContain('push the prediction up');
+  });
+});
+
+describe('RunResults networks', () => {
+  it('shows the trained network and what its first layer listens to', () => {
+    const element = render({
+      n_train: 8,
+      n_test: 2,
+      evaluation,
+      network: {
+        layers: [
+          { kind: 'input', units: 2, activation: null, shown: ['numeric__a', 'numeric__b'] },
+          { kind: 'hidden', units: 4, activation: 'relu', shown: ['neuron 1'] },
+          { kind: 'output', units: 1, activation: 'identity', shown: ['prediction'] },
+        ],
+        parameters: 17,
+        weights: [[[1], [2]], [[3]]],
+      },
+      feature_importance: [
+        { feature: 'numeric__b', value: 2 },
+        { feature: 'numeric__a', value: 1 },
+      ],
+    });
+    const headings = [...element.querySelectorAll('h2')].map((h) => h.textContent?.trim());
+    expect(headings).toContain('The trained network');
+    expect(headings).toContain('What the first layer listens to');
+    expect(element.textContent).toContain('2 → 4 relu → 1: 17 weights and biases');
+    expect(element.querySelector('app-network-diagram svg')).not.toBeNull();
+  });
+
+  it('leaves both sections out for other models', () => {
+    const headings = [...render({ n_train: 8, n_test: 2, evaluation }).querySelectorAll('h2')].map(
+      (h) => h.textContent?.trim(),
+    );
+    expect(headings).not.toContain('The trained network');
+    expect(headings).not.toContain('What the first layer listens to');
   });
 });
 

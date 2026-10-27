@@ -10,7 +10,16 @@ from app.ml.algorithms.mlp_classifier import recommend
 from app.ml.algorithms.mlp_classifier.estimator import build_estimator
 from app.ml.algorithms.mlp_classifier.params import MLPClassifierParams
 from app.ml.algorithms.mlp_classifier.spec import SPEC
-from app.ml.base import Estimator, ExplainedTemplate, Suitability, TaskType, TrainingCurve
+from app.ml.algorithms.mlp_inspect import input_weight_importance, mlp_network
+from app.ml.base import (
+    Estimator,
+    ExplainedTemplate,
+    ImportanceTable,
+    Network,
+    Suitability,
+    TaskType,
+    TrainingCurve,
+)
 from app.ml.codegen import TemplateFile, load_templates
 from app.ml.profiling import DatasetProfile
 
@@ -51,3 +60,13 @@ class MLPClassifierPack:
             validation=model.validation_scores_,
             validation_label="Validation accuracy",
         )
+
+    def network(self, fitted: Estimator, feature_names: list[str]) -> Network:
+        model = cast(MLPClassifier, fitted)
+        classes = [str(c) for c in model.classes_]
+        # Two classes share one logistic output: the probability of the last class.
+        outputs = [f"P({classes[-1]})"] if model.n_outputs_ == 1 else classes
+        return mlp_network(model, feature_names, outputs)
+
+    def feature_importance(self, fitted: Estimator, feature_names: list[str]) -> ImportanceTable:
+        return input_weight_importance(cast(MLPClassifier, fitted), feature_names)

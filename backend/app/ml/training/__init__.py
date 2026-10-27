@@ -3,6 +3,7 @@
 from app.ml.training.trainer import (
     STAGES,
     Coefficient,
+    Importance,
     Trainable,
     TrainingConfig,
     TrainingReport,
@@ -16,6 +17,7 @@ from app.ml.training.trainer import (
 __all__ = [
     "STAGES",
     "Coefficient",
+    "Importance",
     "Trainable",
     "TrainingConfig",
     "TrainingReport",

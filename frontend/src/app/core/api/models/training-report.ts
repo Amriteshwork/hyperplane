@@ -3,6 +3,8 @@
 
 import { Coefficient } from '../models/coefficient';
 import { Evaluation } from '../models/evaluation';
+import { Importance } from '../models/importance';
+import { NetworkSummary } from '../models/network-summary';
 
 /**
  * The JSON-safe outcome of a run, stored on it and returned by the API.
@@ -10,6 +12,8 @@ import { Evaluation } from '../models/evaluation';
 export interface TrainingReport {
   coefficients?: Array<Coefficient>;
   evaluation: Evaluation;
+  feature_importance?: Array<Importance>;
   n_test: number;
   n_train: number;
+  network?: NetworkSummary | null;
 }
