@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this track (ADR 0016).
+- id: 3blue1brown-transformers
+  note: "Watch first: the whole transformer, animated, so the first seven chapters have a place to fit."
+- id: alammar-illustrated-bert
+  note: "For the last two chapters: BERT's masking, inputs and fine-tuning, drawn picture by picture."
+- id: statquest-encoder-only-transformers
+  note: "The last chapter as a video: the encoder-only transformer, step by step."
+- id: huggingface-transformer-architectures
+  note: "When you've finished: encoders, decoders and encoder-decoders side by side, with the models that use each."

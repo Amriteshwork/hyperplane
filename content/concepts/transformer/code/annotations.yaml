@@ -23,8 +23,9 @@ numpy:
     span: block
     short: "One block: x + attention(LN(x)), then x + MLP(LN(x)). Talk, then think."
     deep: |
-      `talk` is the only place tokens exchange information: pre-LN, then causal
-      multi-head attention. `think` is a two-layer MLP with ReLU, widened 4× in the
+      `talk` is the only place tokens exchange information: pre-LN, then multi-head
+      attention under `mask`. GPT passes the causal mask; BERT reuses this same block
+      with a mask that hides only padding. `think` is a two-layer MLP with ReLU, widened 4× in the
       middle, applied to each token's row separately. Each is wrapped in `residual`, so
       it adds an update to the stream instead of replacing it.
     concepts: [multi-head-attention, layer-normalization, residual-connections, activation-functions]
@@ -88,7 +89,7 @@ pytorch:
 
   block:
     span: block
-    short: "The block as an nn.Module: our attention and layer norm functions, with their weights as learnable Parameters."
+    short: "The block as an nn.Module: our attention and layer norm functions, with their weights as learnable Parameters. `causal=False` makes it BERT's."
     deep: |
       `self.attn` stacks $W_Q, W_K, W_V, W_O$ into one `(4, d, d)` parameter; `*self.attn`
       unpacks it into the four arguments. Each layer norm's $\gamma$ and $\beta$ are the

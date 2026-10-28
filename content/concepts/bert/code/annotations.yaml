@@ -1,0 +1,165 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Every part comes from an earlier page: GPT's block and weights (Transformer), plus masking and its loss (Masked language modeling)."
+    deep: |
+      BERT adds no new maths. It's the transformer's block with a different mask,
+      trained on a different objective. "Download with dependencies" bundles everything
+      this file imports so it runs on its own.
+    concepts: [transformer, masked-language-modeling, embeddings, positional-encoding, layer-normalization]
+
+  words: &words
+    span: block
+    short: "Split text into words and punctuation, so one [MASK] hides a whole name."
+    deep: |
+      Real BERT uses **WordPiece** with a 30,000-entry vocabulary, a cousin of BPE:
+      common words are one token, rare ones are split ("playing" → "play", "##ing").
+      Whole words keep this demo readable: hiding one token hides one name.
+    concepts: [tokenization]
+
+  pack:
+    span: block
+    short: "Two sentences as one input: [CLS] A [SEP] B [SEP], plus a segment id per token saying which sentence it came from."
+    deep: |
+      `[CLS]` always comes first. Its final vector is the one a classifier reads.
+      `[SEP]` marks where each sentence ends. Segment ids (0 for A, 1 for B) pick one of
+      two learned vectors that are added to every token, so attention can tell
+      "dog in the question" from "dog in the passage".
+
+  padding-mask:
+    span: block
+    short: "The whole mask: every row is the same, 'look at anything that isn't padding'. No triangle."
+    deep: |
+      Compare GPT's causal mask, a lower triangle. BERT reads the whole input at once,
+      so the only thing to hide is **padding**: filler tokens that make sentences of
+      different lengths fit one batch. `np.broadcast_to` repeats the one row
+      "which tokens are real" for every query, without copying it.
+    concepts: [causal-masking]
+
+  params:
+    span: block
+    short: "Exactly GPT's weights (embedding table, blocks, final norm, output layer), plus a 2 × d segment table."
+    deep: |
+      The output layer, `W_out`, becomes the **MLM head**: one score per vocabulary
+      entry, used only in pretraining. BERT-base has the same shape as GPT-1 on purpose
+      (12 layers, $d = 768$, 12 heads, 110M parameters), so the paper could compare the
+      two fairly.
+    concepts: [transformer]
+
+  encoder:
+    span: block
+    short: "Add token, segment and position vectors, run the blocks with the padding mask, normalise: one vector per token."
+    deep: |
+      $$X_0 = E[\text{ids}] + S[\text{segments}] + P$$
+
+      The result isn't a prediction. It's a **contextual embedding**: row $t$ describes
+      token $t$ in the light of the whole input, both sides of it. Different heads put
+      different things on top: the MLM head in pretraining, a classifier in fine-tuning.
+    concepts: [embeddings, positional-encoding, residual-connections]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  input:
+    span: block
+    short: "Pack 'zoe likes jam, so zoe eats jam.' and 'raj likes figs.' into 16 tokens, each with its segment id."
+    deep: |
+      The vocabulary is every word and punctuation mark in the corpus (21 of them), then
+      the four special tokens. The printout pairs each token with its segment: 0 up to
+      and including the first [SEP], 1 after it.
+
+  both-ways:
+    span: block
+    short: "Change the last word, and the first word's vector changes too. A GPT's never would."
+    deep: |
+      This is the exact opposite of the check on the Transformer page, where rewriting
+      the end left every earlier prediction untouched. Without the causal mask,
+      information flows in both directions in every layer.
+    concepts: [causal-masking]
+
+  padding:
+    span: block
+    short: "Append five [PAD] tokens: every real token's vector stays exactly the same."
+    deep: |
+      Padding gets weight exactly 0 in every attention row ($e^{-\infty} = 0$), and every
+      other layer works token by token. So a batch can mix short and long inputs safely.
+
+  mlm:
+    span: block
+    short: "Mask 30% of the words, score the MLM head at those positions: an untrained BERT sits at log V, uniform guessing."
+    deep: |
+      The MLM head is GPT's output layer, `W_out`: one score per vocabulary entry at
+      every position. Only the masked positions are scored. A higher rate than 15% is
+      used here only so this short input has some words to hide.
+    concepts: [masked-language-modeling]
+
+  fine-tune:
+    span: block
+    short: "Fine-tuning adds one small matrix: softmax of the [CLS] vector times W, with K classes."
+    deep: |
+      The paper: *"The only new parameters introduced during fine-tuning are
+      classification layer weights $W \in \mathbb{R}^{K\times H}$"*, and the loss is
+      $\log(\text{softmax}(CW^\top))$. All other weights start from pretraining, and all
+      of them keep training on the labelled data. Here, $K = 2$ and $W$ is untrained,
+      so the probabilities are near 50/50.
+    concepts: [softmax, log-loss]
+
+pytorch:
+  reuse:
+    short: "The transformer's `Block`, now with `causal=False`, plus masking (Masked language modeling) and the corpus."
+    deep: |
+      `Block(d, n_heads, causal=False)` is the whole difference between this encoder and
+      the GPT on the Transformer page.
+    concepts: [transformer, masked-language-modeling, positional-encoding]
+
+  words: *words
+
+  model:
+    span: block
+    short: "TinyBERT: token + segment + position embeddings → 2 unmasked blocks → LayerNorm. An MLM head scores every word."
+    deep: |
+      `forward` returns the vectors, not predictions. The MLM head is kept beside the
+      encoder, so the encoder can be reused under a different head after pretraining.
+    concepts: [embeddings, layer-normalization]
+
+  demo:
+    short: "The demo: pretrain by filling blanks, then test whether it reads the answer from the right."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  data:
+    span: block
+    short: "2,000 generated sentences as rows of [CLS] + 9 words + [SEP]."
+    deep: |
+      Every sentence has the same shape, "zoe likes jam , so zoe eats jam .", so no
+      padding is needed. Words 1 and 3 are random; words 6 and 8 copy them.
+    concepts: [language-modeling]
+
+  pretrain:
+    span: block
+    short: "500 AdamW steps: mask 64 random sentences afresh, score only the masked words. The loss falls from ~3.6 to ~0.1."
+    deep: |
+      The −100 targets from `mask_tokens` make `F.cross_entropy` skip the unmasked
+      positions. The model is never told about names or copying. It has to find out
+      that the hidden word is usually written elsewhere in the sentence.
+    concepts: [adam-optimizer, masked-language-modeling]
+
+  fill:
+    span: block
+    short: "Hide the first word of four new sentences. It names zoe, raj, kim and ian: read from the right."
+    deep: |
+      At position 1, a left-to-right model has seen only [CLS]: it could do no better
+      than 1 in 8. BERT reads the whole sentence, finds the second copy of the name at
+      position 6 and copies it back. This is the same look-up-and-copy trick the GPT
+      learnt, pointed backwards.
+    concepts: [multi-head-attention]
+
+  both-hidden:
+    span: block
+    short: "Hide both copies of the name: now its best guess gets well under 50%. It was reading, not memorising."
+    deep: |
+      With no copy left, the only clue is "a name goes here", so the probability
+      spreads over the eight names. That shows the confident answers above came from
+      the context, not from anything about the sentence's position.

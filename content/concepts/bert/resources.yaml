@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-illustrated-bert
+  note: "Start here: BERT's inputs and outputs, sentence classification from [CLS], and how it grew out of ELMo and the OpenAI transformer."
+- id: statquest-encoder-only-transformers
+  note: "The encoder-only transformer built up step by step, and why its contextual embeddings are what search and RAG systems use."
+- id: huggingface-transformer-architectures
+  note: "This page's GPT-vs-BERT comparison in one place: encoder, decoder and encoder-decoder models, with examples of each."
+- id: umarjamil-bert
+  note: "A longer lecture covering this whole page: pretraining, the [CLS] token, fine-tuning, and BERT against GPT and Llama."
+- id: d2l-bert
+  note: "Builds BERTEncoder, the MLM head and the NSP head in PyTorch, the same parts as this page's code at a larger scale."
+- id: devlin-bert
+  note: "The original paper. Section 3 (with Figures 1 and 2) is the whole model; Table 5 is the experiment showing that reading both ways matters."

@@ -1,0 +1,8 @@
+type: video
+title: "Encoder-Only Transformers (like BERT) for RAG, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=GDN649X_acE
+author: StatQuest with Josh Starmer
+level: beginner
+why: "StatQuest's step-by-step treatment of the encoder-only transformer, the BERT family, and how its context-aware embeddings are used for retrieval."
+source: curated
+checked: 2026-10-28

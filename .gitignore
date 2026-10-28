@@ -17,6 +17,8 @@ eggs/
 lib/
 # Spartan helm primitives keep their sources in `src/lib/`.
 !frontend/src/app/shared/ui/helm/**/lib/
+# The figures' maths lives in `figures/lib/` (ADR 0020).
+!frontend/src/app/shared/figures/lib/
 lib64/
 parts/
 sdist/

@@ -36,10 +36,10 @@ def init_params(V, d, n_layers, rng):
 
 
 # @a:block
-def block(X, p, n_heads):
-    """Tokens talk (attention), then each token thinks on its own (MLP); both as residuals."""
+def block(X, p, n_heads, mask):
+    """Tokens talk (attention, limited by `mask`), then each token thinks on its own (MLP); both as residuals."""
     def talk(h):
-        return multi_head_attention(layer_norm(h, *p["ln1"]), *p["attn"], n_heads, causal_mask(len(h)))[0]
+        return multi_head_attention(layer_norm(h, *p["ln1"]), *p["attn"], n_heads, mask)[0]
 
     def think(h):
         return relu(layer_norm(h, *p["ln2"]) @ p["W1"] + p["b1"]) @ p["W2"] + p["b2"]
@@ -52,7 +52,7 @@ def gpt(ids, params, n_heads):
     """Token ids (T,) → next-token scores (T, V): one prediction per position."""
     X = embed(ids, params["E"]) + sinusoidal(len(ids), params["E"].shape[1])
     for p in params["blocks"]:
-        X = block(X, p, n_heads)
+        X = block(X, p, n_heads, causal_mask(len(ids)))
     return layer_norm(X, *params["ln_f"]) @ params["W_out"]
 
 

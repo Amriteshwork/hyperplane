@@ -25,6 +25,10 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
   'transformer-block': () =>
     import('./transformer-block-figure').then((m) => m.TransformerBlockFigure),
   'bptt-unrolled': () => import('./bptt-unrolled-figure').then((m) => m.BpttUnrolledFigure),
+  'fill-in-the-blank': () =>
+    import('./fill-in-the-blank-figure').then((m) => m.FillInTheBlankFigure),
+  'bert-input': () => import('./bert-input-figure').then((m) => m.BertInputFigure),
+  'bert-heads': () => import('./bert-heads-figure').then((m) => m.BertHeadsFigure),
 };
 
 export const FIGURES = new InjectionToken<Readonly<Record<string, FigureLoader>>>('FIGURES', {

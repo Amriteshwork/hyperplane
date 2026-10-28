@@ -16,16 +16,16 @@ from tokenization_pytorch import build_vocab, decode, encode, windows
 class Block(torch.nn.Module):
     """Pre-LN block: x + attention(LN(x)), then x + MLP(LN(x))."""
 
-    def __init__(self, d, n_heads):
+    def __init__(self, d, n_heads, causal=True):
         super().__init__()
-        self.n_heads = n_heads
+        self.n_heads, self.causal = n_heads, causal
         self.attn = torch.nn.Parameter(torch.randn(4, d, d) / d**0.5)  # W_Q, W_K, W_V, W_O
         gamma_beta = torch.stack([torch.ones(d), torch.zeros(d)])  # each norm's (γ, β)
         self.ln1, self.ln2 = torch.nn.Parameter(gamma_beta.clone()), torch.nn.Parameter(gamma_beta.clone())
         self.mlp = torch.nn.Sequential(torch.nn.Linear(d, 4 * d), torch.nn.GELU(), torch.nn.Linear(4 * d, d))
 
     def forward(self, x):
-        mask = causal_mask(x.shape[-2])
+        mask = causal_mask(x.shape[-2]) if self.causal else None  # None: every token sees all
         x = x + multi_head_attention(layer_norm(x, *self.ln1), *self.attn, self.n_heads, mask)[0]
         return x + self.mlp(layer_norm(x, *self.ln2))
 

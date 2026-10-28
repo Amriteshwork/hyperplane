@@ -87,7 +87,9 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
     sequence = areas["sequence-models"]
     assert sequence.index("tokenization") < sequence.index("self-attention")
     assert sequence.index("causal-masking") < sequence.index("multi-head-attention")
-    assert sequence[-1] == "transformer"  # everything else on the path comes first
+    # each comes after everything it builds on
+    assert sequence.index("transformer") < sequence.index("masked-language-modeling")
+    assert sequence.index("masked-language-modeling") < sequence.index("bert")
     assert areas["foundations"][0] == "numpy-basics"
     foundations = areas["foundations"]
     assert foundations.index("vectors") < foundations.index("matrix-multiplication")
@@ -209,10 +211,10 @@ def test_concept_code_lists_what_it_imports_from_prerequisites(client: TestClien
 def test_transformers_track_walks_every_prerequisite_to_the_transformer(
     client: TestClient,
 ) -> None:
-    summary, rnn = client.get("/api/v1/tracks").json()["items"]
+    summary, rnn, bert = client.get("/api/v1/tracks").json()["items"]
     assert summary["id"] == "transformers"
     families = {f["id"]: f for f in client.get("/api/v1/families").json()["items"]}
-    assert families["sequence-models"]["tracks"] == [summary, rnn]
+    assert families["sequence-models"]["tracks"] == [summary, bert, rnn]
     assert families["sequence-models"]["algorithms"] == []
     assert families["linear-models"]["tracks"] == []
     assert summary["goal"] == {"id": "transformer", "title": "Transformer"}
@@ -225,6 +227,17 @@ def test_transformers_track_walks_every_prerequisite_to_the_transformer(
     assert route[-1] == "transformer"
     assert "::figure[attention-heatmap]" in track["body"]
     assert track["resources"]
+
+
+def test_bert_track_is_the_transformer_track_then_masking_then_bert(client: TestClient) -> None:
+    def route(track_id: str) -> list[str]:
+        track = client.get(f"/api/v1/tracks/{track_id}").json()
+        return [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
+
+    bert = route("bert")
+    assert bert == [*route("transformers"), "masked-language-modeling", "bert"]
+    path = client.get("/api/v1/concepts/bert").json()["learning_path"]
+    assert sorted(bert) == sorted([c["id"] for c in path] + ["bert"])
 
 
 def test_recurrent_networks_track_ends_at_the_lstm(client: TestClient) -> None:

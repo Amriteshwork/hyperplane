@@ -1,0 +1,8 @@
+type: blog
+title: "The Illustrated BERT, ELMo, and co. (How NLP Cracked Transfer Learning)"
+url: https://jalammar.github.io/illustrated-bert/
+author: Jay Alammar
+level: beginner
+why: "The story of transfer learning in NLP, from word vectors through ELMo and the OpenAI transformer to BERT, drawn picture by picture."
+source: curated
+checked: 2026-10-28

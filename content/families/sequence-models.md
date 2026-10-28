@@ -2,7 +2,7 @@
 title: Sequence Models
 summary: Models that read and write text one token at a time, built from recurrence and attention. The ideas behind GPT, BERT and every modern LLM.
 order: 8
-tracks: [transformers, recurrent-networks]
+tracks: [transformers, bert, recurrent-networks]
 ---
 
 Sequence models treat their input as an ordered stream of tokens and learn how each one

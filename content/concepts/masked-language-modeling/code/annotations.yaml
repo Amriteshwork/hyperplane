@@ -1,0 +1,139 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the generated corpus, the bigram and cross-entropy (Language modeling) and the tokenizer (Tokenization)."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [language-modeling, tokenization]
+
+  add-tokens: &add-tokens
+    span: block
+    short: "Give special tokens like [MASK] the next free ids, after every real token."
+    deep: |
+      A special token is just another row of the embedding table, one that no real text
+      ever produces. Numbering them after the real tokens means "is this a real token?"
+      is simply `id < V`.
+    concepts: [embeddings]
+
+  mask: &mask
+    span: block
+    short: "BERT's recipe: pick 15% of the real tokens; turn 80% of those into [MASK], 10% into a random token, leave 10% alone."
+    deep: |
+      Two independent random draws per token: one decides **whether** it's picked, the
+      other **what happens** to it. `picked` remembers the positions, because the loss is
+      taken there and nowhere else.
+
+      Why not always write [MASK]? Because [MASK] never appears in real text. A model
+      that only ever had to fix [MASK] tokens could learn to ignore every other token's
+      own identity. With 10% swapped and 10% kept, it can't tell which visible words
+      are genuine, so it has to build a good vector for **every** position.
+
+  loss:
+    span: block
+    short: "Cross-entropy, but only at the picked positions: the other 85% are given, so there's nothing to score."
+    deep: |
+      $$\mathcal{L} = -\frac{1}{|M|}\sum_{t\in M} \log p_\theta\big(x_t \mid \tilde{x}\big)$$
+
+      where $M$ is the set of picked positions and $\tilde{x}$ the corrupted text. Compare
+      a GPT, which is scored at **every** position: an MLM gets about one lesson per seven
+      tokens, so it needs more passes over the data to learn as much.
+    concepts: [language-modeling, log-loss]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  recipe:
+    span: block
+    short: "Mask 34,000 characters and count: 15% picked, 80% of those became [MASK], everything else untouched."
+    deep: |
+      Of the picked tokens, slightly more than 10% look unchanged: the "random" 10%
+      sometimes draws the very token that was there.
+
+  both-sides:
+    span: block
+    short: "Guess hidden characters from the left neighbour only, then from both neighbours: the loss falls from 1.31 to 0.49 nats."
+    deep: |
+      The left-only guess is the bigram, $P(x_t \mid x_{t-1})$. The two-sided guess uses
+      Bayes' rule with the same table, read in both directions:
+
+      $$P(x_t \mid x_{t-1}, x_{t+1}) \;\propto\; P(x_t \mid x_{t-1})\;P(x_{t+1} \mid x_t).$$
+
+      Knowing what comes **after** the gap rules out most candidates: after "e", a
+      hidden letter followed by "t" is "a" (as in "eats"). This is the information a
+      left-to-right model throws away, and the reason BERT exists.
+    concepts: [probability, language-modeling]
+
+  uniform:
+    span: block
+    short: "A model that knows nothing still scores log V on the masked positions, the same baseline as next-token prediction."
+    deep: |
+      Giving every token probability $1/V$ costs $-\log(1/V) = \log V$ at every scored
+      position, however many there are. Any trained MLM should start here and fall.
+    concepts: [language-modeling]
+
+pytorch:
+  reuse:
+    short: "Reuse the generated corpus (Language modeling) and the tokenizer (Tokenization)."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [language-modeling, tokenization]
+
+  add-tokens: *add-tokens
+
+  mask:
+    span: block
+    short: "The same 15% / 80-10-10 recipe, returning targets with −100 at every position that isn't scored."
+    deep: |
+      −100 is `F.cross_entropy`'s default `ignore_index`: positions whose target is −100
+      contribute nothing to the loss or its gradient. That turns "score only the picked
+      positions" into a single standard call, the way Hugging Face's BERT does it.
+
+      Why not always write [MASK]? Because [MASK] never appears in real text. With 10%
+      swapped and 10% kept, the model can't tell which visible words are genuine, so it
+      builds a good vector for every position.
+
+  neighbours:
+    span: block
+    short: "The smallest masked language model: embed the token on the left (and the right), concatenate, score every vocabulary entry."
+    deep: |
+      With both sides, this is word2vec's **CBOW** ("continuous bag of words", 2013):
+      predict a word from its neighbours. BERT replaces "the two neighbours" with "every
+      token in the input, weighted by attention".
+
+      `ids[:-2]` and `ids[2:]` line up the left and right neighbours of positions
+      $1..T-2$, so the model makes all its guesses in one pass.
+    concepts: [embeddings]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  recipe:
+    span: block
+    short: "Mask the corpus once and check the recipe: about 15% picked, 80% of those turned into [MASK]."
+    deep: |
+      `targets != -100` recovers which positions were picked. Every other position is
+      exactly as it was.
+
+  ignore-index:
+    span: block
+    short: "Random logits, two ways to score them: cross-entropy with −100 targets equals cross-entropy on the picked rows alone."
+    deep: |
+      Both average over the picked positions only, so they agree exactly. The first form
+      keeps the (batch, time) shape intact, which is what a real training loop wants.
+    concepts: [log-loss]
+
+  train:
+    span: block
+    short: "Train both models with fresh holes every step: reading both sides roughly halves the validation loss (1.77 → 0.94 nats)."
+    deep: |
+      The holes are re-drawn every step, so the model never sees the same masked text
+      twice: masking is also data augmentation. Validation uses one fixed mask on
+      unseen text.
+
+      The losses are higher than in the NumPy file because here the neighbours
+      themselves may be masked or swapped, exactly as in real MLM training.
+    concepts: [adam-optimizer, train-test-split]

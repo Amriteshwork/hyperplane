@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each adds to this walkthrough (ADR 0016).
+- id: alammar-illustrated-bert
+  note: "The classic illustrated tour of this paper, starting with the transfer-learning story in section 2: word vectors, ELMo, the OpenAI transformer."
+- id: statquest-encoder-only-transformers
+  note: "Watch first if you prefer video: the encoder-only transformer this paper introduced, built up step by step."
+- id: umarjamil-bert
+  note: "A lecture-length companion: pretraining, the [CLS] token, fine-tuning, and how BERT compares with GPT and Llama."
+- id: d2l-bert
+  note: "Sections 3 and 3.1 in PyTorch: the input representation, masked LM and next sentence prediction as code."
+- id: huggingface-transformer-architectures
+  note: "Where BERT sits today: encoder, decoder and encoder-decoder models compared."

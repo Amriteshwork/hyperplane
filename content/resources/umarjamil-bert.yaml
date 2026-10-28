@@ -1,0 +1,8 @@
+type: video
+title: "BERT explained: Training, Inference, BERT vs GPT/LLamA, Fine tuning, [CLS] token"
+url: https://www.youtube.com/watch?v=90mGPxR2GgY
+author: Umar Jamil
+level: intermediate
+why: "A long, whiteboard-style walk through BERT: how it's trained, how it differs from GPT and Llama, fine-tuning and the [CLS] token."
+source: curated
+checked: 2026-10-28

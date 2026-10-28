@@ -1,0 +1,8 @@
+type: course
+title: "LLM Course: Transformer Architectures"
+url: https://huggingface.co/learn/llm-course/chapter1/6
+author: Hugging Face
+level: beginner
+why: "Encoder, decoder and encoder-decoder models side by side: what each can attend to, how each is pretrained, and which tasks suit which."
+source: curated
+checked: 2026-10-28

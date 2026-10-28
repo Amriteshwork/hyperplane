@@ -1,0 +1,8 @@
+type: paper
+title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+url: https://arxiv.org/abs/1810.04805
+author: Devlin, Chang, Lee & Toutanova (2018)
+level: advanced
+why: "The paper that introduced masked-language-model pretraining and the pretrain-then-fine-tune recipe; sections 3 and 5 are short and readable."
+source: curated
+checked: 2026-10-28

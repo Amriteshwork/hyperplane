@@ -3,10 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AttentionHeatmapFigure } from './attention-heatmap-figure';
 import { BackpropStepsFigure } from './backprop-steps-figure';
+import { BertHeadsFigure } from './bert-heads-figure';
+import { BertInputFigure } from './bert-input-figure';
 import { BoundaryPlaygroundFigure } from './boundary-playground-figure';
 import { BpttUnrolledFigure } from './bptt-unrolled-figure';
 import { EarlyStoppingFigure } from './early-stopping-figure';
 import { DEFAULT_FIGURES } from './figure-registry';
+import { FillInTheBlankFigure } from './fill-in-the-blank-figure';
 import { NetworkShapeFigure } from './network-shape-figure';
 import { PositionalEncodingExplorerFigure } from './positional-encoding-explorer-figure';
 import { ReluSumFigure } from './relu-sum-figure';
@@ -199,5 +202,45 @@ describe('figures', () => {
     await fixture.whenStable();
     expect(live()).toContain('38.44 × δ₁₀'); // 1.5⁹
     expect(live()).toContain('exploding');
+  });
+
+  it('fill in the blank: BERT copies the first name from the right; GPT can only guess', async () => {
+    const [fixture, el] = await mount(FillInTheBlankFigure);
+    const live = () => el.querySelector('[aria-live]')?.textContent ?? '';
+    expect(live()).toContain('copies “zoe” from position 5');
+    button(el, 'Left to right').click();
+    await fixture.whenStable();
+    expect(live()).toContain('out of sight');
+    expect(live()).toContain('1 in 8');
+    button(el, 'Both ways').click();
+    button(el, 'zoe').click(); // hide the copy too: now nobody can know
+    await fixture.whenStable();
+    expect(live()).toContain('twin is hidden');
+  });
+
+  it('BERT input: packs both sentences and explains the picked token', async () => {
+    const [fixture, el] = await mount(BertInputFigure);
+    const tokens = [...el.querySelectorAll('tbody tr:first-child button')].map((b) =>
+      b.textContent?.trim(),
+    );
+    expect(tokens[0]).toBe('[CLS]');
+    expect(tokens).toContain('##ing');
+    expect(tokens.filter((t) => t === '[SEP]')).toHaveLength(2);
+    button(el, '##ing').click();
+    await fixture.whenStable();
+    expect(el.querySelector('[aria-live]')?.textContent).toContain('word piece');
+  });
+
+  it('BERT heads: classification reads [CLS], tagging reads every word', async () => {
+    const [fixture, el] = await mount(BertHeadsFigure);
+    const live = () => el.querySelector('[aria-live]')?.textContent ?? '';
+    expect(live()).toContain('1,536');
+    button(el, 'Names & places').click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('PLACE');
+    expect(live()).toContain('6,912');
+    button(el, 'Question answering').click();
+    await fixture.whenStable();
+    expect(el.querySelector('[role="img"]')?.getAttribute('aria-label')).toContain('on: start');
   });
 });

@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-illustrated-bert
+  note: "Read the 'Masked Language Model' section: why a two-way model can't simply predict the next word, and the 15% masking with random swaps."
+- id: statquest-encoder-only-transformers
+  note: "A visual walk through the encoder-only transformer, the kind of model this objective trains."
+- id: huggingface-transformer-architectures
+  note: "Encoder models in one page: bidirectional attention, and pretraining by corrupting a sentence and reconstructing it."
+- id: d2l-bert
+  note: "The 'Masked Language Modeling' section implements this page's 80/10/10 recipe and the masked-position loss in PyTorch."
+- id: devlin-bert
+  note: "Section 3.1, 'Task #1: Masked LM': the original reasoning for masking, the 15% rate and the 80/10/10 split."

@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Bidirectional Encoder Representations from Transformers (BERT)"
+url: https://d2l.ai/chapter_natural-language-processing-pretraining/bert.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "BERT's input representation, masked language modelling and next sentence prediction, each implemented in PyTorch and assembled into one model."
+source: curated
+checked: 2026-10-28
