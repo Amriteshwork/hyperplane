@@ -72,6 +72,8 @@ def test_real_algorithms_package_registers_every_pack() -> None:
     registry = AlgorithmRegistry.discover()
     assert [p.spec.id for p in registry.list()] == [
         "elastic_net",
+        "knn_classifier",
+        "knn_regressor",
         "lasso",
         "linear_regression",
         "logistic_regression",

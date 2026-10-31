@@ -1,0 +1,9 @@
+type: blog
+title: "Lazy learning"
+url: https://en.wikipedia.org/wiki/Lazy_learning
+author: Wikipedia contributors
+level: beginner
+duration_min: 5
+why: A short definition of lazy versus eager learning, with the advantages and costs of waiting until a query arrives.
+source: curated
+checked: 2026-10-31

@@ -92,6 +92,55 @@ describe('RunResults networks', () => {
   });
 });
 
+describe('RunResults tuning suggestion', () => {
+  const tuning = {
+    name: 'n_neighbors',
+    label: 'Neighbours (k)',
+    best: 10,
+    score: 0.69,
+    score_label: 'Cross-validated R²',
+    chosen: 5,
+  };
+
+  function mount(report: TrainingReport) {
+    TestBed.overrideComponent(RunResults, {
+      remove: { imports: [Chart] },
+      add: { imports: [StubChart] },
+    });
+    const fixture = TestBed.createComponent(RunResults);
+    fixture.componentRef.setInput('report', report);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('offers the best value for the next run', () => {
+    const fixture = mount({ n_train: 8, n_test: 2, evaluation, tuning });
+    const taken: unknown[] = [];
+    fixture.componentInstance.tryParameter.subscribe((v) => taken.push(v));
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Neighbours (k) = 10 has the best Cross-validated R²');
+    element.querySelector<HTMLButtonElement>('[role="status"] button')?.click();
+    expect(taken).toEqual([{ name: 'n_neighbors', value: 10 }]);
+  });
+
+  it('has nothing to offer when this run already used it', () => {
+    const element = mount({
+      n_train: 8,
+      n_test: 2,
+      evaluation,
+      tuning: { ...tuning, chosen: 10 },
+    }).nativeElement as HTMLElement;
+    expect(element.textContent).toContain('already has the best');
+    expect(element.querySelector('[role="status"] button')).toBeNull();
+  });
+
+  it('shows neither view for models that report neither', () => {
+    const element = mount({ n_train: 8, n_test: 2, evaluation }).nativeElement as HTMLElement;
+    expect(element.querySelector('[role="status"]')).toBeNull();
+    expect(element.querySelector('app-neighbour-explorer')).toBeNull();
+  });
+});
+
 describe('featureLabel', () => {
   it('drops the preprocessing prefix', () => {
     expect(featureLabel('numeric__bmi')).toBe('bmi');

@@ -21,8 +21,10 @@ from app.ml.base import (
     ReportsClassCoefficients,
     ReportsCoefficients,
     ReportsFeatureImportance,
+    ReportsNeighbours,
     ReportsNetwork,
     ReportsTrainingCurve,
+    ReportsTuningCurve,
 )
 from app.ml.codegen import CodegenContext, find_anchors, render
 from app.ml.registry import AlgorithmRegistry
@@ -56,6 +58,8 @@ def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     assert (Capability.CLASS_COEFFICIENTS in supports) == isinstance(pack, ReportsClassCoefficients)
     assert (Capability.FEATURE_IMPORTANCE in supports) == isinstance(pack, ReportsFeatureImportance)
     assert (Capability.TRAINING_CURVE in supports) == isinstance(pack, ReportsTrainingCurve)
+    assert (Capability.TUNING_CURVE in supports) == isinstance(pack, ReportsTuningCurve)
+    assert (Capability.NEIGHBOURS in supports) == isinstance(pack, ReportsNeighbours)
     assert (Capability.NETWORK in supports) == isinstance(pack, ReportsNetwork)
 
 

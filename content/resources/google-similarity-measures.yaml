@@ -1,0 +1,9 @@
+type: blog
+title: "Measuring similarity from embeddings"
+url: https://developers.google.com/machine-learning/clustering/dnn-clustering/supervised-similarity
+author: Google for Developers
+level: intermediate
+duration_min: 10
+why: Compares Euclidean distance, cosine and the dot product, and proves they agree once vectors are normalised.
+source: curated
+checked: 2026-10-31

@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Nearest Neighbors Regression"
+url: https://scikit-learn.org/stable/auto_examples/neighbors/plot_regression.html
+author: scikit-learn developers
+level: beginner
+duration_min: 5
+why: Fits a noisy sine with k = 5, showing the curve that uniform and distance weights each produce.
+source: curated
+checked: 2026-10-31

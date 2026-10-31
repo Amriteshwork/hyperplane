@@ -54,6 +54,11 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
   'base-vs-chat': () => import('./base-vs-chat-figure').then((m) => m.BaseVsChatFigure),
   'reward-votes': () => import('./reward-votes-figure').then((m) => m.RewardVotesFigure),
   'rlhf-leash': () => import('./rlhf-leash-figure').then((m) => m.RlhfLeashFigure),
+  'knn-playground': () => import('./knn-playground-figure').then((m) => m.KnnPlaygroundFigure),
+  'knn-regression': () => import('./knn-regression-figure').then((m) => m.KnnRegressionFigure),
+  'distance-balls': () => import('./distance-balls-figure').then((m) => m.DistanceBallsFigure),
+  'distance-concentration': () =>
+    import('./distance-concentration-figure').then((m) => m.DistanceConcentrationFigure),
 };
 
 export const FIGURES = new InjectionToken<Readonly<Record<string, FigureLoader>>>('FIGURES', {

@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn User Guide: Nearest Neighbors"
+url: https://scikit-learn.org/stable/modules/neighbors.html
+author: scikit-learn developers
+level: intermediate
+duration_min: 25
+why: The exact classifiers and regressors we run, their weights, and how brute force, KD trees and ball trees find neighbours.
+source: curated
+checked: 2026-10-31

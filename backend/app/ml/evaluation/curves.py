@@ -1,12 +1,12 @@
-"""Plots of what an iterative model recorded while training (its loss per epoch)."""
+"""Plots of what a model recorded while training (a loss per epoch) or tuning (a score per k)."""
 
 from collections.abc import Sequence
 
 import numpy as np
 
-from app.ml.base import TrainingCurve
-from app.ml.evaluation.models import CurveMarker, CurvePlot, CurveSeries
-from app.ml.evaluation.numbers import evenly, points
+from app.ml.base import TrainingCurve, TuningCurve
+from app.ml.evaluation.models import CurveMarker, CurvePlot, CurveSeries, TuningSuggestion
+from app.ml.evaluation.numbers import evenly, points, round6
 
 
 def training_curve_plots(curve: TrainingCurve) -> list[CurvePlot]:
@@ -39,6 +39,38 @@ def training_curve_plots(curve: TrainingCurve) -> list[CurvePlot]:
             )
         )
     return plots
+
+
+def tuning_curve_plot(curve: TuningCurve) -> CurvePlot:
+    x, y = np.asarray(curve.values, dtype=float), np.asarray(curve.scores, dtype=float)
+    return CurvePlot(
+        id="tuning-curve",
+        title=f"{curve.score_label} by {curve.parameter}",
+        description=(
+            "Each point refits on parts of the training rows and scores on the part left out, "
+            "so you can compare settings without touching the test set. Pick the best-scoring "
+            "region, then rerun with that value."
+        ),
+        x_label=curve.parameter,
+        y_label=curve.score_label,
+        series=[CurveSeries(name=curve.score_label, points=points(x, y))],
+        axes="data",
+        marker=None
+        if curve.chosen is None
+        else CurveMarker(x=curve.chosen, label=f"This run ({curve.chosen:g})"),
+    )
+
+
+def tuning_suggestion(curve: TuningCurve) -> TuningSuggestion:
+    best = int(np.argmax(curve.scores))  # the first of equal scores
+    return TuningSuggestion(
+        name=curve.name,
+        label=curve.parameter,
+        best=curve.values[best],
+        score=round6(curve.scores[best]),
+        score_label=curve.score_label,
+        chosen=curve.chosen,
+    )
 
 
 def _per_epoch(

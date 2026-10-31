@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: udacity-curse-of-dimensionality
+  note: "Start here: three minutes on why more features demand so much more data."
+- id: cornell-cs4780-knn
+  note: "The neighbourhood-size calculation: the cube holding your k neighbours grows towards the whole space."
+- id: weinberger-curse-of-dimensionality
+  note: "The same course's lecture on it; the curse takes the first part, before the perceptron."
+- id: beyer-nearest-neighbor-meaningful
+  note: "Advanced: the conditions under which nearest and farthest neighbours become indistinguishable."

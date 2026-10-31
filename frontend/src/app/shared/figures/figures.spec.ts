@@ -27,8 +27,12 @@ import { BertInputFigure } from './bert-input-figure';
 import { BoundaryPlaygroundFigure } from './boundary-playground-figure';
 import { BpttUnrolledFigure } from './bptt-unrolled-figure';
 import { EarlyStoppingFigure } from './early-stopping-figure';
+import { DistanceBallsFigure } from './distance-balls-figure';
+import { DistanceConcentrationFigure } from './distance-concentration-figure';
 import { DEFAULT_FIGURES } from './figure-registry';
 import { FillInTheBlankFigure } from './fill-in-the-blank-figure';
+import { KnnPlaygroundFigure } from './knn-playground-figure';
+import { KnnRegressionFigure } from './knn-regression-figure';
 import { NetworkShapeFigure } from './network-shape-figure';
 import { PositionalEncodingExplorerFigure } from './positional-encoding-explorer-figure';
 import { ReluSumFigure } from './relu-sum-figure';
@@ -79,6 +83,71 @@ describe('figures', () => {
   it('registers a loader for every figure that resolves to a component', async () => {
     for (const load of Object.values(DEFAULT_FIGURES))
       expect(typeof (await load())).toBe('function');
+  });
+
+  it('knn playground memorises at k = 1, generalises at a larger k', async () => {
+    const [fixture, el] = await mount(KnnPlaygroundFigure);
+    const score = (id: string) =>
+      parseFloat(el.querySelector(`[data-testid="${id}"]`)?.textContent ?? '');
+    expect(score('train-score')).toBe(100);
+    const memorising = score('test-score');
+    slide(el, 'Neighbours', 21);
+    await fixture.whenStable();
+    expect(score('train-score')).toBeLessThan(100);
+    expect(score('test-score')).toBeGreaterThan(memorising);
+    expect(el.querySelectorAll('line')).toHaveLength(21); // one per neighbour
+    button(el, 'Circle').click();
+    await fixture.whenStable();
+    const plot = el.querySelector('svg');
+    expect(plot?.getAttribute('aria-label')).toContain('circle');
+    const dot = () => [...el.querySelectorAll('circle')].at(-1)?.getAttribute('cx');
+    const before = dot();
+    plot?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    await fixture.whenStable();
+    expect(dot()).not.toBe(before);
+  });
+
+  it('knn regression is closest to the curve at a moderate k', async () => {
+    const [fixture, el] = await mount(KnnRegressionFigure);
+    const mse = () => parseFloat(el.querySelector('[data-testid="mse"]')?.textContent ?? '');
+    const atOne = mse();
+    slide(el, 'Neighbours', 8);
+    await fixture.whenStable();
+    const atEight = mse();
+    slide(el, 'Neighbours', 60);
+    await fixture.whenStable();
+    expect(atEight).toBeLessThan(atOne);
+    expect(atEight).toBeLessThan(mse());
+  });
+
+  it('distance balls change shape with the metric and collapse under a stretch', async () => {
+    const [fixture, el] = await mount(DistanceBallsFigure);
+    const shape = () => el.querySelector('path')?.getAttribute('d') ?? '';
+    const circle = shape();
+    expect(circle).toContain('a');
+    button(el, 'Manhattan').click();
+    await fixture.whenStable();
+    expect(shape()).not.toContain('a');
+    expect(shape()).not.toBe(circle);
+    const before = el.querySelector('[data-testid="nearest-distance"]')?.textContent;
+    slide(el, 'Stretch', 20);
+    await fixture.whenStable();
+    expect(el.querySelector('[data-testid="nearest-distance"]')?.textContent).not.toBe(before);
+    expect(el.querySelector('[data-testid="agreement"]')?.textContent).toMatch(/of 3/);
+  });
+
+  it('distance concentration pulls nearest and farthest together', async () => {
+    const [fixture, el] = await mount(DistanceConcentrationFigure);
+    const read = (id: string) =>
+      parseFloat(el.querySelector(`[data-testid="${id}"]`)?.textContent?.replace(',', '') ?? '');
+    const contrast = read('contrast');
+    const edge = read('edge');
+    slide(el, 'Features', 10);
+    await fixture.whenStable();
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('1000 features');
+    expect(read('contrast')).toBeLessThan(1.3);
+    expect(contrast).toBeGreaterThan(read('contrast'));
+    expect(read('edge')).toBeGreaterThan(edge);
   });
 
   it('tokenizer playground shows real tokens and refuses nothing', async () => {

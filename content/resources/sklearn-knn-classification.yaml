@@ -1,0 +1,9 @@
+type: blog
+title: "scikit-learn example: Nearest Neighbors Classification"
+url: https://scikit-learn.org/stable/auto_examples/neighbors/plot_classification.html
+author: scikit-learn developers
+level: beginner
+duration_min: 5
+why: Short, runnable code that scales the features first and plots the decision boundary for each kind of weights.
+source: curated
+checked: 2026-10-31

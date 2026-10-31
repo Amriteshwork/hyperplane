@@ -1,0 +1,8 @@
+type: paper
+title: "When Is Nearest Neighbor Meaningful?"
+url: https://minds.wisc.edu/handle/1793/60174
+author: Beyer, Goldstein, Ramakrishnan, Shaft
+level: advanced
+why: The classic result that, under broad conditions, the nearest and farthest points become almost equally far as dimensions grow.
+source: curated
+checked: 2026-10-31

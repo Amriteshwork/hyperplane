@@ -9,8 +9,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Literal, Protocol, runtime_checkable
 
+import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 from pydantic import BaseModel, ConfigDict, Field
+from sklearn.pipeline import Pipeline
 
 from app.ml.profiling.profile import DatasetProfile
 from app.ml.types import TaskType
@@ -24,7 +26,9 @@ class Capability(StrEnum):
     COEFFICIENTS = "coefficients"
     CLASS_COEFFICIENTS = "class_coefficients"
     TRAINING_CURVE = "training_curve"
+    TUNING_CURVE = "tuning_curve"
     NETWORK = "network"
+    NEIGHBOURS = "neighbours"
     SPARSE = "sparse"
 
 
@@ -103,6 +107,22 @@ class TrainingCurve:
 
 
 @dataclass(frozen=True, slots=True)
+class TuningCurve:
+    """A held-out score for several values of one hyperparameter, in increasing order."""
+
+    #: Its name in the params model, so the Lab can fill in the best value, e.g. "n_neighbors".
+    name: str
+    #: The hyperparameter on the x axis, e.g. "Neighbours (k)".
+    parameter: str
+    values: Sequence[float]
+    scores: Sequence[float]
+    #: What `scores` measures, e.g. "Cross-validated accuracy".
+    score_label: str
+    #: The value this run used, when it is among `values`.
+    chosen: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Network:
     """A fitted feed-forward network: its units, layer by layer, and the weights between them."""
 
@@ -113,6 +133,47 @@ class Network:
     activation: str
     output_activation: str
     output_names: Sequence[str]
+
+
+class Neighbour(BaseModel):
+    """A stored training row that had a say in one prediction."""
+
+    model_config = ConfigDict(frozen=True)
+
+    distance: float
+    #: This row's share of the say: 1/k each, unless closer rows count more.
+    share: float
+    target: str
+    #: Its values in `NeighbourReport.columns`, as the learner's data shows them.
+    values: list[str]
+
+
+class NeighbourExample(BaseModel):
+    """One test row and the training rows that decided its prediction."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["miss", "hit"]
+    predicted: str
+    actual: str
+    values: list[str]
+    neighbours: list[Neighbour]
+
+
+class NeighbourReport(BaseModel):
+    """What a stored-rows model did: some predictions traced to rows, and how near "near" is."""
+
+    model_config = ConfigDict(frozen=True)
+
+    k: int
+    stored_rows: int
+    #: The columns where neighbours differ most from their query (at most a handful).
+    columns: list[str]
+    total_columns: int
+    examples: list[NeighbourExample]
+    #: On a sample of test rows: the mean distance to the k-th neighbour, and to any stored row.
+    nearest_distance: float
+    typical_distance: float
 
 
 class Estimator(Protocol):
@@ -186,6 +247,33 @@ class ReportsTrainingCurve(Protocol):
     """
 
     def training_curve(self, fitted: Estimator) -> TrainingCurve | None: ...
+
+
+@runtime_checkable
+class ReportsTuningCurve(Protocol):
+    """Models whose key hyperparameter can be rescored cheaply on the training rows.
+
+    Takes the whole pipeline, so each fold refits the preprocessing. `None` when this dataset
+    would make the view too slow.
+    """
+
+    def tuning_curve(
+        self, pipeline: Pipeline, X_train: pd.DataFrame, y_train: ArrayLike
+    ) -> TuningCurve | None: ...
+
+
+@runtime_checkable
+class ReportsNeighbours(Protocol):
+    """Models that answer from stored rows, which can show the rows behind a prediction."""
+
+    def neighbours(
+        self,
+        pipeline: Pipeline,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+    ) -> NeighbourReport: ...
 
 
 @runtime_checkable

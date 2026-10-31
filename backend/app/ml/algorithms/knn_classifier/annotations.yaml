@@ -1,0 +1,227 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      `KNeighborsClassifier` (from `sklearn.neighbors`) is the model. `LogisticRegression` is only imported to compare
+      against: does following the local shape of the data pay off here? `clone` copies a pipeline
+      unfitted, and `cross_val_score` compares values of k without using the test set.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict (`TARGET`), which
+      columns are features, how much data to hold out, and the random seed.
+
+      `SEED` only fixes the train/test split. k-NN itself has no randomness, so the same rows always
+      give the same model.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` holds
+      the class labels. Rows with a missing target can't be used; missing *feature* values are filled in during
+      preprocessing, because a distance can't be computed from a gap.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      This matters more than usual for k-NN. Scored on its training rows, each row finds itself as its
+      own nearest neighbour, so $k = 1$ scores perfectly while learning nothing. Only the held-out
+      score says anything.
+    concepts: [train-test-split, overfitting-underfitting]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers and one-hot encode categories."
+    deep: |
+      **This step changes the predictions more than for any model so far.** Distances add up
+      differences across features, so unscaled, the feature with the largest numbers picks the
+      neighbours by itself. On California Housing, $R^2$ is 0.15 without scaling and 0.67 with it.
+
+      Standardising treats one standard deviation of each feature as equally important. A one-hot
+      column contributes 0 or 1, comparable to a standardised feature, so two different categories
+      are always the same distance apart.
+
+      All of it is learned **from the training set only**, so no information leaks from the test set.
+    concepts: [feature-scaling, distance-metrics]
+
+  model:
+    span: block
+    short: "Create the model with your settings, chained after preprocessing."
+    deep: |
+      - `n_neighbors` is $k$, how many rows get a say. It is the setting that matters most.
+      - `weights`: with `uniform` each neighbour counts the same; with `distance` each counts in
+        proportion to $1/d$, and a row identical to the query decides alone.
+      - `metric` defines what close means.
+
+      scikit-learn also chooses how to search: a KD tree or ball tree when there are few features, or
+      brute force past 15 features, for sparse data, or for cosine distance. That choice affects speed,
+      not which rows count as nearest (apart from exact ties).
+    concepts: [distance-metrics, bias-variance]
+
+  fit:
+    span: block
+    short: "Fit the preprocessing, then simply store the transformed training rows."
+    deep: |
+      There is no optimisation here: no loss, no gradient and no iterations. `fit` validates the data,
+      keeps it, and builds the search structure. This is why it is called **lazy** learning: the work
+      happens at prediction time.
+    concepts: [lazy-learning]
+
+  predict:
+    span: block
+    short: "Predict the test rows: labels by majority vote, and probabilities as vote shares."
+    deep: |
+      These "probabilities" are shares of the $k$ votes, so with $k = 5$ each is 0, 0.2, 0.4 and so on.
+      They rank rows usefully, but they are coarse and not calibrated.
+
+      This line is the slow part of a lazy learner, because every test row searches the stored rows.
+    concepts: [lazy-learning]
+
+  evaluate:
+    span: block
+    short: "Score the predictions with accuracy, precision, recall, F1, log-loss and ROC-AUC."
+    deep: |
+      The same metrics as Logistic Regression, so you can compare them directly. Log-loss punishes a
+      class that gets zero votes when it was the right answer, so it is often poor for small $k$ even
+      when accuracy is good. Vote shares give only $k + 1$ thresholds, which makes the ROC curve coarse.
+    concepts: [classification-metrics, roc-auc, log-loss]
+
+  confusion:
+    span: block
+    short: "Count the test rows by actual class (rows) and predicted class (columns)."
+    deep: |
+      The diagonal holds the correct predictions. A rare class tends to be outvoted in most
+      neighbourhoods, so check its row: distance weights can help.
+    concepts: [classification-metrics, class-imbalance]
+
+  neighbours:
+    span: block
+    short: "Show the rows behind one prediction: its neighbours, their distances and their targets."
+    deep: |
+      This is what makes k-NN easy to explain: the answer to "why this prediction?" is a short list of
+      real rows. Note that the query goes through `preprocess` first, because the stored rows were
+      transformed too, and `rows` numbers them in training order.
+    concepts: [lazy-learning, distance-metrics]
+
+  nearness:
+    span: block
+    short: "Compare the distance to the k-th neighbour with the distance to a typical stored row."
+    deep: |
+      This is the curse of dimensionality measured on your own data. If the k-th neighbour is
+      nearly as far away as a typical row, the neighbours aren't really near, and removing
+      uninformative columns will probably help more than tuning k. The rows compared are the first
+      200 test rows and first 2,000 training rows; the split shuffled them, so they are a random
+      sample. The Lab's figures come from these same lines.
+    concepts: [curse-of-dimensionality, distance-metrics]
+
+  overfit:
+    span: block
+    short: "Compare the training accuracy with the test accuracy."
+    deep: |
+      The training score is flattering by construction, because each training row is among its own
+      neighbours (at distance 0). At $k = 1$ it is perfect, so a gap here is expected and is not by
+      itself a warning. Judge $k$ by the cross-validated scores below, not by this line.
+    concepts: [overfitting-underfitting, bias-variance]
+
+  choose-k:
+    span: block
+    short: "Score several values of k by 5-fold cross-validation on the training rows."
+    deep: |
+      Each candidate is scored on five different held-out parts of the training rows, with
+      preprocessing refitted each time. The test set stays unused, so it remains an honest final
+      check. This is the same loop as the Lab's "Cross-validated accuracy by Neighbours (k)" plot.
+
+      Expect a hump: small $k$ fits noise (high variance), large $k$ blurs real structure (high bias).
+
+      Past 20,000 rows it is skipped: each candidate costs five fits and a prediction for every row,
+      which is where a lazy learner is slow.
+    concepts: [cross-validation, bias-variance, hyperparameter-search]
+
+  baseline:
+    span: block
+    short: "Train Logistic Regression on the same rows, for comparison."
+    deep: |
+      If the linear model matches k-NN, the relationship is nearly linear and the simpler, faster and
+      smaller model should win. If k-NN is clearly better, the data has curves or interactions worth
+      keeping: on California Housing it scores 0.67 against linear's 0.58.
+
+  save:
+    span: block
+    short: "Save the whole pipeline to a file you can load later."
+    deep: |
+      `joblib` writes both the preprocessing and the model. **The model contains the training data**,
+      so the file grows with your dataset and needs the same care if that data is private.
+      Only load joblib files you trust: loading can run code.
+    concepts: [lazy-learning]
+
+scratch:
+  numpy:
+    short: "NumPy is all this needs: a table of numbers, some distances and a sort."
+    deep: |
+      No solver and no gradient. The whole algorithm fits on a screen.
+
+  distances:
+    span: block
+    short: "The distance from every query to every stored row, for each metric."
+    deep: |
+      `A[:, None, :] - B[None, :, :]` uses broadcasting to subtract every pair, giving a table of shape
+      (queries, rows, features). Each metric then collapses the last axis: a sum of squares, or a
+      plain sum. Cosine normalises each row and uses one matrix product.
+    concepts: [distance-metrics]
+
+  class:
+    span: block
+    short: "The model's settings, and the stored data that takes the place of learned weights."
+    deep: |
+      A linear model's attributes would be `coef_` and `intercept_`. Here they are the training rows.
+    concepts: [lazy-learning]
+
+  fit:
+    span: block
+    short: "Training: keep a copy of the data. That is all."
+    deep: |
+      scikit-learn also builds a search tree here when there are few features. It only makes the search
+      faster, so the scratch version skips it.
+    concepts: [lazy-learning]
+
+  neighbours:
+    span: block
+    short: "Sort each query's distances and keep the k smallest, with their row numbers."
+    deep: |
+      `np.argsort` orders each row of distances, and `take_along_axis` reads off the matching values.
+      Sorting all $n$ distances is more than we need, but it is the clearest way to write it; this
+      brute-force search costs $O(nd)$ per query.
+    concepts: [distance-metrics]
+
+  weights:
+    span: block
+    short: "Every neighbour counts the same, or each counts in proportion to 1/distance."
+    deep: |
+      With distance weights, a query identical to a training row would divide by zero. Like
+      scikit-learn, we let only those exact matches count in that case.
+
+  predict-proba:
+    span: block
+    short: "Add each neighbour's weight to its class's total, then normalise."
+    deep: |
+      `np.add.at` adds to one cell per neighbour, summing correctly when several neighbours share a
+      class. Dividing by the row total gives vote shares that add up to 1.
+    concepts: [lazy-learning]
+
+  predict:
+    span: block
+    short: "The class with the largest share of the vote."
+    deep: |
+      `argmax` returns the first of equal values, so a tied vote goes to the earliest class in sorted
+      order. scikit-learn does the same, and the tests check that we match it exactly. An odd $k$ avoids
+      ties for two classes.
+    concepts: [decision-boundary]

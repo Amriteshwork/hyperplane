@@ -1,0 +1,116 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the all-pairs Euclidean distance from the distance-metrics page."
+    deep: |
+      That one function is nearly the whole algorithm. Download with dependencies to get the
+      file alongside.
+    concepts: [distance-metrics]
+
+  neighbours:
+    span: block
+    short: "Measure the distance from each query to every training row, and keep the k smallest."
+    deep: |
+      This is the prediction cost of a lazy learner: $O(nd)$ for each query. There is no fit
+      step, because the "model" is `X_train` itself. Real libraries use `argpartition` or a
+      search tree rather than sorting everything.
+
+  classify:
+    span: block
+    short: "Look up the neighbours' labels, then take the most common in each row."
+    deep: |
+      `np.bincount` counts each label and `argmax` picks the largest count. In a tie, `argmax`
+      returns the smallest label, as scikit-learn does. Odd $k$ avoids ties for two classes.
+
+  regress:
+    span: block
+    short: "Average the neighbours' targets."
+    deep: |
+      $\hat y = \frac1k\sum_{i \in N_k(x)} y_i$. An average can't leave the range of the
+      targets, so unlike a linear model this can't extrapolate.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      The curse-of-dimensionality page imports `knn_classify`; the demo stays out of its way.
+
+  data:
+    span: block
+    short: "Two overlapping 2D clouds, one per class; no boundary can separate them perfectly."
+    deep: |
+      The overlap is the point: about 20% of rows sit on the wrong side, so any model scoring
+      much above 80% on the training rows is memorising noise.
+    concepts: [train-test-split]
+
+  sweep:
+    span: block
+    short: "k = 1 memorises, k = 15 generalises, and k = n answers the same for everyone."
+    deep: |
+      - $k = 1$: 100% on training rows, because each is its own neighbour; about 71% on new ones.
+      - $k = 15$: about 81% on both.
+      - $k = n$: every query polls every row, so all get the majority class; about 50%.
+
+      High variance, a good balance and high bias, set by one number.
+    concepts: [bias-variance, overfitting-underfitting]
+
+  cost:
+    span: block
+    short: "Fitting computed no distances; 300 queries against 300 rows need 90,000."
+    deep: |
+      The arithmetic of laziness. An eager linear model would do its work once, then answer
+      each query with one dot product.
+
+  regression:
+    span: block
+    short: "The same search fits a sine curve with no formula, and stays within the targets' range."
+    deep: |
+      Nothing told it the data was a sine. It follows the shape because nearby $x$ have similar
+      $y$, and that smoothness is the one assumption k-NN makes.
+    concepts: [mean-squared-error]
+
+pytorch:
+  neighbours:
+    span: block
+    short: "`cdist` measures every pair and `topk` keeps the k smallest."
+    deep: |
+      `largest=False` makes `topk` return the smallest values. It avoids a full sort, which is
+      what you want for large tables of embeddings.
+
+  classify:
+    span: block
+    short: "`mode` takes the most common label along each row."
+    deep: |
+      `torch.mode` returns the most common value and its position; `.values` keeps the labels.
+
+  regress:
+    span: block
+    short: "Average the neighbours' targets."
+    deep: |
+      The same formula as NumPy. Nothing here is a parameter, so nothing needs a gradient.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run directly."
+    deep: |
+      The same experiment as the NumPy file, with PyTorch's random numbers.
+
+  data:
+    span: block
+    short: "Two overlapping 2D clouds, one per class."
+    deep: |
+      The overlap is what makes $k = 1$ memorise noise rather than a real pattern.
+
+  sweep:
+    span: block
+    short: "k = 1 is perfect on training rows; k = 15 does better on new ones."
+    deep: |
+      The training score can't choose $k$: it would always pick 1.
+    concepts: [bias-variance]
+
+  regression:
+    span: block
+    short: "The same search fits a sine curve with no formula."
+    deep: |
+      The grid stops short of the data's edges, where neighbours can only be on one side and
+      the average is pulled inward.

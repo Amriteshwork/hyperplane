@@ -96,6 +96,19 @@ class Evaluation(_Frozen):
     plots: list[Plot]
 
 
+class TuningSuggestion(_Frozen):
+    """The best-scoring value on a tuning curve, for the Lab to offer as the next run."""
+
+    #: Its name in the params model, e.g. "n_neighbors".
+    name: str
+    label: str
+    best: float
+    score: float
+    score_label: str
+    #: This run's value; absent when it wasn't among the values tried.
+    chosen: float | None = None
+
+
 class NetworkLayer(_Frozen):
     kind: Literal["input", "hidden", "output"]
     units: int

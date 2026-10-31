@@ -4,6 +4,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmProgressImports } from '@spartan-ng/helm/progress';
 
 import { ThemeService } from '../../core/theme/theme.service';
+import { SchemaValues } from '../../shared/ui/json-schema-form/json-schema';
 import { LabStore, isFinished } from './lab.store';
 import { RunResults } from './run-results';
 
@@ -38,7 +39,12 @@ import { RunResults } from './run-results';
           <p class="mt-1 text-sm text-muted-foreground">{{ run.error }}</p>
         </div>
       } @else if (run.report; as report) {
-        <app-run-results class="mt-8 block" [report]="report" [dark]="dark()" />
+        <app-run-results
+          class="mt-8 block"
+          [report]="report"
+          [dark]="dark()"
+          (tryParameter)="useSuggestion($event)"
+        />
       }
 
       @if (finished()) {
@@ -82,4 +88,13 @@ export class RunStep {
     const progress = this.store.progress();
     return progress?.total ? Math.round(((progress.step ?? 0) / progress.total) * 100) : 0;
   });
+
+  /** Back to the settings with this run's own, changing one; the learner still presses Train. */
+  protected useSuggestion({ name, value }: { name: string; value: number }): void {
+    const run = this.store.run();
+    if (!run) return;
+    this.store.algorithmId.set(run.algorithm_id);
+    this.store.params.set({ ...run.params, [name]: value } as SchemaValues);
+    this.configure.emit();
+  }
 }

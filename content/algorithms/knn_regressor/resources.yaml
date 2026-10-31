@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-knn
+  note: "Start here: the neighbour search itself, shown on a classifier; regression averages instead of voting."
+- id: sklearn-knn-regression
+  note: "KNeighborsRegressor on a noisy sine: the curve that uniform and distance weights each give."
+- id: sklearn-feature-scaling-importance
+  note: "Why the scaling step in this model's pipeline changes its predictions so much."
+- id: sklearn-neighbors-guide
+  note: "How the estimator we run finds neighbours, and what its parameters do."
+- id: cornell-cs4780-knn
+  note: "Advanced: the theory behind k-NN, and why it degrades in high dimensions."

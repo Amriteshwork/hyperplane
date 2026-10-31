@@ -23,14 +23,17 @@ from app.ml.base import (
     CoefTable,
     Estimator,
     ImportanceTable,
+    NeighbourReport,
     Parameterised,
     Progress,
     ProgressFn,
     ReportsClassCoefficients,
     ReportsCoefficients,
     ReportsFeatureImportance,
+    ReportsNeighbours,
     ReportsNetwork,
     ReportsTrainingCurve,
+    ReportsTuningCurve,
 )
 from app.ml.codegen import CodegenContext
 from app.ml.evaluation import (
@@ -38,8 +41,11 @@ from app.ml.evaluation import (
     Evaluation,
     NetworkSummary,
     Predictions,
+    TuningSuggestion,
     summarise_network,
     training_curve_plots,
+    tuning_curve_plot,
+    tuning_suggestion,
 )
 from app.ml.preprocessing import PreprocessingConfig, build_preprocessor
 from app.ml.types import TaskType
@@ -94,6 +100,10 @@ class TrainingReport(BaseModel):
     feature_importance: list[Importance] = []
     #: The fitted network's layers and weights (neural networks only).
     network: NetworkSummary | None = None
+    #: The best value on the run's tuning curve (models that report one).
+    tuning: TuningSuggestion | None = None
+    #: Predictions traced back to the stored rows behind them (models that keep their rows).
+    neighbours: NeighbourReport | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +152,13 @@ def train(
     if isinstance(pack, ReportsTrainingCurve) and (curve := pack.training_curve(model)):
         plots = [*evaluation.plots, *training_curve_plots(curve)]
         evaluation = evaluation.model_copy(update={"plots": plots})
+    suggestion = None
+    if isinstance(pack, ReportsTuningCurve) and (
+        tuning := pack.tuning_curve(pipeline, X_train, y_train)
+    ):
+        plots = [*evaluation.plots, tuning_curve_plot(tuning)]
+        evaluation = evaluation.model_copy(update={"plots": plots})
+        suggestion = tuning_suggestion(tuning)
     return TrainingResult(
         pipeline=pipeline,
         report=TrainingReport(
@@ -157,6 +174,10 @@ def train(
             else [],
             network=summarise_network(pack.network(model, names))
             if isinstance(pack, ReportsNetwork)
+            else None,
+            tuning=suggestion,
+            neighbours=pack.neighbours(pipeline, X_train, y_train, X_test, y_test)
+            if isinstance(pack, ReportsNeighbours)
             else None,
         ),
         X_test=X_test,

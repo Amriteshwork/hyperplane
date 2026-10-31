@@ -9,5 +9,6 @@ export type ConceptArea =
   | 'optimisation'
   | 'evaluation'
   | 'features'
+  | 'instance-based'
   | 'neural-networks'
   | 'sequence-models';

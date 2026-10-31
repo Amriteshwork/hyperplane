@@ -1,0 +1,9 @@
+type: blog
+title: "Lecture 2: k-nearest neighbors / Curse of Dimensionality"
+url: https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote02_kNN.html
+author: Cornell CS4780
+level: intermediate
+duration_min: 25
+why: Rigorous but readable course notes, from the Minkowski distance through the 1-NN error bound to why neighbourhoods fail in high dimensions.
+source: curated
+checked: 2026-10-31

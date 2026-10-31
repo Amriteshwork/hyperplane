@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-knn
+  note: "Start here: a new point takes the class of its neighbours, and what happens as k changes."
+- id: sklearn-knn-classification
+  note: "KNeighborsClassifier with scaling on Iris: the decision boundary under each kind of weights."
+- id: sklearn-feature-scaling-importance
+  note: "Why the scaling step in this model's pipeline changes its predictions so much."
+- id: sklearn-neighbors-guide
+  note: "How the estimator we run finds neighbours, and what its parameters do."
+- id: cornell-cs4780-knn
+  note: "Advanced: the 1-NN error bound, and why it degrades in high dimensions."

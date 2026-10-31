@@ -1,0 +1,91 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the distances from distance-metrics and the classifier from lazy-learning."
+    deep: |
+      The experiment below just adds dimensions to code you've already read. Download with
+      dependencies to get the files alongside.
+    concepts: [distance-metrics, lazy-learning]
+
+  contrast:
+    span: block
+    short: "How much farther is the farthest row than the nearest, relative to the nearest?"
+    deep: |
+      $$\frac{d_{\max} - d_{\min}}{d_{\min}}$$
+
+      Beyer et al. proved that under broad conditions this goes to 0 as the dimension grows.
+      At 0, the nearest neighbour is no nearer than any other row.
+
+  edge:
+    span: block
+    short: "A cube's volume is its side to the power d, so the side for a given volume is the d-th root."
+    deep: |
+      Roots of small numbers approach 1 as $d$ grows, so a neighbourhood holding any fixed
+      fraction of the data ends up nearly as wide as the whole range.
+
+  demo:
+    span: block
+    short: "Four small measurements of the same effect."
+    deep: |
+      Each block changes one thing, the dimension, and prints what happens.
+
+  concentration:
+    span: block
+    short: "Add dimensions to 1,000 uniform rows: the farthest goes from 85× the nearest to 1.12×."
+    deep: |
+      A squared distance is a sum over features. With more independent terms its relative
+      spread falls like $1/\sqrt{d}$, by the law of large numbers. Distances grow, but they
+      grow together.
+    concepts: [probability]
+
+  neighbourhood:
+    span: block
+    short: "A cube holding 1% of the data has sides of 0.01 in 1D and 0.95 in 100D."
+    deep: |
+      "Local" stops being local. In 100D the 1% neighbourhood spans 95% of the range of every
+      feature, so a model that averages over it is close to averaging over everything.
+
+  rows-needed:
+    span: block
+    short: "Staying within 0.1 along each axis takes about 10 to the power d rows."
+    deep: |
+      Cut each axis into 10 bins and place one row per cell. That gives 100 rows in 2D and a
+      million in 6D: the amount of data needed grows exponentially with the dimension.
+
+  noise:
+    span: block
+    short: "Two good features plus noise columns: accuracy falls from 94% to 68% as noise is added."
+    deep: |
+      The informative features never change. Each noise column just adds a random term to
+      every distance, until the signal is too small a share of the total to steer the search.
+      Models that weigh features can ignore these columns; plain k-NN can't.
+    concepts: [feature-selection]
+
+pytorch:
+  contrast:
+    span: block
+    short: "The farthest-versus-nearest ratio for each query, averaged."
+    deep: |
+      `torch.cdist` gives a table of queries × rows, so one line of `max` and `min` per row
+      replaces the loop over queries.
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run directly."
+    deep: |
+      The same measurement as the NumPy file, using PyTorch's distance function.
+
+  concentration:
+    span: block
+    short: "Add dimensions: the farthest row's lead over the nearest almost disappears."
+    deep: |
+      Uniform random data has no low-dimensional structure, so this is the worst case. Real
+      data usually behaves as if it had fewer dimensions than it has columns.
+    concepts: [probability]
+
+  spread:
+    span: block
+    short: "The spread of distances from one query, as a share of their mean, collapses."
+    deep: |
+      At $d = 2$ the spread is 43% of the mean, and at $d = 1000$ under 2%: almost every row
+      sits on a thin shell at the same distance. The figure on this page draws the histogram.

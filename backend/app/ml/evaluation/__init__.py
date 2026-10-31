@@ -3,7 +3,7 @@
 from collections.abc import Callable
 
 from app.ml.evaluation.classification import evaluate_classification
-from app.ml.evaluation.curves import training_curve_plots
+from app.ml.evaluation.curves import training_curve_plots, tuning_curve_plot, tuning_suggestion
 from app.ml.evaluation.models import (
     CurveMarker,
     CurvePlot,
@@ -16,6 +16,7 @@ from app.ml.evaluation.models import (
     Plot,
     Predictions,
     ScatterPlot,
+    TuningSuggestion,
 )
 from app.ml.evaluation.network import summarise_network
 from app.ml.evaluation.regression import evaluate_regression
@@ -44,6 +45,9 @@ __all__ = [
     "Plot",
     "Predictions",
     "ScatterPlot",
+    "TuningSuggestion",
     "summarise_network",
     "training_curve_plots",
+    "tuning_curve_plot",
+    "tuning_suggestion",
 ]

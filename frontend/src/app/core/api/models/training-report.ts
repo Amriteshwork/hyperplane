@@ -4,7 +4,9 @@
 import { Coefficient } from '../models/coefficient';
 import { Evaluation } from '../models/evaluation';
 import { Importance } from '../models/importance';
+import { NeighbourReport } from '../models/neighbour-report';
 import { NetworkSummary } from '../models/network-summary';
+import { TuningSuggestion } from '../models/tuning-suggestion';
 
 /**
  * The JSON-safe outcome of a run, stored on it and returned by the API.
@@ -15,5 +17,7 @@ export interface TrainingReport {
   feature_importance?: Array<Importance>;
   n_test: number;
   n_train: number;
+  neighbours?: NeighbourReport | null;
   network?: NetworkSummary | null;
+  tuning?: TuningSuggestion | null;
 }

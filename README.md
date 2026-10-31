@@ -123,7 +123,7 @@ docs/        Architecture, roadmap, architecture decision records (ADRs)
 | Family | Algorithms |
 |--------|------------|
 | Linear models | Linear, Polynomial, Ridge, Lasso, Elastic Net, Logistic Regression, SGD Regressor / Classifier |
-| Instance-based | K-Nearest Neighbors |
+| Instance-based | KNN Regressor / Classifier |
 | Probabilistic | Naive Bayes (Gaussian, Multinomial, Bernoulli), LDA / QDA |
 | Support Vector Machines | Linear SVM, Kernel SVM, SVR |
 | Tree-based | Decision Tree |

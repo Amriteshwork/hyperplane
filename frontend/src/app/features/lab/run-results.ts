@@ -1,11 +1,13 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
 
 import { TrainingReport } from '../../core/api/models/training-report';
 import { Chart } from '../../shared/ui/chart/chart';
 import { DataTable, TableColumn } from '../../shared/ui/data-table/data-table';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { featureLabel } from './feature-label';
+import { NeighbourExplorer } from './neighbour-explorer';
 import { NetworkDiagram } from './network-diagram';
 import { barOptions, plotOptions } from './plot-options';
 
@@ -20,10 +22,10 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
   ...COEFFICIENT_COLUMNS,
 ];
 
-/** Metrics, evaluation plots, coefficients and (for networks) the trained network of a run. */
+/** Metrics, evaluation plots, coefficients and whatever else this kind of model can show of a run. */
 @Component({
   selector: 'app-run-results',
-  imports: [DecimalPipe, Chart, DataTable, NetworkDiagram, StatCard],
+  imports: [DecimalPipe, HlmButton, Chart, DataTable, NeighbourExplorer, NetworkDiagram, StatCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section aria-labelledby="metrics-heading">
@@ -61,7 +63,39 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
           </app-chart>
         }
       </div>
+      @if (report().tuning; as tuning) {
+        <div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border p-3" role="status">
+          @if (tuning.best === tuning.chosen) {
+            <p class="text-sm">
+              This run's {{ tuning.label }} of {{ tuning.best }} already has the best
+              {{ tuning.score_label }} ({{ format(tuning.score) }}) of the values tried.
+            </p>
+          } @else {
+            <p class="text-sm">
+              {{ tuning.label }} = {{ tuning.best }} has the best {{ tuning.score_label }} ({{
+                format(tuning.score)
+              }}) of the values tried.
+            </p>
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="tryParameter.emit({ name: tuning.name, value: tuning.best })"
+            >
+              Set up a run with {{ tuning.best }}
+            </button>
+          }
+        </div>
+      }
     </section>
+
+    @if (report().neighbours; as neighbours) {
+      <section class="mt-10" aria-labelledby="neighbours-heading">
+        <h2 id="neighbours-heading" class="text-lg font-semibold">The rows behind a prediction</h2>
+        <app-neighbour-explorer [report]="neighbours" />
+      </section>
+    }
 
     @if (report().network; as network) {
       <section class="mt-10" aria-labelledby="network-heading">
@@ -126,6 +160,8 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
 export class RunResults {
   readonly report = input.required<TrainingReport>();
   readonly dark = input(false);
+  /** The learner took up a suggested hyperparameter value. */
+  readonly tryParameter = output<{ name: string; value: number }>();
 
   protected readonly coefficientColumns = COEFFICIENT_COLUMNS;
   protected readonly classCoefficientColumns = CLASS_COEFFICIENT_COLUMNS;

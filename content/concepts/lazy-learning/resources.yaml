@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-knn
+  note: "Start here: classifying a new point from nearby labelled points, the lazy idea in five minutes."
+- id: wikipedia-lazy-learning
+  note: "The definition of lazy versus eager learning, and what waiting for the query costs."
+- id: cornell-cs4780-knn
+  note: "Proves that as data grows, 1-NN's error is at most twice the best possible error."
+- id: sklearn-neighbors-guide
+  note: "How KD trees and ball trees spare a lazy learner from measuring every distance."

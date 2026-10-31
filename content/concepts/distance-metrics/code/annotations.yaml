@@ -1,0 +1,122 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Build on the dot product and norm from the vectors page."
+    deep: |
+      Euclidean distance is the norm of a difference, and cosine is a normalised dot product,
+      so both are one line once those exist. Download with dependencies to get the file alongside.
+    concepts: [vectors]
+
+  minkowski:
+    span: block
+    short: "The general formula: raise each absolute difference to the power p, sum, take the p-th root."
+    deep: |
+      $$d_p(u, v) = \Big(\sum_i |u_i - v_i|^p\Big)^{1/p}$$
+
+      Larger $p$ gives more weight to the largest difference. It is a true metric for
+      $p \ge 1$; below 1 the triangle inequality fails.
+
+  named:
+    span: block
+    short: "The three members everyone uses, written directly."
+    deep: |
+      Manhattan is $p = 1$, Euclidean is $p = 2$, and Chebyshev is the limit as $p \to \infty$,
+      where the largest term swamps all the others.
+
+  cosine:
+    span: block
+    short: "Compare directions: one minus the cosine of the angle between the two vectors."
+    deep: |
+      Dividing by both norms removes length, so $v$ and $10v$ are at distance 0. It is
+      undefined for a zero vector, which has no direction; libraries treat that case
+      specially.
+    concepts: [vectors]
+
+  pairwise:
+    span: block
+    short: "All the distances at once: insert axes so every row of A meets every row of B."
+    deep: |
+      `A[:, None, :]` has shape $(a, 1, d)$ and `B[None, :, :]` has shape $(1, b, d)$, so
+      broadcasting subtracts each pair, giving $(a, b, d)$. Summing over features leaves one
+      distance per pair. `lazy-learning` imports this.
+    concepts: [numpy-basics]
+
+  demo:
+    span: block
+    short: "Everything below runs only when the file is run, not when another file imports it."
+    deep: |
+      Later pages import `pairwise`; the checks stay out of their way.
+
+  triangle:
+    span: block
+    short: "From (0, 0) to (3, 4): Manhattan 7, Euclidean 5, Chebyshev 4."
+    deep: |
+      The asserts also check the family relationship: Minkowski with $p = 1$ and $p = 2$ give
+      the named distances, and a large $p$ is already within 0.01 of the maximum.
+
+  disagree:
+    span: block
+    short: "The metrics can disagree about which of two points is nearer."
+    deep: |
+      $(2, 2)$ spreads its difference evenly and $(3, 0)$ puts it all in one feature.
+      Euclidean squares the differences, so it penalises the concentrated one more and
+      prefers $(2, 2)$. Manhattan only adds them up and prefers $(3, 0)$.
+
+  cosine-demo:
+    span: block
+    short: "A vector and its 10× copy are far apart, yet at cosine distance 0."
+    deep: |
+      Euclidean distance would call `a` and `longer` very different. Cosine calls them the same,
+      which is what you want when length just means "more of the same".
+
+  scale:
+    span: block
+    short: "Unscaled, income (in dollars) picks the neighbours and age (in years) is ignored."
+    deep: |
+      Income differences run to tens of thousands, and age differences are at most 50, so the
+      unscaled search nearly ignores age. After standardising, each feature counts in standard
+      deviations and the neighbours are close in age too.
+    concepts: [feature-scaling]
+
+  checks:
+    span: block
+    short: "The broadcast matches a plain double loop, and distances obey the triangle inequality."
+    deep: |
+      $d(p, r) \le d(p, q) + d(q, r)$: a detour can't be shorter. It is what makes a metric a
+      metric, and what KD trees and ball trees rely on to skip rows without measuring them.
+
+pytorch:
+  pairwise:
+    span: block
+    short: "The Minkowski formula on every pair of rows, by broadcasting."
+    deep: |
+      The same broadcast as NumPy, with `None` adding the axes. This is what `torch.cdist`
+      computes, faster, and it is differentiable, which metric learning relies on.
+
+  cosine:
+    span: block
+    short: "Normalise each row to length 1; then a matrix product gives every cosine at once."
+    deep: |
+      Once rows have length 1, the dot product is the cosine, so `unit_A @ unit_B.T` holds
+      every pair. Embedding search uses exactly this.
+    concepts: [matrix-multiplication]
+
+  demo:
+    span: block
+    short: "The checks, run only when this file is run directly."
+    deep: |
+      Double precision keeps the comparisons with the library functions tight.
+
+  checks:
+    span: block
+    short: "Our broadcast agrees with `torch.cdist` for p = 1, 2 and 3, and approaches its maximum."
+    deep: |
+      `cdist` with $p = \infty$ is Chebyshev. $p = 200$ is already close, the limit from the
+      formula made visible.
+
+  cosine-demo:
+    span: block
+    short: "Our cosine distance agrees with `cosine_similarity`."
+    deep: |
+      Random normal vectors point in unrelated directions, so the mean cosine distance sits
+      near 1 (a cosine near 0).

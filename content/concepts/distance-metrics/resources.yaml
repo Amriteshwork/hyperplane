@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: cornell-cs4780-knn
+  note: "The Minkowski family in one formula, with a quiz on which p gives which distance."
+- id: sklearn-feature-scaling-importance
+  note: "One large-valued feature dominating every distance until standardisation evens things out."
+- id: google-similarity-measures
+  note: "When to choose cosine or the dot product over Euclidean distance, and when they agree."
+- id: sklearn-neighbors-guide
+  note: "The metrics scikit-learn's neighbour search accepts, and which of its algorithms support each."

@@ -24,10 +24,13 @@ def test_families_list_available_and_upcoming_algorithms(client: TestClient) -> 
     assert algorithms["logistic_regression"]["task_types"] == ["binary", "multiclass"]
     assert algorithms["sgd_regressor"]["task_types"] == ["regression"]
     assert algorithms["sgd_classifier"]["task_types"] == ["binary", "multiclass"]
-    upcoming = {a["id"]: a for a in body["items"][1]["algorithms"]}
-    assert upcoming["knn"] == {
-        "id": "knn",
-        "name": "K-Nearest Neighbors",
+    neighbours = {a["id"]: a for a in body["items"][1]["algorithms"]}
+    assert neighbours["knn_regressor"]["task_types"] == ["regression"]
+    assert neighbours["knn_classifier"]["task_types"] == ["binary", "multiclass"]
+    upcoming = {a["id"]: a for a in body["items"][2]["algorithms"]}
+    assert upcoming["gaussian_nb"] == {
+        "id": "gaussian_nb",
+        "name": "Gaussian Naive Bayes",
         "available": False,
         "summary": None,
         "task_types": [],
@@ -78,8 +81,14 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
         "optimisation",
         "evaluation",
         "features",
+        "instance-based",
         "neural-networks",
         "sequence-models",
+    ]
+    assert areas["instance-based"] == [
+        "distance-metrics",
+        "lazy-learning",
+        "curse-of-dimensionality",
     ]
     assert areas["neural-networks"].index("neurons") < areas["neural-networks"].index(
         "backpropagation"
