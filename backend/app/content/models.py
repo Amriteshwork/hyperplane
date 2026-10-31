@@ -141,11 +141,20 @@ class ConceptCode(_Frozen):
     uses: tuple[CodeUse, ...] = ()
 
 
+class Video(_Frozen):
+    """A Manim animation (`scenes/<id>.py`), rendered offline and hosted on YouTube (ADR 0022)."""
+
+    title: str
+    #: Filled in once the render is uploaded; until then the page says the clip is coming.
+    youtube: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{11}$")
+
+
 class ConceptFrontmatter(_Frozen):
     title: str
     summary: str
     area: ConceptArea
     prerequisites: tuple[str, ...] = ()
+    videos: dict[str, Video] = {}
 
 
 class TrackChapter(_Frozen):
@@ -193,14 +202,6 @@ class Track(_Frozen):
     resources: tuple[ResourceLink, ...]
 
 
-class PaperVideo(_Frozen):
-    """A Manim animation (`scenes/<id>.py`), rendered offline and hosted on YouTube (ADR 0022)."""
-
-    title: str
-    #: Filled in once the render is uploaded; until then the page says the clip is coming.
-    youtube: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{11}$")
-
-
 class PaperFrontmatter(_Frozen):
     title: str
     summary: str
@@ -211,7 +212,7 @@ class PaperFrontmatter(_Frozen):
     concepts: tuple[str, ...] = Field(min_length=1)
     #: A guided track that teaches those concepts from scratch.
     track: str | None = None
-    videos: dict[str, PaperVideo] = {}
+    videos: dict[str, Video] = {}
 
 
 class PaperSection(_Frozen):

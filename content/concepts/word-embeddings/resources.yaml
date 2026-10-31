@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-illustrated-word2vec
+  note: "Start here: the sliding window, skip-gram and negative sampling, drawn out one step at a time."
+- id: statquest-word-embedding
+  note: "A network learning word vectors from neighbouring words, with negative sampling near the end."
+- id: d2l-word2vec
+  note: "The skip-gram probability model and its gradients, written out."
+- id: mikolov-word2vec
+  note: "Advanced: the original word2vec paper, with the analogy test."
+- id: mikolov-negative-sampling
+  note: "Advanced: the objective this page trains."

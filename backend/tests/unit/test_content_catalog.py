@@ -340,3 +340,14 @@ def test_paper_source_must_be_a_paper_or_blog(tmp_path: Path, source: str) -> No
 def _edit(folder: Path, old: str, new: str) -> None:
     path = folder / "paper.md"
     path.write_text(path.read_text().replace(old, new))
+
+
+def test_concept_videos_need_a_scene_and_a_directive(tmp_path: Path) -> None:
+    write_mse(tmp_path)
+    folder = tmp_path / "concepts" / "mse"
+    page = folder / "concept.md"
+    page.write_text(
+        page.read_text().replace("---\n", "---\nvideos: {squared-area: {title: Squares}}\n", 1)
+    )
+    with pytest.raises(ContentError, match="not used in the text"):
+        ContentCatalog.load(tmp_path)

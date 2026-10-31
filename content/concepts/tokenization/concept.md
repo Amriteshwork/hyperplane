@@ -3,6 +3,10 @@ title: Tokenization
 summary: A network can't read letters, only numbers. Tokenization chops text into pieces and gives each piece an id, losslessly.
 area: sequence-models
 prerequisites: [numpy-basics]
+videos:
+  text-to-vector:
+    title: From text to tokens to vectors
+    youtube: p7juzwXw2z0
 ---
 
 Every model on this site so far has eaten a table of numbers. Text isn't one. Before a
@@ -35,6 +39,15 @@ tokens that appears most often, and glue it into one new token.* On English, "t"
 early, then "th"+"e", then " the". Common words end up as single tokens and rare words split
 into familiar pieces ("token" + "ization"), so nothing is ever unknown. The code below runs
 a few merges by hand, and you can watch the sequence shrink.
+
+**Try a real tokenizer.** This is `tiktoken`, the tokenizer OpenAI's models use, running in
+your browser. Type anything:
+
+::figure[tokenizer-playground]
+
+Here's the whole journey from text to the numbers a model reads:
+
+::video[text-to-vector]
 
 **Why this matters later.** Tokenization explains many famous LLM quirks. Models are bad at
 counting the r's in "strawberry" because they never see letters, only chunks. Arithmetic

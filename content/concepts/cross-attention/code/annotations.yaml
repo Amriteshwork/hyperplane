@@ -1,0 +1,119 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse scaled dot-product attention (Self-attention) and, for comparison, multi-head attention."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [self-attention, multi-head-attention]
+
+  cross:
+    span: block
+    short: "Multi-head attention with one change: queries from Y, keys and values from X."
+    deep: |
+      $$\text{CrossAttention}(Y, X) = \text{softmax}\!\left(\frac{(YW_Q)(XW_K)^\top}{\sqrt{d_k}}\right) XW_V$$
+
+      $Q$ is $T \times d$ and $K$ is $S \times d$, so $QK^\top$ is $T \times S$: one row of
+      scores per target token, one column per source token. `attention` never needed the
+      two to be the same length. Self-attention just always passed it the same sequence
+      twice.
+    concepts: [self-attention, multi-head-attention, matrix-multiplication]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  shapes:
+    span: block
+    short: "4 target tokens read 6 source tokens: the weights are 4 × 6, the output has the target's shape."
+    deep: |
+      The output is $T \times d$ whatever $S$ is. That's what lets a decoder block keep
+      the same shape in and out, and so be stacked, while reading a source of any length.
+
+  self:
+    span: block
+    short: "Pass the same sequence as Y and X: the result is exactly multi-head attention."
+    deep: |
+      Self-attention is the special case of cross-attention where a sequence attends to
+      itself. One function covers both.
+
+  any-length:
+    span: block
+    short: "Make the source 5 tokens longer: the weights get 5 more columns, the output stays the same size."
+    deep: |
+      A translation model has to cope with a 5-word sentence and a 50-word one. Here the
+      source length only changes how many things each query chooses between.
+
+  align:
+    span: block
+    short: "A hand-built translation: le chat noir dort. 'noir' reads 'black', which came before 'cat': the order is swapped."
+    deep: |
+      Each source word is a one-hot "meaning", and each French word's query asks for the
+      meaning it translates. $W_Q = 10I$ makes the questions sharp, so each softmax puts
+      98% on one word.
+
+      In a trained model nobody writes these queries. They're learnt, because reading the
+      right English word is the only way to predict the right French one. Plot the weights
+      of a trained translator and you see this pattern: mostly diagonal, with crossings
+      where the word order differs.
+    concepts: [softmax]
+
+  one-by-one:
+    span: block
+    short: "Compute each target token's read on its own: same answer. Nothing in cross-attention lets target tokens see each other."
+    deep: |
+      Each row of the output depends on one query and the whole source, nothing else.
+      In a decoder, the tokens talk to each other in the **self**-attention layer, which
+      has the causal mask. Cross-attention needs no mask of its own.
+
+pytorch:
+  reuse:
+    short: "Reuse the batched multi-head attention (Multi-head attention), to compare against."
+    deep: |
+      Download with dependencies to get every file this one builds on.
+    concepts: [multi-head-attention]
+
+  cross:
+    span: block
+    short: "The batched multi-head code, with keys and values reshaped to the source's length S instead of T."
+    deep: |
+      `split` now takes a length, because Q has $T$ rows and K, V have $S$. The scores
+      come out as `(…, heads, T, S)`. Everything after that, the mask, the softmax and the
+      weighted sum, is unchanged from multi-head attention.
+    concepts: [multi-head-attention]
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  builtin:
+    span: block
+    short: "Same weights in nn.MultiheadAttention, called as layer(query=Y, key=X, value=X): identical output."
+    deep: |
+      PyTorch's layer has always taken query, key and value as three separate inputs.
+      Passing the same tensor three times is self-attention; passing a different key and
+      value is cross-attention. The transformer decoder in `torch.nn` does exactly this.
+
+  self:
+    span: block
+    short: "And with X as both inputs, it's multi_head_attention again."
+    deep: |
+      Same check as in the NumPy file, on the batched code.
+
+  padding:
+    span: block
+    short: "Add 3 padding rows to the source and mask them out: the output is identical, and padding gets weight exactly 0."
+    deep: |
+      Batched sentences have different lengths, so short ones are padded. A mask of shape
+      $(T, S)$ that is `False` in the padded columns sends their scores to $-\infty$, and
+      their softmax weight to 0. Every row of the mask is the same: padding is hidden from
+      every query.
+    concepts: [causal-masking]
+
+  batch:
+    span: block
+    short: "Three sentence pairs at once: each target sentence reads only its own source."
+    deep: |
+      The batch dimension rides along, as in multi-head attention: sentence $i$'s queries
+      only meet sentence $i$'s keys.

@@ -65,4 +65,7 @@ bigger version of this model on a large slice of the internet gives a model that
 text. **Fine-tuning** on conversations and learning from human (or AI) feedback turns
 "continue this text" into "answer this helpfully". The architecture barely changes. There
 are refinements (RoPE, RMSNorm, other activation functions, more efficient attention), but
-the block on this page is still recognisably the block inside today's models.
+the block on this page is still recognisably the block inside today's models. The
+[From GPT to chat model](/tracks/gpt-to-chat) track builds each step of that road:
+[generating text](/concepts/text-generation), [training at scale](/concepts/llm-training),
+[fine-tuning for chat](/concepts/chat-fine-tuning) and [RLHF](/concepts/rlhf).

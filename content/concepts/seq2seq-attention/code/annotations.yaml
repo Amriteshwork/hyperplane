@@ -1,0 +1,100 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: The LSTM from the page before, and softmax for the weights.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - lstm
+    - softmax
+  additive:
+    span: block
+    short: Score every encoder state against the decoder's state, softmax, blend.
+    deep: |
+      $$e_i = v^\top \tanh(W_s s + W_h h_i), \quad \alpha = \text{softmax}(e), \quad c = \sum_i \alpha_i h_i$$
+    concepts:
+    - softmax
+    - cross-attention
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  encode:
+    span: block
+    short: 'The encoder gives one state per word: a 4 × d matrix for 4 words, 40 × d for 40.'
+    deep: '`lstm_forward` returns all the hidden states first. A plain translator keeps only the last
+      row of this matrix.'
+  bottleneck:
+    span: block
+    short: Without attention the decoder gets only the last row, the same size for any input.
+    deep: This is the problem in one assert. However long the input, the decoder receives the same number
+      of numbers, so longer inputs must share them.
+  look-back:
+    span: block
+    short: With attention the weights cover all 40 words, and the context blends all 40 states.
+    deep: The context is the same size as a single state, but it was built from all of them, and it is
+      rebuilt for each output word.
+  recomputed:
+    span: block
+    short: Each new decoder state asks a new question, so it reads the same memory differently.
+    deep: The memory stays fixed while the question changes. That is what lets each output word read a
+      different part of the input.
+pytorch:
+  reuse:
+    short: The food words from Language modeling.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - language-modeling
+  data:
+    span: block
+    short: 'Shopping lists: word for word, same order. The only challenge is remembering them.'
+    deep: |
+      Each batch has one length, so no padding is needed. That matters: padding after the
+      last word would run through the encoder and blur the plain model's final state, which
+      would make the comparison unfair.
+  model:
+    span: block
+    short: Encoder LSTM, decoder LSTM. With attention on, the decoder also takes a context vector.
+    deep: '`wide` doubles the decoder input and read-out, because attention adds a context vector to each.
+      The extra weights are small next to the size of the gap in results.'
+    concepts:
+    - lstm
+  additive:
+    span: block
+    short: 'The formula from the page, batched: one score per English word, per sentence.'
+    deep: '`W_s(s)[:, None]` adds a dimension so one decoder state broadcasts over every encoder state.
+      This is the same score as in the NumPy file, for a batch.'
+    concepts:
+    - cross-attention
+  forward:
+    span: block
+    short: Teacher forcing in training; the model's own guess at test time.
+    deep: |
+      The plain model only ever receives `s, c` from the encoder's last step. `H`, the
+      full list of states, is used only when `attend` is on. That's the whole difference.
+    concepts:
+    - encoder-decoder
+  fit:
+    span: block
+    short: Same seed, data and steps for both, with lengths from 1 to 12.
+    deep: |
+      Gradient clipping stops one exploding gradient from wrecking the run, a real risk
+      with recurrent networks.
+    concepts:
+    - recurrent-neural-networks
+    - adam-optimizer
+  score:
+    span: block
+    short: Unseen lists, with no teacher, and every word must be right.
+    deep: One wrong word fails the whole list. It is a harsh test, and the one that exposes the wall.
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  compare:
+    span: block
+    short: 'The table behind the plot: exact translations at each length.'
+    deep: Both models are perfect on short lists, so any later gap comes from memory and not from the
+      ability to translate a word.
+  alignment:
+    span: block
+    short: The weights behind the figure. The diagonal is an alignment nobody taught.
+    deep: Each row is one German word and each column one English word. The largest value in each row
+      sits on the diagonal because the list keeps its order, and nothing in the loss asks for that directly.

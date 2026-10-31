@@ -1,0 +1,9 @@
+type: video
+title: "Reinforcement Learning from Human Feedback: From Zero to chatGPT"
+url: https://www.youtube.com/watch?v=2MBJOuVq380
+author: "Hugging Face"
+level: intermediate
+duration_min: 60
+why: "A talk that starts from the basics of reinforcement learning and ends at chat models."
+source: curated
+checked: 2026-10-31

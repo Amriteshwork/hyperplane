@@ -63,7 +63,7 @@ which is chance. The LSTM picks it in most of them: its gates learnt to hold the
 
 **Where LSTMs went.** Through the 2010s, stacked LSTMs ran machine translation, speech
 recognition and handwriting recognition. Encoder–decoder LSTMs squeezed a whole sentence
-into one vector, which was a bottleneck. **Attention** was first added to fix it, letting the
+into one vector, which was a bottleneck. [Attention](/concepts/seq2seq-attention) was first added to fix it, letting the
 decoder look back at every encoder state. Transformers then kept the attention and dropped
 the recurrence altogether, which removed the step-by-step loop. LSTMs remain a good choice
 for small streaming problems, like sensor data or audio on a device, where one step at a

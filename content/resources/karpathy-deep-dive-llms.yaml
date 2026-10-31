@@ -1,0 +1,9 @@
+type: video
+title: "Deep Dive into LLMs like ChatGPT"
+url: https://www.youtube.com/watch?v=7xTGNNLPyMI
+author: "Andrej Karpathy"
+level: beginner
+duration_min: 211
+why: "The whole journey for a general audience, from raw text through base models to the assistant you talk to."
+source: curated
+checked: 2026-10-31

@@ -115,6 +115,12 @@ class ContentCatalog:
             )
             for folder in _folders(root / "concepts")
         ]
+        for concept in concepts:
+            _check_videos(
+                root / "concepts" / concept.id,
+                concept.meta.videos.keys(),
+                set(_VIDEO.findall(concept.body)),
+            )
         tracks = [
             Track(
                 id=folder.name,

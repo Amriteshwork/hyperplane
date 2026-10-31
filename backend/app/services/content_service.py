@@ -41,11 +41,11 @@ from app.schemas.content import (
     PaperSectionOut,
     PaperSourceOut,
     PaperSummaryOut,
-    PaperVideoOut,
     ResourceOut,
     TrackChapterOut,
     TrackOut,
     TrackSummaryOut,
+    VideoOut,
 )
 
 #: Placeholder data for showing a training template outside a run.
@@ -168,6 +168,10 @@ class ContentService:
             resources=_resources(concept.resources),
             algorithms=self._algorithms_using(concept_id),
             code=[self._concept_code(concept.id, c) for c in concept.code],
+            videos=[
+                VideoOut(id=name, title=v.title, youtube_id=v.youtube)
+                for name, v in concept.meta.videos.items()
+            ],
         )
 
     def get_concept_code_bundle(self, concept_id: str, library: CodeLibrary) -> CodeBundle:
@@ -275,7 +279,7 @@ class ContentService:
             intro=paper.intro,
             sections=[PaperSectionOut(id=s.id, title=s.title, body=s.body) for s in paper.sections],
             videos=[
-                PaperVideoOut(id=name, title=v.title, youtube_id=v.youtube)
+                VideoOut(id=name, title=v.title, youtube_id=v.youtube)
                 for name, v in paper.meta.videos.items()
             ],
             # In index order, so prerequisites come before what builds on them.

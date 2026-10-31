@@ -1,0 +1,8 @@
+type: paper
+title: "Neural Machine Translation by Jointly Learning to Align and Translate"
+url: https://arxiv.org/abs/1409.0473
+author: Bahdanau, Cho & Bengio (2014)
+level: advanced
+why: "The paper that introduced attention: a translation model's decoder looks back at every source word instead of one fixed-length summary. Section 3.1 and Figure 3 are the core."
+source: curated
+checked: 2026-10-28

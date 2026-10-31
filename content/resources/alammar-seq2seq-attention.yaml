@@ -1,0 +1,8 @@
+type: blog
+title: "Visualizing A Neural Machine Translation Model (Mechanics of Seq2seq Models With Attention)"
+url: https://jalammar.github.io/visualizing-neural-machine-translation-mechanics-of-seq2seq-models-with-attention/
+author: Jay Alammar
+level: beginner
+why: "Animated walkthrough of encoder-decoder translation: the fixed-length context vector as a bottleneck, then attention scoring every encoder state at each decoding step."
+source: curated
+checked: 2026-10-28

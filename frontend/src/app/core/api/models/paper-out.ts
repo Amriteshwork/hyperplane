@@ -4,9 +4,9 @@
 import { ConceptSummaryOut } from '../models/concept-summary-out';
 import { PaperSectionOut } from '../models/paper-section-out';
 import { PaperSourceOut } from '../models/paper-source-out';
-import { PaperVideoOut } from '../models/paper-video-out';
 import { ResourceOut } from '../models/resource-out';
 import { TrackSummaryOut } from '../models/track-summary-out';
+import { VideoOut } from '../models/video-out';
 
 /**
  * A section-by-section, plain-words walkthrough of one paper or blog post.
@@ -21,5 +21,5 @@ export interface PaperOut {
   summary: string;
   title: string;
   track: TrackSummaryOut | null;
-  videos: Array<PaperVideoOut>;
+  videos: Array<VideoOut>;
 }

@@ -44,7 +44,8 @@ $$p_k \propto \exp(z_k / \tau).$$
 $\tau \to 0$ always picks the most likely token: safe, repetitive, often stuck in a loop
 ("eats eats eats"). $\tau = 1$ samples the model's honest beliefs. $\tau > 1$ flattens
 everything toward uniform: creative, then nonsense. Your chatbot's "creativity" slider is
-this one number.
+this one number. [Text generation](/concepts/text-generation) measures what it costs, and
+adds top-k, top-p and beam search.
 
 **The bigram's blind spot.** The training text for this chain is generated:
 *"zoe likes jam, so zoe eats jam."*, with names and foods chosen at random. After "so ",

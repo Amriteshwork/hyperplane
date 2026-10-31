@@ -29,6 +29,31 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
     import('./fill-in-the-blank-figure').then((m) => m.FillInTheBlankFigure),
   'bert-input': () => import('./bert-input-figure').then((m) => m.BertInputFigure),
   'bert-heads': () => import('./bert-heads-figure').then((m) => m.BertHeadsFigure),
+  'cross-attention': () => import('./cross-attention-figure').then((m) => m.CrossAttentionFigure),
+  'seq2seq-steps': () => import('./seq2seq-steps-figure').then((m) => m.Seq2seqStepsFigure),
+  'tokenizer-playground': () =>
+    import('./tokenizer-playground-figure').then((m) => m.TokenizerPlaygroundFigure),
+  'token-to-vector': () => import('./token-to-vector-figure').then((m) => m.TokenToVectorFigure),
+  'sampling-explorer': () =>
+    import('./sampling-explorer-figure').then((m) => m.SamplingExplorerFigure),
+  'temperature-tradeoff': () =>
+    import('./temperature-tradeoff-figure').then((m) => m.TemperatureTradeoffFigure),
+  'beam-search-tree': () => import('./beam-search-tree-figure').then((m) => m.BeamSearchTreeFigure),
+  'kv-cache': () => import('./kv-cache-figure').then((m) => m.KvCacheFigure),
+  'bottleneck-curve': () =>
+    import('./bottleneck-curve-figure').then((m) => m.BottleneckCurveFigure),
+  'attention-lookback': () =>
+    import('./attention-lookback-figure').then((m) => m.AttentionLookbackFigure),
+  'skipgram-trainer': () =>
+    import('./skipgram-trainer-figure').then((m) => m.SkipgramTrainerFigure),
+  'word-map': () => import('./word-map-figure').then((m) => m.WordMapFigure),
+  'lr-warmup': () => import('./lr-warmup-figure').then((m) => m.LrWarmupFigure),
+  'gradient-clip': () => import('./gradient-clip-figure').then((m) => m.GradientClipFigure),
+  'dropout-mask': () => import('./dropout-mask-figure').then((m) => m.DropoutMaskFigure),
+  'chat-labels': () => import('./chat-labels-figure').then((m) => m.ChatLabelsFigure),
+  'base-vs-chat': () => import('./base-vs-chat-figure').then((m) => m.BaseVsChatFigure),
+  'reward-votes': () => import('./reward-votes-figure').then((m) => m.RewardVotesFigure),
+  'rlhf-leash': () => import('./rlhf-leash-figure').then((m) => m.RlhfLeashFigure),
 };
 
 export const FIGURES = new InjectionToken<Readonly<Record<string, FigureLoader>>>('FIGURES', {

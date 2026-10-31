@@ -1,0 +1,9 @@
+type: video
+title: "Let's reproduce GPT-2 (124M)"
+url: https://www.youtube.com/watch?v=l8pRSuU81PU
+author: "Andrej Karpathy"
+level: advanced
+duration_min: 240
+why: "A real training run built from scratch: weight tying, warmup with cosine decay and gradient clipping, in working code."
+source: curated
+checked: 2026-10-31

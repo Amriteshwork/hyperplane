@@ -1,6 +1,25 @@
 import { Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { AttentionLookbackFigure } from './attention-lookback-figure';
+import { BaseVsChatFigure } from './base-vs-chat-figure';
+import { BeamSearchTreeFigure } from './beam-search-tree-figure';
+import { BottleneckCurveFigure } from './bottleneck-curve-figure';
+import { ChatLabelsFigure } from './chat-labels-figure';
+import { CrossAttentionFigure } from './cross-attention-figure';
+import { DropoutMaskFigure } from './dropout-mask-figure';
+import { GradientClipFigure } from './gradient-clip-figure';
+import { KvCacheFigure } from './kv-cache-figure';
+import { LrWarmupFigure } from './lr-warmup-figure';
+import { RewardVotesFigure } from './reward-votes-figure';
+import { RlhfLeashFigure } from './rlhf-leash-figure';
+import { SamplingExplorerFigure } from './sampling-explorer-figure';
+import { Seq2seqStepsFigure } from './seq2seq-steps-figure';
+import { SkipgramTrainerFigure } from './skipgram-trainer-figure';
+import { TemperatureTradeoffFigure } from './temperature-tradeoff-figure';
+import { TokenToVectorFigure } from './token-to-vector-figure';
+import { TokenizerPlaygroundFigure } from './tokenizer-playground-figure';
+import { WordMapFigure } from './word-map-figure';
 import { AttentionHeatmapFigure } from './attention-heatmap-figure';
 import { BackpropStepsFigure } from './backprop-steps-figure';
 import { BertHeadsFigure } from './bert-heads-figure';
@@ -60,6 +79,191 @@ describe('figures', () => {
   it('registers a loader for every figure that resolves to a component', async () => {
     for (const load of Object.values(DEFAULT_FIGURES))
       expect(typeof (await load())).toBe('function');
+  });
+
+  it('tokenizer playground shows real tokens and refuses nothing', async () => {
+    const [fixture, el] = await mount(TokenizerPlaygroundFigure);
+    await vi.waitFor(async () => {
+      await fixture.whenStable();
+      expect(el.querySelector('[data-testid="tokens"]')).not.toBeNull();
+    });
+    button(el, 'Numbers').click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('tokens');
+    button(el, 'Show ids').click();
+    await fixture.whenStable();
+    const chips = [...el.querySelectorAll('[data-testid="tokens"] span')].map((c) => c.textContent);
+    expect(chips.every((c) => /^\d+$/.test(c?.trim() ?? ''))).toBe(true);
+  });
+
+  it('token to vector shows one row for "bank" in both sentences', async () => {
+    const [fixture, el] = await mount(TokenToVectorFigure);
+    const row = () => el.querySelector('p.mt-3')?.textContent ?? '';
+    const river = row();
+    button(el, 'money').click();
+    await fixture.whenStable();
+    expect(row()).toBe(river);
+  });
+
+  it('sampling explorer: low temperature only draws the favourite', async () => {
+    const [fixture, el] = await mount(SamplingExplorerFigure);
+    slide(el, 'Temperature', 0.05);
+    await fixture.whenStable();
+    button(el, 'Draw 20').click();
+    await fixture.whenStable();
+    expect(el.querySelector('p.font-mono')?.textContent?.trim()).toBe(
+      Array(20).fill('mat').join(' '),
+    );
+  });
+
+  it('temperature trade-off reports the measured runs', async () => {
+    const [fixture, el] = await mount(TemperatureTradeoffFigure);
+    button(el, 'τ = 2.5').click();
+    await fixture.whenStable();
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('0% of sentences');
+  });
+
+  it('beam search finds the better sentence only at width 2', async () => {
+    const [fixture, el] = await mount(BeamSearchTreeFigure);
+    const finish = async () => {
+      button(el, 'Next step').click();
+      await fixture.whenStable();
+      button(el, 'Next step').click();
+      await fixture.whenStable();
+      return el.querySelector('svg')?.getAttribute('aria-label') ?? '';
+    };
+    expect(await finish()).toContain('Best: "the cat" at 0.20');
+    button(el, 'Width 2').click();
+    await fixture.whenStable();
+    expect(await finish()).toContain('Best: "a cat" at 0.36');
+  });
+
+  it('the KV cache turns a whole grid into one row', async () => {
+    const [fixture, el] = await mount(KvCacheFigure);
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('computes 64');
+    button(el, 'With the KV cache').click();
+    await fixture.whenStable();
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('computes 8');
+  });
+
+  it('bottleneck curve shows the gap at 12 words', async () => {
+    const [fixture, el] = await mount(BottleneckCurveFigure);
+    slide(el, 'List length', 8);
+    await fixture.whenStable();
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toBe(
+      'At 12 words: one vector 0%, with attention 70%.',
+    );
+  });
+
+  it('look-back follows the diagonal', async () => {
+    const [fixture, el] = await mount(AttentionLookbackFigure);
+    button(el, 'reis').click();
+    await fixture.whenStable();
+    expect(el.querySelector('[role="img"]')?.getAttribute('aria-label')).toContain(
+      '"reis" reads "rice" most, at 63%',
+    );
+  });
+
+  it('cross-attention shows which English a German word reads', async () => {
+    const [fixture, el] = await mount(CrossAttentionFigure);
+    button(el, 'pflaumen').click();
+    await fixture.whenStable();
+    expect(el.querySelector('table')?.getAttribute('aria-label')).toContain('reads "plums"');
+  });
+
+  it('translation steps: encoder first, then three steps for each word', async () => {
+    const [fixture, el] = await mount(Seq2seqStepsFigure);
+    expect(el.textContent).toContain('Step 1 of 28');
+    for (let i = 0; i < 3; i++) {
+      button(el, 'Next step').click();
+      await fixture.whenStable();
+    }
+    expect(el.textContent).toContain('1 of 9 words');
+  });
+
+  it('skip-gram trains live and separates the groups', async () => {
+    const run = manualFrames();
+    const [fixture, el] = await mount(SkipgramTrainerFigure);
+    const label = () => el.querySelector('svg')?.getAttribute('aria-label') ?? '';
+    const separation = () => Number(label().split('separation ')[1]);
+    const before = separation();
+    button(el, 'Train').click();
+    for (let i = 0; i < 200; i++) run();
+    await fixture.whenStable();
+    expect(separation()).toBeGreaterThan(before + 0.2);
+    fixture.destroy();
+  });
+
+  it('word map solves king − man + woman on real vectors', async () => {
+    const [, el] = await mount(WordMapFigure);
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('is closest to queen');
+  });
+
+  it('warmup slider draws a schedule and lists the measured runs', async () => {
+    const [fixture, el] = await mount(LrWarmupFigure);
+    slide(el, 'Warmup steps', 0);
+    await fixture.whenStable();
+    expect(el.textContent).toContain('off (constant)');
+    expect(el.textContent).toContain('1.58');
+    expect(el.textContent).toContain('0.31');
+  });
+
+  it('clipping only touches gradients over the limit', async () => {
+    const [fixture, el] = await mount(GradientClipFigure);
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('becomes length 3.0');
+    slide(el, 'Gradient length', 2);
+    await fixture.whenStable();
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('becomes length 2.0');
+    expect(el.textContent).toContain("it's not touched");
+  });
+
+  it('dropout: rate 0 silences nothing, and each batch differs', async () => {
+    const [fixture, el] = await mount(DropoutMaskFigure);
+    const label = () => el.querySelector('svg')?.getAttribute('aria-label') ?? '';
+    slide(el, 'Dropout rate', 0);
+    await fixture.whenStable();
+    expect(label()).toContain('0 of 16');
+  });
+
+  it('chat labels: only the assistant counts', async () => {
+    const [fixture, el] = await mount(ChatLabelsFigure);
+    expect(el.textContent).toContain('This counts');
+    button(el, 'what').click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('costs nothing');
+  });
+
+  it('base vs chat shows the measured rates', async () => {
+    const [fixture, el] = await mount(BaseVsChatFigure);
+    expect(el.textContent).toContain('92%');
+    button(el, 'Base model').click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('never stops');
+  });
+
+  it('votes teach the reward model, and it scores a reply no one rated', async () => {
+    const [fixture, el] = await mount(RewardVotesFigure);
+    const unrated = 'JAM! thanks thanks for asking, asking, asking!';
+    const score = () =>
+      [...el.querySelectorAll('li')].find((l) => l.textContent?.includes(unrated))?.textContent ??
+      '';
+    expect(score()).toContain('+0.0');
+    for (let i = 0; i < 6; i++) {
+      el.querySelector<HTMLButtonElement>('[role="group"] button')?.click();
+      await fixture.whenStable();
+    }
+    expect(el.textContent).toContain('6 votes');
+    expect(score()).not.toContain('+0.0');
+  });
+
+  it('a loose leash scores higher and is worse', async () => {
+    const [fixture, el] = await mount(RlhfLeashFigure);
+    const reward = () => Number(/reward score: ([\d.]+)/.exec(el.textContent ?? '')?.[1]);
+    const tight = (slide(el, 'Leash', 50), await fixture.whenStable(), reward());
+    slide(el, 'Leash', 100);
+    await fixture.whenStable();
+    expect(reward()).toBeGreaterThan(tight);
+    expect(el.textContent).toContain('Worse than the base model');
   });
 
   it('XOR network outputs 1 only for mixed inputs', async () => {

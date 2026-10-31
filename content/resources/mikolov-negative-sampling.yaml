@@ -1,0 +1,8 @@
+type: paper
+title: "Distributed Representations of Words and Phrases and their Compositionality"
+url: https://arxiv.org/abs/1310.4546
+author: "Mikolov, Sutskever, Chen, Corrado & Dean (2013)"
+level: advanced
+why: "Where negative sampling comes from: the objective this page trains."
+source: curated
+checked: 2026-10-31

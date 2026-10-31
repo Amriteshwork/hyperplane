@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-seq2seq-attention
+  note: "Start here: the context vector and then attention, animated step by step."
+- id: statquest-attention
+  note: "Attention added to an encoder-decoder LSTM and worked through with numbers."
+- id: statquest-seq2seq
+  note: "The plain encoder-decoder LSTM this page starts from, with no attention yet."
+- id: d2l-bahdanau-attention
+  note: "The same additive attention in PyTorch, trained on English to French, with its weights plotted."
+- id: bahdanau-align-and-translate
+  note: "The paper itself. Section 3.1 is this page's formula; its results plot is this page's curve at full scale."

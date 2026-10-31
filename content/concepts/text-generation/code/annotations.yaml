@@ -1,0 +1,112 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: The bigram and corpus from Language modeling, softmax, and the tokenizer.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - language-modeling
+    - softmax
+    - tokenization
+  filter:
+    span: block
+    short: 'All three knobs in one function: reshape with temperature, then cut the tail.'
+    deep: |
+      $$p_k \propto \exp(z_k / \tau)$$
+
+      Top-p keeps a token if the mass of the tokens above it hasn't reached $p$ yet, so the
+      token that crosses the line is kept too. Dividing by the sum at the end makes what's
+      left a proper distribution again.
+    concepts:
+    - softmax
+    - probability
+  beam:
+    span: block
+    short: Grow every kept sequence by every token, then keep the best `width` overall.
+    deep: |
+      Scores are summed logs, because multiplying many small probabilities underflows.
+      With `width=1` this is exactly greedy.
+    concepts:
+    - logarithms-exponentials
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  temperature:
+    span: block
+    short: τ = 1 changes nothing, τ → 0 is greedy, and τ → ∞ is uniform.
+    deep: Dividing scores by τ multiplies the gaps between them by 1/τ, and the softmax turns gaps into
+      ratios. That is why a small τ exaggerates the leader and a large one erases its lead.
+  top-k-p:
+    span: block
+    short: Top-k always keeps k. Top-p keeps as many as it takes, so a sure model keeps one.
+    deep: 'The last assert is why top-p is popular: the same setting keeps three tokens when the model
+      is unsure and one when it is sure. Top-k cannot adapt like that.'
+  greedy-trap:
+    span: block
+    short: A tiny tree where the best first word leads to the worse sentence.
+    deep: |
+      Greedy takes "the" (0.5) and then "cat" (0.4): $0.5 \times 0.4 = 0.20$. Beam also keeps
+      "a" (0.4), and "a cat" scores $0.4 \times 0.9 = 0.36$.
+  real-model:
+    span: block
+    short: On a real bigram, a beam of 5 finds a sequence at least as likely as greedy's.
+    deep: A beam only guarantees the best it found among what it kept. Here it does better than greedy,
+      but neither is guaranteed the best of all possible sequences.
+pytorch:
+  reuse:
+    short: The tiny GPT, its corpus and tokenizer, and layer norm for the cached step.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - transformer
+    - language-modeling
+    - tokenization
+    - layer-normalization
+  filter:
+    span: block
+    short: The same three knobs, batched. `scatter` and `gather` map the cuts back from sorted order.
+    deep: '`order.argsort(-1)` is the inverse of the sort, so it maps a keep mask computed in sorted order
+      back to token order.'
+    concepts:
+    - softmax
+  generate:
+    span: block
+    short: 'The loop: predict, pick, append. Whichever knobs you pass decide the pick.'
+    deep: '`multinomial` draws one token per row. Nothing is learnt here, so `no_grad` saves the memory
+      that gradients would use.'
+    concepts:
+    - language-modeling
+  cache:
+    span: block
+    short: Only the new token computes Q, K and V. Old keys and values come from the cache.
+    deep: |
+      Earlier tokens can't see later ones, so their keys and values never change. Each
+      block appends one $K$ and one $V$ per head, then compares one query against all of
+      them. There's no mask, because future tokens aren't in the cache to peek at.
+    concepts:
+    - self-attention
+    - causal-masking
+    - multi-head-attention
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  train:
+    span: block
+    short: The same training as the Transformer page, a little shorter.
+    deep: Fewer steps than the Transformer page, because this page studies what happens after training.
+    concepts:
+    - transformer
+  tradeoff:
+    span: block
+    short: 'Measure it: at each temperature, how many sentences are valid and how many differ?'
+    deep: |
+      The figure above plots this table. Sentences start after a fresh ". ", so each is a
+      full attempt, and `is_valid` checks the name and food are real and copied correctly.
+  cache-check:
+    span: block
+    short: The cached path must give the same logits as a full forward pass.
+    deep: Agreement to rounding error proves the cache changes the cost and not the answer. It only holds
+      because the causal mask stops old tokens from seeing new ones.
+  cache-work:
+    span: block
+    short: 'Count attention scores: every token against every other, or only the new row.'
+    deep: 'A count is steadier than a stopwatch, and it is what grows with length: the tiny model is too
+      small for the saving to show clearly in seconds.'

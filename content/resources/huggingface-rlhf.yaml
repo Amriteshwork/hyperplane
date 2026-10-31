@@ -1,0 +1,8 @@
+type: blog
+title: "Illustrating Reinforcement Learning from Human Feedback (RLHF)"
+url: https://huggingface.co/blog/rlhf
+author: "Hugging Face"
+level: beginner
+why: "The whole RLHF pipeline drawn out, from human rankings to an updated model."
+source: curated
+checked: 2026-10-31

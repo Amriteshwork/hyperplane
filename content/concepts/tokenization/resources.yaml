@@ -3,6 +3,8 @@
   note: "Start here: word, character and subword tokenizers side by side, and why subwords win."
 - id: tiktokenizer
   note: "Paste a sentence, some code, or a long number and watch how a real GPT tokenizer cuts it up."
+- id: tiktoken
+  note: "The library behind this page's figure: a few lines of Python give you the same tokens and ids."
 - id: 3blue1brown-transformers
   note: "The first minutes show where tokens enter a GPT and what happens to them next."
 - id: huggingface-bpe

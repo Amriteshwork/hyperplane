@@ -1,8 +1,8 @@
 ---
 title: Recurrent networks, from scratch
-summary: From a NumPy array to an LSTM. Every idea a recurrent network needs, then a plain RNN caught forgetting and the gated LSTM that remembers.
+summary: From a NumPy array to an LSTM translator with attention. A plain RNN caught forgetting, a gated LSTM that remembers, then the wall that made attention necessary.
 order: 2
-goal: lstm
+goal: seq2seq-attention
 chapters:
   - title: The maths you need
     summary: Arrays, vectors, matrix products, slopes and probabilities. Skim whatever you already know; everything later leans on these.
@@ -22,6 +22,12 @@ chapters:
   - title: Gated memory
     summary: Add a memory cell and gates that decide what to keep, write and show, and the name finally survives.
     concepts: [lstm]
+  - title: Attention
+    summary: A token asks a question, every token offers an answer. Just enough attention to look back across two sentences.
+    concepts: [self-attention, causal-masking, multi-head-attention, cross-attention]
+  - title: The wall, and the way through
+    summary: Two LSTMs translate through one vector until long inputs break them. Let the decoder look back, and the wall disappears.
+    concepts: [seq2seq-attention]
 ---
 
 Before transformers, language was modelled by **recurrent neural networks**. An RNN reads
@@ -33,9 +39,15 @@ attention was invented.
 This track lays out **everything a recurrent network needs, in order**, from "what is a
 NumPy array?" to an RNN with hand-written backpropagation through time. Then it puts the RNN
 to a test: *"zoe likes jam, so "*, who eats? The RNN learns the sentence pattern quickly but
-loses the name on the way, and the page shows why: vanishing gradients. The last chapter
+loses the name on the way, and the page shows why: vanishing gradients. The next chapter
 adds the **LSTM**'s gated memory cell, trains it beside the RNN on the same batches, and it
 remembers.
+
+Then comes the problem an LSTM can't solve. Two LSTMs can translate, but only by squeezing the
+whole sentence through one vector. The last chapters measure that wall and break through it with
+**attention**, the idea that went on to replace recurrence altogether:
+
+::figure[bottleneck-curve]
 
 **How to use it**
 
@@ -44,5 +56,5 @@ remembers.
 - **Run the code.** Every page has a from-scratch implementation in NumPy and another in
   PyTorch, each checking its own result. "Download with dependencies" gives you a folder
   that runs on its own.
-- **Then read the transformer track.** It solves the same test a different way: instead of
-  carrying the name along, attention looks straight back at it.
+- **Then read the transformer track.** It takes the last chapter's idea all the way: if attention
+  can look straight back at anything, the recurrence can go.

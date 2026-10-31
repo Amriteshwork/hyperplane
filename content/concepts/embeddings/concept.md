@@ -38,7 +38,14 @@ $$\vec{\text{king}} - \vec{\text{man}} + \vec{\text{woman}} \;\approx\; \vec{\te
 
 The step from "man" to "woman" points roughly the same way as the step from "king" to
 "queen". The code builds a tiny hand-made embedding where you can see this exactly. In real
-models the directions are messier, but the idea holds.
+models the directions are messier, but the idea holds. [Word embeddings](/concepts/word-embeddings)
+trains vectors like these from raw text, and lets you try the arithmetic on real ones.
+
+**Look inside a real model.** These are GPT-2's own token vectors, the actual numbers it
+starts from, after its own tokenizer has cut up the sentence. Compare "bank" in the two bank
+sentences:
+
+::figure[token-to-vector]
 
 **Where this goes next.** In a transformer, the embedding of "bank" is the same whether the
 sentence is about rivers or money: the table has one row per token, so it ignores context.

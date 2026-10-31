@@ -3,7 +3,7 @@ import { Injectable, computed, inject, resource, signal } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { getConcept } from '../../core/api/fn/learn/get-concept';
 import { errorMessage, isNotFound } from '../../core/http/http-errors';
-import { splitPapers, toLearningResource } from '../../shared/learn/mappers';
+import { splitPapers, toLearningResource, toVideoClips } from '../../shared/learn/mappers';
 
 @Injectable()
 export class ConceptStore {
@@ -20,6 +20,8 @@ export class ConceptStore {
   private readonly split = computed(() =>
     splitPapers(this.concept()?.resources.map(toLearningResource) ?? []),
   );
+  /** `::video[name]` lookups for the page's MarkdownView. */
+  readonly videos = computed(() => toVideoClips(this.concept()?.videos ?? []));
   readonly resources = computed(() => this.split().others);
   readonly papers = computed(() => this.split().papers);
   readonly notFound = computed(() => isNotFound(this.detail.error()));

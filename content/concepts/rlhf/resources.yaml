@@ -1,0 +1,15 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: huggingface-rlhf
+  note: "Start here: the pipeline on this page, drawn out."
+- id: huggingface-rlhf-talk
+  note: "From the basics of reinforcement learning up to chat models."
+- id: karpathy-deep-dive-llms
+  note: "The reinforcement learning stage, explained for a general audience, with the reward model and its failure modes."
+- id: lambert-rlhf-book
+  note: "A free book on the field, for when you want the details."
+- id: ouyang-instructgpt
+  note: "The paper behind this page: rankings, a reward model and PPO, on GPT-3."
+- id: christiano-human-preferences
+  note: "Advanced: where learning a reward from comparisons comes from."
+- id: gao-reward-overoptimization
+  note: "Advanced: the Goodhart curve on this page, measured on real models."

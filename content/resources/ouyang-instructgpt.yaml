@@ -1,0 +1,8 @@
+type: paper
+title: "Training language models to follow instructions with human feedback"
+url: https://arxiv.org/abs/2203.02155
+author: "Ouyang et al. (2022)"
+level: advanced
+why: "InstructGPT: the three steps from a base model to an assistant that this track builds."
+source: curated
+checked: 2026-10-31

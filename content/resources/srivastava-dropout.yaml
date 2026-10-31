@@ -1,0 +1,8 @@
+type: paper
+title: "Dropout: A Simple Way to Prevent Neural Networks from Overfitting"
+url: https://jmlr.org/papers/v15/srivastava14a.html
+author: "Srivastava, Hinton, Krizhevsky, Sutskever & Salakhutdinov (2014)"
+level: advanced
+why: "The dropout paper: silence random units during training, and why that acts like averaging many networks."
+source: curated
+checked: 2026-10-31

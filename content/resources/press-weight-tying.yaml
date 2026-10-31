@@ -1,0 +1,8 @@
+type: paper
+title: "Using the Output Embedding to Improve Language Models"
+url: https://arxiv.org/abs/1608.05859
+author: "Press & Wolf (2016)"
+level: advanced
+why: "The argument for tying the input and output tables of a language model."
+source: curated
+checked: 2026-10-31

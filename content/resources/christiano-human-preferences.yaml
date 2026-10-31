@@ -1,0 +1,8 @@
+type: paper
+title: "Deep reinforcement learning from human preferences"
+url: https://arxiv.org/abs/1706.03741
+author: "Christiano et al. (2017)"
+level: advanced
+why: "Where learning a reward from 'A beats B' comparisons comes from."
+source: curated
+checked: 2026-10-31

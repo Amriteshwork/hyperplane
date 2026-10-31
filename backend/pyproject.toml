@@ -40,6 +40,8 @@ dev = [
 torch = ["torch>=2.14.1"]
 # Renders the Manim scenes in content/papers (ADR 0022). Dev-only; needs cairo/pango headers.
 videos = ["manim>=0.22.0"]
+# Rebuilds the tokenizer and word-vector data behind figures (scripts/build_figure_data.py). Dev-only.
+figures = ["tiktoken>=0.14.0"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }

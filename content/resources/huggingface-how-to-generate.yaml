@@ -1,0 +1,8 @@
+type: blog
+title: "How to generate text"
+url: https://huggingface.co/blog/how-to-generate
+author: "Hugging Face"
+level: beginner
+why: "Greedy search, beam search, top-k and top-p, compared on a real GPT-2 with runnable code."
+source: curated
+checked: 2026-10-31

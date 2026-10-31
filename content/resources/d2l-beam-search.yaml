@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Beam Search"
+url: https://d2l.ai/chapter_recurrent-modern/beam-search.html
+author: "Zhang, Lipton, Li & Smola"
+level: intermediate
+why: "Greedy, exhaustive and beam search side by side, with why each costs what it costs."
+source: curated
+checked: 2026-10-31

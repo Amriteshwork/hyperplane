@@ -19,6 +19,7 @@ const concept: ConceptOut = {
   resources: [],
   algorithms: [{ id: 'linear_regression', name: 'Linear Regression' }],
   code: [],
+  videos: [],
 };
 
 async function open(body: ConceptOut) {

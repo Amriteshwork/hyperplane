@@ -1,0 +1,9 @@
+type: video
+title: "Beam Search"
+url: https://www.youtube.com/watch?v=RLWuzLLSIgw
+author: "DeepLearningAI (Andrew Ng)"
+level: beginner
+duration_min: 12
+why: "Beam search stepped through by hand on a translation, three candidates at a time."
+source: curated
+checked: 2026-10-31

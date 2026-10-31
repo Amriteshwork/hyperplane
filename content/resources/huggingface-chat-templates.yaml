@@ -1,0 +1,8 @@
+type: blog
+title: "Chat templates"
+url: https://huggingface.co/docs/transformers/chat_templating
+author: "Hugging Face"
+level: intermediate
+why: "How real models turn a list of messages into one string of tokens, with examples from different models."
+source: curated
+checked: 2026-10-31

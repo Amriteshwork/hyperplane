@@ -1,0 +1,8 @@
+type: interactive
+title: "tiktoken"
+url: https://github.com/openai/tiktoken
+author: "OpenAI"
+level: beginner
+why: "OpenAI's own tokenizer library, in a few lines of Python, with the encodings its models use."
+source: curated
+checked: 2026-10-31

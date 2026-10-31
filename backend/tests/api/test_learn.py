@@ -90,6 +90,8 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
     # each comes after everything it builds on
     assert sequence.index("transformer") < sequence.index("masked-language-modeling")
     assert sequence.index("masked-language-modeling") < sequence.index("bert")
+    assert sequence.index("multi-head-attention") < sequence.index("cross-attention")
+    assert sequence.index("cross-attention") < sequence.index("encoder-decoder")
     assert areas["foundations"][0] == "numpy-basics"
     foundations = areas["foundations"]
     assert foundations.index("vectors") < foundations.index("matrix-multiplication")
@@ -211,10 +213,10 @@ def test_concept_code_lists_what_it_imports_from_prerequisites(client: TestClien
 def test_transformers_track_walks_every_prerequisite_to_the_transformer(
     client: TestClient,
 ) -> None:
-    summary, rnn, bert = client.get("/api/v1/tracks").json()["items"]
+    summary, rnn, bert, translation, chat = client.get("/api/v1/tracks").json()["items"]
     assert summary["id"] == "transformers"
     families = {f["id"]: f for f in client.get("/api/v1/families").json()["items"]}
-    assert families["sequence-models"]["tracks"] == [summary, bert, rnn]
+    assert families["sequence-models"]["tracks"] == [summary, chat, bert, translation, rnn]
     assert families["sequence-models"]["algorithms"] == []
     assert families["linear-models"]["tracks"] == []
     assert summary["goal"] == {"id": "transformer", "title": "Transformer"}
@@ -240,14 +242,48 @@ def test_bert_track_is_the_transformer_track_then_masking_then_bert(client: Test
     assert sorted(bert) == sorted([c["id"] for c in path] + ["bert"])
 
 
-def test_recurrent_networks_track_ends_at_the_lstm(client: TestClient) -> None:
-    track = client.get("/api/v1/tracks/recurrent-networks").json()
-    assert track["goal"] == {"id": "lstm", "title": "LSTM"}
+def test_translation_track_is_the_transformer_track_then_cross_attention(
+    client: TestClient,
+) -> None:
+    track = client.get("/api/v1/tracks/encoder-decoder").json()
+    assert track["goal"] == {"id": "encoder-decoder", "title": "Encoder-decoder transformer"}
     route = [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
-    path = client.get("/api/v1/concepts/lstm").json()["learning_path"]
-    assert sorted(route) == sorted([c["id"] for c in path] + ["lstm"])
-    assert route[-2:] == ["recurrent-neural-networks", "lstm"]
-    assert "self-attention" not in route  # RNNs come before attention, not after
+    transformers = client.get("/api/v1/tracks/transformers").json()
+    before = [c["id"] for chapter in transformers["chapters"] for c in chapter["concepts"]]
+    assert route == [*before, "cross-attention", "encoder-decoder"]
+    path = client.get("/api/v1/concepts/encoder-decoder").json()["learning_path"]
+    assert sorted(route) == sorted([c["id"] for c in path] + ["encoder-decoder"])
+
+
+def test_recurrent_networks_track_ends_by_breaking_through_with_attention(
+    client: TestClient,
+) -> None:
+    track = client.get("/api/v1/tracks/recurrent-networks").json()
+    assert track["goal"] == {"id": "seq2seq-attention", "title": "Seq2seq with attention"}
+    route = [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
+    path = client.get("/api/v1/concepts/seq2seq-attention").json()["learning_path"]
+    assert sorted(route) == sorted([c["id"] for c in path] + ["seq2seq-attention"])
+    assert route[-1] == "seq2seq-attention"
+    assert route.index("lstm") < route.index("self-attention")  # the wall comes before the fix
+
+
+def test_chat_track_is_the_transformer_track_then_the_road_to_a_chatbot(
+    client: TestClient,
+) -> None:
+    track = client.get("/api/v1/tracks/gpt-to-chat").json()
+    assert track["goal"] == {"id": "rlhf", "title": "RLHF"}
+    route = [c["id"] for chapter in track["chapters"] for c in chapter["concepts"]]
+    transformers = client.get("/api/v1/tracks/transformers").json()
+    before = [c["id"] for chapter in transformers["chapters"] for c in chapter["concepts"]]
+    assert route == [*before, "text-generation", "llm-training", "chat-fine-tuning", "rlhf"]
+
+
+def test_concept_pages_declare_their_videos(client: TestClient) -> None:
+    videos = client.get("/api/v1/concepts/text-generation").json()["videos"]
+    assert videos == [
+        {"id": "beam-vs-greedy", "title": "Why the best first word can lose", "youtube_id": None}
+    ]
+    assert client.get("/api/v1/concepts/vectors").json()["videos"] == []
 
 
 def test_attention_paper_walks_through_the_original_section_by_section(client: TestClient) -> None:

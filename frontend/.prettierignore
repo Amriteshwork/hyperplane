@@ -5,3 +5,4 @@ node_modules/
 test-results/
 playwright-report/
 package-lock.json
+src/app/shared/figures/lib/real-vectors.data.ts

@@ -1,0 +1,8 @@
+type: course
+title: "Reinforcement Learning from Human Feedback"
+url: https://rlhfbook.com/
+author: "Nathan Lambert"
+level: intermediate
+why: "A free book on the whole field: preference data, reward models, and optimisation."
+source: curated
+checked: 2026-10-31

@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: The Bahdanau Attention Mechanism"
+url: https://d2l.ai/chapter_attention-mechanisms-and-transformers/bahdanau-attention.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "An RNN decoder that recomputes its context from every encoder state at each step, implemented, trained on English-French and with its attention weights plotted."
+source: curated
+checked: 2026-10-28

@@ -1,0 +1,93 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  schedule:
+    span: block
+    short: A linear climb to the peak, then half a cosine down to 0.
+    deep: Warmup avoids big steps while the gradients are still noise. The cosine ends with small steps,
+      so the weights can settle.
+    concepts:
+    - learning-rate
+  clip:
+    span: block
+    short: Measure all the gradients as one long vector. If it's too long, scale it down.
+    deep: Treating all parameters as one vector means clipping preserves their relative sizes. Clipping
+      each array on its own would change the direction.
+    concepts:
+    - vectors
+  dropout:
+    span: block
+    short: Zero a random share, and divide the rest by the keep rate so the mean stays put.
+    deep: Dividing by the keep rate means later layers see the same average signal in training and at
+      test time, when nothing is dropped.
+  smooth:
+    span: block
+    short: The right token gets 1 − ε, and ε is shared across all the tokens.
+    deep: The loss now has a minimum above zero, so the model gains nothing from pushing a score toward
+      infinity.
+    concepts:
+    - log-loss
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  schedule-check:
+    span: block
+    short: It starts near 0, peaks at the end of warmup, and finishes near 0.
+    deep: Checking the shape at its three corners catches the usual off-by-one mistakes in a schedule.
+  clip-check:
+    span: block
+    short: A length-50 gradient becomes length 1 pointing the same way; a small one isn't touched.
+    deep: Scaling by $c/\lVert g \rVert$ changes the length and leaves the ratio between the entries alone.
+  dropout-check:
+    span: block
+    short: About 20% are zeroed, and the mean stays at 1.
+    deep: 'Large samples make the checks steady: with 100,000 numbers the share is within 1% of the rate.'
+  tying:
+    span: block
+    short: How much one shared table saves on GPT-2.
+    deep: |
+      GPT-2 small has about 124 million parameters when the shared table is counted once.
+      The table is $V \times d$, so it's about 31% of them.
+  smooth-check:
+    span: block
+    short: The targets still sum to 1, and the right token gets 0.92.
+    deep: '$0.92 = (1 - 0.1) + 0.1/5$: the right token also gets its share of the $\epsilon$.'
+pytorch:
+  reuse:
+    short: The tiny GPT, with its corpus and tokenizer.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - transformer
+    - language-modeling
+    - tokenization
+  schedule:
+    span: block
+    short: The same schedule; `warmup=0` means a constant rate, for comparison.
+    deep: Passing `warmup=0` keeps one code path for every run in the comparison.
+    concepts:
+    - learning-rate
+  run:
+    span: block
+    short: One seeded run, so any difference comes from the tricks you switch on.
+    deep: Reseeding at the start of each run means every run starts from the same weights and sees the
+      same batches, so the tricks are the only difference.
+    concepts:
+    - adam-optimizer
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  data:
+    span: block
+    short: The usual corpus and split, with non-overlapping validation windows.
+    deep: Non-overlapping windows stop the validation loss from counting the same characters many times.
+    concepts:
+    - train-test-split
+  rescue:
+    span: block
+    short: 'Four runs: a good rate, a rate that''s too high, that rate with clipping, and with warmup.'
+    deep: Warmup and cosine decay are switched on together, as they are in practice. Clipping alone barely
+      moves the result, because the problem is the learning rate on every step and not rare spikes.
+  tied:
+    span: block
+    short: 'One table for both directions: fewer parameters, and a slightly higher loss at this size.'
+    deep: Assigning one Parameter to both modules makes them share storage, and `parameters()` counts
+      it once. The saving is small here because the output table is small; on GPT-2 it is 31% of the model.

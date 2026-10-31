@@ -4,7 +4,7 @@
 /**
  * A Manim animation, keyed by the name `::video[name]` uses (ADR 0022).
  */
-export interface PaperVideoOut {
+export interface VideoOut {
   id: string;
   title: string;
   youtube_id: string | null;

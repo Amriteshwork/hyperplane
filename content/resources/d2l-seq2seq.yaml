@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Sequence-to-Sequence Learning for Machine Translation"
+url: https://d2l.ai/chapter_recurrent-modern/seq2seq.html
+author: Zhang, Lipton, Li & Smola
+level: intermediate
+why: "The encoder-decoder for translation built from two RNNs, with teacher forcing, the masked loss and BLEU evaluation explained and implemented."
+source: curated
+checked: 2026-10-28

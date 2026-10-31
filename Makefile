@@ -39,8 +39,8 @@ backend-dev: env ## Run the API with reload on :8000
 worker: env ## Run an RQ worker on the host
 	$(BACKEND) uv run rq worker --url "$(REDIS_URL)" "$(JOB_QUEUE_NAME)"
 
-videos: ## Render a paper's Manim scenes: make videos paper=<id> [scene=<name>] [q=l|m|h]
-	$(BACKEND) uv run --group videos python -m scripts.render_videos $(paper) $(if $(scene),--scene $(scene)) --quality $(or $(q),h)
+videos: ## Render a page's Manim scenes: make videos paper=<id> | concept=<id> [scene=<name>] [q=l|m|h]
+	$(BACKEND) uv run --group videos python -m scripts.render_videos $(or $(paper),$(concept)) $(if $(concept),--concept) $(if $(scene),--scene $(scene)) --quality $(or $(q),h)
 
 datasets: ## Fetch the sample datasets that are not committed (licence unverified)
 	$(BACKEND) uv run python -m scripts.sample_datasets

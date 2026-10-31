@@ -3,8 +3,7 @@ import { Injectable, computed, inject, resource, signal } from '@angular/core';
 import { Api } from '../../core/api/api';
 import { getPaper } from '../../core/api/fn/learn/get-paper';
 import { errorMessage, isNotFound } from '../../core/http/http-errors';
-import { toLearningResource } from '../../shared/learn/mappers';
-import { VideoClipData } from '../../shared/ui/video-clip/video-clip';
+import { toLearningResource, toVideoClips } from '../../shared/learn/mappers';
 
 @Injectable()
 export class PaperStore {
@@ -20,14 +19,7 @@ export class PaperStore {
   readonly paper = computed(() => (this.detail.hasValue() ? this.detail.value() : null));
   readonly sections = computed(() => this.paper()?.sections ?? []);
   /** `::video[name]` lookups for every section's MarkdownView. */
-  readonly videos = computed(() =>
-    Object.fromEntries(
-      (this.paper()?.videos ?? []).map((v): [string, VideoClipData] => [
-        v.id,
-        { title: v.title, youtubeId: v.youtube_id },
-      ]),
-    ),
-  );
+  readonly videos = computed(() => toVideoClips(this.paper()?.videos ?? []));
   readonly resources = computed(() => this.paper()?.resources.map(toLearningResource) ?? []);
   readonly notFound = computed(() => isNotFound(this.detail.error()));
   readonly error = computed(() => (this.detail.error() ? errorMessage(this.detail.error()) : null));

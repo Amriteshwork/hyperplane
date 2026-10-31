@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: alammar-seq2seq-attention
+  note: "Start here: the bottleneck this page's layer removes, and attention over every source word, animated step by step."
+- id: statquest-attention
+  note: "Attention as it first appeared, between an encoder and a decoder: similarity scores, softmax, weighted sum."
+- id: d2l-bahdanau-attention
+  note: "The original cross-attention, built on top of an RNN translator, with its attention weights plotted like this page's figure."
+- id: weng-attention
+  note: "Advanced: the scoring functions that came before the transformer's dot product, and how cross-attention became self-attention."
+- id: bahdanau-align-and-translate
+  note: "The paper that introduced it. Section 3.1 is this page's formula with an RNN state as the query; Figure 3 shows the alignments."
+- id: vaswani-attention-is-all-you-need
+  note: "Section 3.2.3: \"encoder-decoder attention\", queries from the decoder, keys and values from the encoder's output."

@@ -1,0 +1,8 @@
+type: paper
+title: "The Curious Case of Neural Text Degeneration"
+url: https://arxiv.org/abs/1904.09751
+author: "Holtzman, Buys, Du, Forbes & Choi (2019)"
+level: advanced
+why: "The paper that introduced top-p (nucleus) sampling, and showed that the most likely text is often not the most human-sounding."
+source: curated
+checked: 2026-10-31

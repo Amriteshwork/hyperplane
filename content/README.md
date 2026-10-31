@@ -14,6 +14,7 @@ content/
     posts/*.md                 our own posts, when good external material doesn't exist
     code/numpy.py, pytorch.py  the concept from scratch on random data (see below)
     code/annotations.yaml      explanations for their `# @a:<anchor>` comments
+    scenes/<name>.py           one Manim scene per `::video[name]`, as for papers (ADR 0024)
   families/<family_id>.md      one page per family (e.g. linear-models.md)
   papers/<paper_id>/           a paper or blog post explained section by section (below)
     paper.md, resources.yaml
@@ -155,7 +156,7 @@ shape: **The paper says** (a short quote), **In plain words**, a `::figure` or `
 embed the paper's own figures.
 
 Videos are ManimCE scenes: `::video[qkv-lookup]` is class `QkvLookup` in
-`scenes/qkv_lookup.py`. Use `Text`, not `MathTex` (no LaTeX needed). Render with
-`make videos paper=<id> [scene=<name>] [q=l]` (needs `libcairo2-dev libpango1.0-dev`), upload
+`scenes/qkv_lookup.py`. Use `Text`, not `MathTex` (no LaTeX needed). Concepts declare `videos` the same way. Render with
+`make videos paper=<id> | concept=<id> [scene=<name>] [q=l]` (needs `libcairo2-dev libpango1.0-dev`), upload
 the MP4 from `build/videos/` to YouTube, and set its id as `youtube:`. Until then the page
 shows "Animation coming soon".

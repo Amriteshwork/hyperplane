@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: karpathy-reproduce-gpt2
+  note: "The tricks on this page in a real GPT-2 training run: weight tying, warmup, cosine decay and clipping."
+- id: karpathy-nanogpt
+  note: "A complete, readable GPT training script. Find each trick from this page in its code."
+- id: karpathy-training-recipe
+  note: "The habits that matter more than any one trick, and how training fails silently."
+- id: srivastava-dropout
+  note: "Advanced: the dropout paper."
+- id: press-weight-tying
+  note: "Advanced: the argument for tying the two tables."

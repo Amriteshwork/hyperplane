@@ -1,0 +1,8 @@
+type: paper
+title: "Scaling Laws for Reward Model Overoptimization"
+url: https://arxiv.org/abs/2210.10760
+author: "Gao, Schulman & Hilton (2022)"
+level: advanced
+why: "Measures the Goodhart curve on this page in real models: the proxy reward keeps climbing while true quality falls."
+source: curated
+checked: 2026-10-31

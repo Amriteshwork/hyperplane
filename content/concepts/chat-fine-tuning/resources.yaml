@@ -1,0 +1,7 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: karpathy-deep-dive-llms
+  note: "Start here: from base models to assistants, for a general audience."
+- id: huggingface-chat-templates
+  note: "Real chat templates: how different models turn messages into one sequence."
+- id: ouyang-instructgpt
+  note: "Step 1 of InstructGPT, supervised fine-tuning, is this page. The paper reports what it gained on real models."

@@ -1,7 +1,16 @@
 import { CodeAnnotationOut } from '../../core/api/models/code-annotation-out';
 import { ResourceOut } from '../../core/api/models/resource-out';
+import { VideoOut } from '../../core/api/models/video-out';
 import { CodeAnnotation } from '../ui/code-explainer/code-explainer';
 import { LearningResource } from '../ui/resource-card/resource-card';
+import { VideoClipData } from '../ui/video-clip/video-clip';
+
+/** API videos → the lookup `::video[name]` reads in MarkdownView. */
+export function toVideoClips(videos: readonly VideoOut[]): Record<string, VideoClipData> {
+  return Object.fromEntries(
+    videos.map((v): [string, VideoClipData] => [v.id, { title: v.title, youtubeId: v.youtube_id }]),
+  );
+}
 
 /** API code annotations → the CodeExplainer's input shape. */
 export function toCodeAnnotations(code: {

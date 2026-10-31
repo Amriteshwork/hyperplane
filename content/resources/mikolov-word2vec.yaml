@@ -1,0 +1,8 @@
+type: paper
+title: "Efficient Estimation of Word Representations in Vector Space"
+url: https://arxiv.org/abs/1301.3781
+author: "Mikolov, Chen, Corrado & Dean (2013)"
+level: advanced
+why: "The original word2vec paper: skip-gram, CBOW, and the word analogy test."
+source: curated
+checked: 2026-10-31

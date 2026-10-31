@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: huggingface-how-to-generate
+  note: "Start here: greedy, beam, top-k and top-p on a real GPT-2, the same four knobs as this page."
+- id: ng-beam-search
+  note: "Beam search stepped through by hand, with three candidates kept at each step."
+- id: alammar-illustrated-gpt2
+  note: "Next-word prediction as autocomplete, with top-k sampling in pictures."
+- id: transformer-explainer
+  note: "Drag the temperature slider on a real model and watch its next-token probabilities move."
+- id: d2l-beam-search
+  note: "The cost of greedy, exhaustive and beam search, written out."
+- id: holtzman-text-degeneration
+  note: "Advanced: why the likeliest text reads badly, and where top-p comes from."

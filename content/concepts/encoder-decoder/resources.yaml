@@ -1,0 +1,17 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-seq2seq
+  note: "Start here: an encoder and a decoder for a tiny translation task, with [BOS], [EOS] and feeding each word back in."
+- id: statquest-transformers
+  note: "The transformer version of this page worked through with actual numbers, including the decoder's cross-attention."
+- id: alammar-illustrated-transformer
+  note: "The encoder and decoder stacks drawn layer by layer, then the decoder writing a translation one word at a time."
+- id: huggingface-transformer-architectures
+  note: "Encoder-only, decoder-only and encoder-decoder side by side, with the models that use each: this page's last section."
+- id: d2l-seq2seq
+  note: "Teacher forcing and greedy decoding explained in detail, on an RNN encoder-decoder."
+- id: d2l-transformer
+  note: "The full encoder-decoder transformer in PyTorch, the same structure as this page's code at a larger scale."
+- id: harvard-annotated-transformer
+  note: "Advanced: the original paper's model line by line, with its EncoderDecoder class, masks and greedy decoding."
+- id: vaswani-attention-is-all-you-need
+  note: "Section 3.1 and Figure 1 are this page: an encoder stack, a decoder stack, and cross-attention between them."

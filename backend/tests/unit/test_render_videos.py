@@ -21,3 +21,11 @@ def test_renders_each_video_from_its_scene_file_and_class() -> None:
 def test_unknown_video_names_fail() -> None:
     with pytest.raises(SystemExit, match="no videos"):
         render_commands(CONTENT, PAPER, "nope", "h")
+
+
+def test_renders_a_concepts_videos_from_its_own_folder() -> None:
+    [command] = render_commands(CONTENT, "rlhf", None, "l", concept=True)
+    assert command[-2:] == [
+        str(CONTENT / "concepts" / "rlhf" / "scenes" / "votes_to_policy.py"),
+        "VotesToPolicy",
+    ]

@@ -59,7 +59,11 @@ import { ConceptStore } from './concept.store';
         }
 
         <!-- Prose stays at reading width; the code below uses the full page. -->
-        <app-markdown-view class="mt-8 block max-w-3xl" [content]="concept.body" />
+        <app-markdown-view
+          class="mt-8 block max-w-3xl"
+          [content]="concept.body"
+          [videos]="store.videos()"
+        />
 
         @if (concept.code.length) {
           <section class="mt-10" aria-labelledby="from-scratch">

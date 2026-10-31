@@ -1,0 +1,8 @@
+type: video
+title: "Sequence-to-Sequence (seq2seq) Encoder-Decoder Neural Networks, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=L8HKweZIOmg
+author: StatQuest with Josh Starmer
+level: beginner
+why: "Builds an encoder and a decoder for a tiny translation task step by step, including the start and end tokens and feeding each output back in."
+source: curated
+checked: 2026-10-28

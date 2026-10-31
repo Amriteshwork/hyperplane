@@ -1,0 +1,128 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: Cosine similarity from Embeddings, the sigmoid, and the vocabulary builder.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - embeddings
+    - sigmoid
+    - tokenization
+  corpus:
+    span: block
+    short: Sentences with hidden structure. Nothing in the text names the groups.
+    deep: |
+      Words in a group share sentence patterns. Telling them apart isn't possible from their
+      neighbours, and that's exactly the signal skip-gram turns into similar vectors.
+  pairs:
+    span: block
+    short: 'Slide a window over each sentence: every (word, nearby word) is a training example.'
+    deep: A window of 2 gives each word up to four neighbours, so a short sentence yields many examples.
+      Skip-gram needs no labels because the text labels itself.
+  loss:
+    span: block
+    short: Pull a real neighbour's dot product up, push random words' dot products down.
+    deep: |
+      $$\mathcal L = -\log\sigma(u\cdot v) - \sum_n \log\sigma(-u\cdot n)$$
+
+      Its gradients, worked out with the chain rule:
+
+      $$\frac{\partial\mathcal L}{\partial u} = -(1-\sigma(u\cdot v))\,v + \sum_n \sigma(u\cdot n)\,n$$
+
+      $$\frac{\partial\mathcal L}{\partial v} = -(1-\sigma(u\cdot v))\,u, \qquad \frac{\partial\mathcal L}{\partial n} = \sigma(u\cdot n)\,u$$
+    concepts:
+    - log-loss
+    - sigmoid
+    - derivatives
+  train:
+    span: block
+    short: 'Plain SGD, one pair at a time. Each word gets two vectors: as a centre and as a context.'
+    deep: Keeping two tables makes the gradients simple, since a word is never compared with itself through
+      the same vector. Most uses keep E and throw C away.
+    concepts:
+    - stochastic-gradient-descent
+  neighbours:
+    span: block
+    short: Rank the other words by the angle between their vectors and this one.
+    deep: Cosine ignores length and compares only direction, so frequent words with long vectors don't
+      dominate.
+    concepts:
+    - embeddings
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  data:
+    span: block
+    short: 'Turn sentences into the only dataset the model sees: pairs of nearby words.'
+    deep: Every number the model will ever see comes from these pairs. Nothing here mentions meaning.
+  gradient-check:
+    span: block
+    short: Compare the hand-derived gradient with finite differences.
+    deep: Nudge each coordinate both ways and compare the slope with the formula. If the derivation had
+      a mistake, this assert would catch it.
+    concepts:
+    - derivatives
+  fit:
+    short: Train. The loss can't reach 0, because random 'fake' pairs are sometimes real.
+    deep: Random words are sometimes real neighbours, so the model can never be right on every pair. A
+      flat loss above zero is normal here.
+  result:
+    span: block
+    short: Same-group words point the same way, and nobody told it the groups.
+    deep: The groups appear in the assert only as a check. The training code never reads them, and only
+      sees which words appear near which.
+pytorch:
+  reuse:
+    short: The vocabulary builder from Tokenization.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - tokenization
+  corpus:
+    span: block
+    short: The same sentences as the NumPy file.
+    deep: The same data as the NumPy file, so you can compare the two results directly.
+  pairs:
+    span: block
+    short: All (word, nearby word) pairs, as one tensor.
+    deep: A nested comprehension gives one row per (word, neighbour) pair, and random batches are then
+      just random rows.
+  model:
+    span: block
+    short: Two embedding tables. Only the centre table is kept in the end.
+    deep: '`nn.Embedding` is the lookup table from the Embeddings page. Starting the vectors small means
+      nothing dominates before training has begun.'
+    concepts:
+    - embeddings
+  loss:
+    span: block
+    short: 'Binary cross-entropy on dot products: real pairs are 1, random ones are 0.'
+    deep: Summing a score for each real pair and one for its negatives gives the same objective as the
+      NumPy file, without writing any gradients by hand.
+    concepts:
+    - log-loss
+  pca:
+    span: block
+    short: Find the two directions the vectors vary most along, and project onto them.
+    deep: |
+      Plots of embeddings are usually made this way, because you can't draw 16 dimensions.
+      Distances in the picture are only approximate.
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  train:
+    span: block
+    short: Random batches of pairs, with 4 random negatives each, trained with Adam.
+    deep: Adam and batches replace the NumPy file's one-pair-at-a-time SGD. It's the same objective, with
+      a different route to it.
+    concepts:
+    - adam-optimizer
+  result:
+    span: block
+    short: Normalise, then one matrix product gives the cosine of every pair of words.
+    deep: After normalising, a dot product is a cosine, so `unit @ unit.T` computes every pair at once.
+    concepts:
+    - matrix-multiplication
+  map:
+    span: block
+    short: Print the 2-D map. Each group lands in its own corner.
+    deep: Each group lands far from the others, though the words within a group sit almost on top of each
+      other. This tiny corpus gives every word in a group the same contexts.

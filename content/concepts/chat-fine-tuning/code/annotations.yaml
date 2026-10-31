@@ -1,0 +1,99 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: Cross-entropy from Language modeling, softmax, and the tokenizer.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - language-modeling
+    - softmax
+    - tokenization
+  template:
+    span: block
+    short: Flatten the turns into one string, with markers for who's speaking and a stop token.
+    deep: Real models each define their own markers, but all of them produce one flat sequence. The stop
+      token is part of the assistant's reply, so it gets learnt too.
+  labels:
+    span: block
+    short: Targets are the next token, except where that token isn't the assistant's.
+    deep: |
+      The inputs and targets are the usual pair, shifted by one. Marker tokens and the user's words
+      get `IGNORE`, so the model is never graded on predicting them.
+  masked-loss:
+    span: block
+    short: Average the loss only over positions with a real target.
+    deep: Dropping positions changes what the average is over, so masked positions don't dilute the loss
+      either.
+    concepts:
+    - log-loss
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  render:
+    span: block
+    short: Two turns each way become one string.
+    deep: 'It looks like an odd string, and that is the point: this is all the model ever sees of a conversation.'
+  mask:
+    span: block
+    short: Only the assistant's words and stop tokens are taught.
+    deep: Most positions are masked. Fine-tuning spends its effort only on what the assistant should say.
+  loss-check:
+    span: block
+    short: Changing what's predicted during the user's turn can't change the loss.
+    deep: Scrambling every masked position leaves the loss exactly the same, which proves the user's turn
+      can't teach the model anything.
+pytorch:
+  reuse:
+    short: The tiny GPT, its corpus and its tokenizer.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - transformer
+    - language-modeling
+    - tokenization
+  chat-data:
+    span: block
+    short: A fact, a question that needs the fact, and a reply ending in the stop token.
+    deep: |
+      Padding goes on the right, and $-100$ hides it from the loss. It has to be on the right: padding
+      on the left would shift every token's position, and the test sentences wouldn't be padded the
+      same way.
+  pretrain:
+    span: block
+    short: 'The base model: plain next-character training. It has never seen a question.'
+    deep: The base model gets plenty of cheap text. It learns spelling and sentence shapes, and it learns
+      nothing about questions.
+    concepts:
+    - transformer
+  fine-tune:
+    span: block
+    short: The same loss on the same model, on conversations, with a lower learning rate.
+    deep: The lower learning rate adjusts what the model already knows without overwriting it. Everything
+      else is the training loop you already know.
+    concepts:
+    - learning-rate
+  reply:
+    span: block
+    short: Greedy generation that stops at the stop token, or gives up at a limit.
+    deep: Using greedy here makes the score repeatable. The limit matters because a base model has never
+      learnt to stop.
+    concepts:
+    - text-generation
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  vocab:
+    span: block
+    short: One vocabulary for both stages, and just 16 example chats.
+    deep: Both stages must share a vocabulary, so the characters the template adds are included from the
+      start.
+  before:
+    span: block
+    short: The base model only continues text, so it can't get a single reply right.
+    deep: The model isn't broken. It keeps writing, because continuing text is the only job it has seen.
+  after:
+    span: block
+    short: After fine-tuning, it answers and stops.
+    deep: The score counts only exact replies, stop token included, on conversations it never saw.
+  scratch:
+    span: block
+    short: 'The same chats and steps with no pretraining: this is what pretraining bought us.'
+    deep: With more chats this gap closes. Pretraining matters most when labelled conversations are scarce.

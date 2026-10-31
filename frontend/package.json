@@ -31,6 +31,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "echarts": "^6.1.0",
+    "js-tiktoken": "^1.0.21",
     "katex": "^0.18.11",
     "marked": "^18.1.1",
     "ngx-echarts": "^22.0.0",

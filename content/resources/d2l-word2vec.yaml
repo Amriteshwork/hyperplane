@@ -1,0 +1,8 @@
+type: course
+title: "Dive into Deep Learning: Word Embedding (word2vec)"
+url: https://d2l.ai/chapter_natural-language-processing-pretraining/word2vec.html
+author: "Zhang, Lipton, Li & Smola"
+level: intermediate
+why: "Skip-gram and CBOW derived as probability models, with the gradients written out."
+source: curated
+checked: 2026-10-31

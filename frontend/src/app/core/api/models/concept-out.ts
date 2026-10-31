@@ -5,6 +5,7 @@ import { AlgorithmRefOut } from '../models/algorithm-ref-out';
 import { ConceptCodeOut } from '../models/concept-code-out';
 import { ConceptRefOut } from '../models/concept-ref-out';
 import { ResourceOut } from '../models/resource-out';
+import { VideoOut } from '../models/video-out';
 export interface ConceptOut {
   algorithms: Array<AlgorithmRefOut>;
   body: string;
@@ -15,4 +16,5 @@ export interface ConceptOut {
   resources: Array<ResourceOut>;
   summary: string;
   title: string;
+  videos: Array<VideoOut>;
 }

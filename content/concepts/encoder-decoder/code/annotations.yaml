@@ -1,0 +1,212 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Everything comes from earlier pages: the transformer's block and weights, cross-attention, the causal mask, and the names and foods."
+    deep: |
+      An encoder-decoder adds no new maths beyond cross-attention. The encoder is the
+      transformer's `block` with no mask. The decoder block is the same block with a
+      cross-attention step in the middle. "Download with dependencies" bundles everything
+      this file imports so it runs on its own.
+    concepts: [transformer, cross-attention, causal-masking, language-modeling]
+
+  pairs:
+    span: block
+    short: "A tiny translation task: 'zoe likes jam, so raj eats figs.' → 'zoe mag marmelade, also isst raj feigen.'"
+    deep: |
+      Real German, word for word, with one twist: after "also" (so), German puts the
+      verb **before** the subject. That's "verb second" word order. "so raj eats" becomes
+      "also isst raj", so the translation can't simply copy the English in order.
+
+      The two names and two foods are picked independently: 8⁴ = 4,096 possible sentences.
+      To get them right, the model has to find each one in the English, which is exactly
+      the job of cross-attention.
+    concepts: [tokenization]
+
+  params:
+    span: block
+    short: "Two sets of transformer weights. Each decoder block also gets four cross-attention matrices and one more layer norm."
+    deep: |
+      The encoder's output layer is deleted: the encoder never predicts a word. Its
+      product is one vector per English word, which the decoder reads. Source and target
+      have separate embedding tables because they're different languages with different
+      vocabularies. Models that translate between many languages often share one table.
+    concepts: [transformer]
+
+  encoder:
+    span: block
+    short: "Embed, add positions, run the blocks with no mask at all: every English word sees every other."
+    deep: |
+      This is BERT's encoder in miniature. Nothing is hidden, because the whole source
+      sentence is given before translation starts. The output is often called the
+      **memory**: the decoder looks things up in it at every step.
+    concepts: [embeddings, positional-encoding]
+
+  decoder-block:
+    span: block
+    short: "Three residual steps: masked self-attention over the German so far, cross-attention into the English, then the MLP."
+    deep: |
+      $$h \leftarrow h + \text{SelfAttn}_{\text{causal}}(\text{LN}(h))$$
+      $$h \leftarrow h + \text{CrossAttn}(\text{LN}(h),\ \text{memory})$$
+      $$h \leftarrow h + \text{MLP}(\text{LN}(h))$$
+
+      The first step is GPT's: look back at the words already written. The second is new:
+      ask the English for what's needed next. The third works on each token by itself.
+      Each step has its own layer norm and its own residual, like every block so far.
+    concepts: [cross-attention, causal-masking, residual-connections, layer-normalization]
+
+  decoder:
+    span: block
+    short: "Embed the German so far, run the decoder blocks (each reading the memory), score the next word."
+    deep: |
+      This is a GPT whose blocks can also read a second sequence. Remove the
+      cross-attention step and you have the Transformer page's `gpt` exactly.
+    concepts: [transformer]
+
+  translate:
+    span: block
+    short: "Encode the English once. Then start from [BOS] and keep appending the likeliest next word until [EOS]."
+    deep: |
+      The encoder runs **once** per sentence. The decoder runs once per output word,
+      reading the same memory every time. That's why encoder-decoder models are cheap to
+      run when the input is long and the output short, as in summarisation.
+
+      Picking the single likeliest word each time is **greedy decoding**. The original
+      transformer and Bahdanau et al. used **beam search**: keep the few best partial
+      translations at each step, not just one.
+
+  demo:
+    short: "Runs only when you execute this file."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  data:
+    span: block
+    short: "Two vocabularies (21 English words, 21 German words plus [BOS] and [EOS]), and the decoder's input and target."
+    deep: |
+      **Teacher forcing**: during training the decoder is shown the **true** German, shifted
+      right by one with `[BOS]` in front. Its target is the same German followed by
+      `[EOS]`. With the causal mask, every position is a next-word question, all answered
+      in one pass, exactly as GPT trains. `[EOS]` is how a trained model says "done".
+    concepts: [language-modeling]
+
+  forward:
+    span: block
+    short: "9 English tokens and 10 German inputs → 10 rows of 23 scores: one next-word guess per German position."
+    deep: |
+      The output has the **target's** length. The English length only sets how many
+      columns each cross-attention has to choose from.
+
+  who-sees-what:
+    span: block
+    short: "Change the last English word: the first German prediction changes. Change the end of the German: earlier predictions don't."
+    deep: |
+      Two rules in one test. Through cross-attention, every German position can see the
+      **whole** English sentence. Through the causal mask, it sees only the German
+      **before** it. The first is what translation needs. The second is what lets the same
+      model write one word at a time.
+    concepts: [causal-masking, cross-attention]
+
+  untrained:
+    span: block
+    short: "Untrained: loss ≈ log V, uniform guessing over 23 words, and the 'translation' is gibberish."
+    deep: |
+      The small output layer (×0.01 at initialisation) makes every word about equally
+      likely, so the loss starts at $\log 23 \approx 3.14$. The PyTorch file trains the
+      same architecture until it translates sentences it has never seen.
+    concepts: [log-loss]
+
+  count:
+    span: block
+    short: "A decoder block has 16·d² weights, against 12·d² for an encoder block: cross-attention adds its own 4·d²."
+    deep: |
+      In the original transformer ($d = 512$, 6 + 6 blocks), that comes to about
+      $6 \cdot 12d^2 + 6 \cdot 16d^2 \approx 44$M weights in the blocks, plus the
+      embeddings, for 65M parameters in all.
+    concepts: [transformer]
+
+pytorch:
+  reuse:
+    short: "The transformer's `Block` (causal for the decoder, not for the encoder), plus batched cross-attention."
+    deep: |
+      `Block(d, n_heads, causal=False)` is the encoder block, the same one BERT uses.
+      `DecoderBlock` inherits everything from `Block` and adds one cross-attention step.
+    concepts: [transformer, cross-attention, multi-head-attention, positional-encoding]
+
+  pairs:
+    span: block
+    short: "The same English → German pairs as the NumPy file: the verb jumps ahead of the subject after 'also'."
+    deep: |
+      `random.Random(seed)` makes the sentences the same on every run. The two names and
+      two foods are independent, so most of the 4,096 possible sentences never appear in
+      training.
+    concepts: [tokenization]
+
+  decoder-block:
+    span: block
+    short: "A subclass of Block: its own cross-attention weights and norm, slotted between self-attention and the MLP."
+    deep: |
+      `self.weights` keeps the latest cross-attention weights, shape
+      `(…, heads, T, S)`, so the demo can look at what each German word read.
+    concepts: [cross-attention]
+
+  model:
+    span: block
+    short: "TinySeq2Seq: 2 encoder blocks without a mask, 2 decoder blocks with cross-attention, about 61,000 parameters."
+    deep: |
+      `encode` and `decode` are kept apart because translation calls them differently:
+      `encode` once per sentence, `decode` once per output word. In training, `forward`
+      just runs one after the other.
+    concepts: [embeddings, layer-normalization]
+
+  translate:
+    span: block
+    short: "Greedy decoding for a whole batch: encode once, then grow every translation by one word per step."
+    deep: |
+      Each step reruns the decoder on everything written so far and keeps only the last
+      position's guess. Real systems cache the earlier positions' keys and values (the
+      **KV cache**) so each step costs one token's work, not the whole prefix's.
+
+  demo:
+    short: "The demo: train a translator, test it on sentences it never saw, then look at its cross-attention."
+    deep: |
+      `__name__` is `"__main__"` only for the file you run.
+
+  data:
+    span: block
+    short: "2,500 training pairs; 100 test pairs that never appear in training. Teacher-forcing inputs and targets."
+    deep: |
+      `F.pad(de, (1, 0), value=BOS)` puts `[BOS]` in front, giving the decoder's input.
+      `F.pad(de, (0, 1), value=EOS)` puts `[EOS]` at the end, giving its target. Every
+      sentence has 9 words, so no padding mask is needed here.
+    concepts: [train-test-split, language-modeling]
+
+  train:
+    span: block
+    short: "150 AdamW steps of teacher forcing: the loss falls from ~3.4 to ~0.001."
+    deep: |
+      One cross-entropy over every German position at once, as in GPT training. Nothing
+      tells the model which English word goes with which German one. It has to find that
+      out to bring the loss down.
+    concepts: [adam-optimizer, log-loss]
+
+  unseen:
+    span: block
+    short: "Translate 100 sentences it never saw, word by word on its own: 100% exactly right, verb order included."
+    deep: |
+      At test time there's no teacher. Each word the model writes becomes part of its own
+      input for the next one. These sentences are new combinations of names and foods,
+      so it can't have memorised them. It must read each slot from the English.
+
+  alignment:
+    span: block
+    short: "For each German name and food, which English word did cross-attention read most? Its own translation, 97% of the time."
+    deep: |
+      This is the **alignment** that Bahdanau et al. plotted in 2014, and nobody taught it.
+      Fixed words like "mag" and "also" are left out: they're always the same, so the
+      decoder can write them from the German alone, and their attention can rest anywhere.
+
+      The misses are interesting too. In the printed sentence, "bob" reads "eats", the
+      word right after "bob" in English. After the encoder's self-attention, the vector at
+      "eats" also knows about the word before it. Cross-attention reads contextual
+      vectors, not raw words.
+    concepts: [cross-attention]

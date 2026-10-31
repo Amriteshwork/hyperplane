@@ -1,0 +1,125 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: The sigmoid for votes, and softmax for the policy.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - sigmoid
+    - softmax
+  replies:
+    span: block
+    short: Six replies. The reward model sees features; real quality stays hidden, as it does in life.
+    deep: '`TRUE_QUALITY` is used only to judge results and is never shown to the reward model. Real systems
+      don''t have this number at all, which is what makes over-optimisation hard to notice.'
+  reward:
+    span: block
+    short: 'P(A beats B) = σ(r(A) − r(B)): logistic regression on the difference in features.'
+    deep: Only the difference in features matters, so the score has no fixed zero. That's fine, since
+      only comparisons are used.
+    concepts:
+    - log-loss
+    - sigmoid
+  policy:
+    span: block
+    short: 'The exact best policy: the base model''s odds, tilted by exp(reward / β).'
+    deep: |
+      Maximising $\mathbb{E}_p[r] - \beta\,\mathrm{KL}(p \Vert p_0)$ gives
+      $p(x) \propto p_0(x)\exp(r(x)/\beta)$. A large $\beta$ stays at the base model; a small
+      one piles everything onto the highest score.
+    concepts:
+    - softmax
+  reinforce:
+    span: block
+    short: 'The same goal by trial and error: sample, score, and raise the odds of what beat the average.'
+    deep: |
+      For a softmax policy, $\nabla_z \log p(x) = \text{onehot}(x) - p$. Subtracting the batch's average
+      score doesn't change the expected direction, and makes it far less noisy.
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  votes:
+    span: block
+    short: Raters vote on normal replies, noisily. Nobody rates the extreme one.
+    deep: |
+      The reward model finds that a few extra words help. It can't know that this stops being true,
+      because it has never seen the extreme reply. That's the trap.
+  shift:
+    span: block
+    short: 'From a tight leash to a loose one: real quality climbs, then falls.'
+    deep: 'Watch reward and quality part ways: as β falls, mass moves to the highest-scoring reply, and
+      that reply is the worst one.'
+  agree:
+    span: block
+    short: REINFORCE, which never sees the formula, lands on the same answer.
+    deep: Matching the formula shows that REINFORCE and the KL penalty really are optimising the stated
+      objective.
+  goodhart:
+    span: block
+    short: A moderate β beats the base model, and an extreme β is worse than either.
+    deep: The peak sits at a moderate β. The reward model is useful up to a point, and pushing beyond
+      that point harms real quality.
+pytorch:
+  reuse:
+    short: The chat data and pretraining from the page before, and the tiny GPT.
+    deep: Download with dependencies to get every file this one builds on.
+    concepts:
+    - chat-fine-tuning
+    - transformer
+    - tokenization
+  reward-model:
+    span: block
+    short: The same small GPT, reading out one number instead of next-token scores.
+    deep: A GPT can compare the question with the reply, which a simple score over characters can't do.
+      It needs that to judge whether the food is right.
+    concepts:
+    - transformer
+  votes:
+    span: block
+    short: 'Each vote trains r(winner) above r(loser): polite beats blunt, and right beats wrong.'
+    deep: |
+      `softplus(r_B − r_A)` is $-\log\sigma(r_A - r_B)$: log-loss on the difference.
+    concepts:
+    - log-loss
+  sample:
+    span: block
+    short: Write whole replies with no gradients, which is much quicker than tracking every step.
+    deep: Sampling needs no gradients. Computing log-probabilities afterwards in one pass is far cheaper
+      than keeping a graph through every generation step.
+    concepts:
+    - text-generation
+  log-prob:
+    span: block
+    short: One pass over the conversation gives the log-probability of the reply, up to its stop token.
+    deep: Each token is scored by what came before it, thanks to the causal mask, so one forward pass
+      gives the probability of every sampled token.
+  kl:
+    span: block
+    short: 'REINFORCE: reply score, minus a charge for drift, times the gradient of its log-probability.'
+    deep: |
+      $\log p_{\text{policy}}(x) - \log p_{\text{base}}(x)$ is a one-sample estimate of the KL divergence,
+      so `beta` is the leash. Subtracting the batch's mean score is the baseline.
+  measure:
+    span: block
+    short: Sample replies to unseen prompts, then count the polite ones and the right ones.
+    deep: The fixed seed gives both models the same prompts and random draws, so the differences come
+      from the weights.
+  demo:
+    short: Runs only when you execute this file.
+    deep: '`__name__` is `"__main__"` only for the file you run.'
+  start:
+    span: block
+    short: A small chat model trained mostly on blunt examples, so it rarely says thanks.
+    deep: Only one example in eight says thanks, so the base model can do it but rarely does. RLHF has
+      something to amplify.
+    concepts:
+    - chat-fine-tuning
+  reward:
+    span: block
+    short: Train the reward model, and check that it prefers the polite reply.
+    deep: Comparing the scores of a few replies is a quick check that the votes taught what they were
+      meant to.
+  improve:
+    span: block
+    short: From one starting point, a tight leash and a loose one.
+    deep: Both runs start from the same weights. The only difference is β, which is what sets how far
+      the model may drift.

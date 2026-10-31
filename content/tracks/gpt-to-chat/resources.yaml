@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this track (ADR 0016).
+- id: karpathy-deep-dive-llms
+  note: "Watch first: the whole journey for a general audience, so every chapter has a place to fit."
+- id: karpathy-build-gpt
+  note: "For the chapters up to the transformer: a GPT built from an empty file."
+- id: karpathy-reproduce-gpt2
+  note: "For the training chapter: the same tricks in a real GPT-2 run."
+- id: huggingface-rlhf
+  note: "For the last chapter: the pipeline from human rankings to an updated model."
+- id: ouyang-instructgpt
+  note: "When you've finished: the paper the last two chapters follow."

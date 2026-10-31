@@ -136,6 +136,15 @@ class ConceptCodeOut(BaseModel):
     uses: list[ConceptCodeUseOut]
 
 
+class VideoOut(BaseModel):
+    """A Manim animation, keyed by the name `::video[name]` uses (ADR 0022)."""
+
+    id: str
+    title: str
+    #: Null until the render is uploaded.
+    youtube_id: str | None
+
+
 class ConceptOut(BaseModel):
     id: str
     title: str
@@ -147,6 +156,7 @@ class ConceptOut(BaseModel):
     resources: list[ResourceOut]
     algorithms: list[AlgorithmRefOut]
     code: list[ConceptCodeOut]
+    videos: list[VideoOut]
 
 
 class TrackChapterOut(BaseModel):
@@ -192,15 +202,6 @@ class PaperSectionOut(BaseModel):
     body: str
 
 
-class PaperVideoOut(BaseModel):
-    """A Manim animation, keyed by the name `::video[name]` uses (ADR 0022)."""
-
-    id: str
-    title: str
-    #: Null until the render is uploaded.
-    youtube_id: str | None
-
-
 class PaperOut(BaseModel):
     """A section-by-section, plain-words walkthrough of one paper or blog post."""
 
@@ -210,7 +211,7 @@ class PaperOut(BaseModel):
     source: PaperSourceOut
     intro: str
     sections: list[PaperSectionOut]
-    videos: list[PaperVideoOut]
+    videos: list[VideoOut]
     #: What to know first, in reading order.
     concepts: list[ConceptSummaryOut]
     track: TrackSummaryOut | None
