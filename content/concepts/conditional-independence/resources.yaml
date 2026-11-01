@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: probabilitycourse-conditional-independence
+  note: "Start here: the coin example this page's code uses, worked by hand, plus a die example showing the opposite failure."
+- id: wikipedia-conditional-independence
+  note: "The formal definition, the height and vocabulary example, and why neither kind of independence implies the other."
+- id: cornell-cs4780-naive-bayes
+  note: "Why estimating the full joint distribution is hopeless, and how the assumption makes it practical."
+- id: sklearn-calibration-guide
+  note: "Its calibration-curves section shows GaussianNB pushing probabilities to 0 or 1 on data with redundant features."
+- id: zhang-optimality-naive-bayes
+  note: "Argues that what matters is how dependencies are distributed between classes, and that they can cancel out."

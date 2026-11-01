@@ -19,6 +19,7 @@ from app.ml.base import (
     AlgorithmPack,
     Capability,
     ReportsClassCoefficients,
+    ReportsClassGaussians,
     ReportsCoefficients,
     ReportsFeatureImportance,
     ReportsNeighbours,
@@ -52,6 +53,12 @@ def test_spec_links_to_existing_content(pack: AlgorithmPack) -> None:
 
 
 @pytest.mark.parametrize("pack", PACKS)
+def test_the_script_keeps_the_matrix_dense_when_the_estimator_needs_it(pack: AlgorithmPack) -> None:
+    source = pack.templates()["train"].source
+    assert ("sparse_threshold=0" in source) == pack.spec.dense_input
+
+
+@pytest.mark.parametrize("pack", PACKS)
 def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     supports = pack.spec.supports
     assert (Capability.COEFFICIENTS in supports) == isinstance(pack, ReportsCoefficients)
@@ -60,6 +67,7 @@ def test_declared_capabilities_match_protocols(pack: AlgorithmPack) -> None:
     assert (Capability.TRAINING_CURVE in supports) == isinstance(pack, ReportsTrainingCurve)
     assert (Capability.TUNING_CURVE in supports) == isinstance(pack, ReportsTuningCurve)
     assert (Capability.NEIGHBOURS in supports) == isinstance(pack, ReportsNeighbours)
+    assert (Capability.CLASS_GAUSSIANS in supports) == isinstance(pack, ReportsClassGaussians)
     assert (Capability.NETWORK in supports) == isinstance(pack, ReportsNetwork)
 
 

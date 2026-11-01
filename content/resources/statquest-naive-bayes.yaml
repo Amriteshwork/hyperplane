@@ -1,0 +1,9 @@
+type: video
+title: "Naive Bayes, Clearly Explained!!!"
+url: https://www.youtube.com/watch?v=O2L2Uv9pdDA
+author: StatQuest with Josh Starmer
+level: beginner
+duration_min: 15
+why: The multinomial version, which the Gaussian video assumes you have seen.
+source: curated
+checked: 2026-11-01

@@ -29,6 +29,7 @@ class Capability(StrEnum):
     TUNING_CURVE = "tuning_curve"
     NETWORK = "network"
     NEIGHBOURS = "neighbours"
+    CLASS_GAUSSIANS = "class_gaussians"
     SPARSE = "sparse"
 
 
@@ -45,6 +46,8 @@ class AlgorithmSpec(BaseModel):
     concepts: tuple[str, ...] = ()
     supports: frozenset[Capability] = frozenset()
     max_rows_default: int = Field(gt=0)
+    #: The estimator rejects sparse matrices, so preprocessing must always return a dense one.
+    dense_input: bool = False
     content_path: str
 
 
@@ -120,6 +123,8 @@ class TuningCurve:
     score_label: str
     #: The value this run used, when it is among `values`.
     chosen: float | None = None
+    #: Values spanning several orders of magnitude read better on a log axis.
+    log_scale: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,6 +179,76 @@ class NeighbourReport(BaseModel):
     #: On a sample of test rows: the mean distance to the k-th neighbour, and to any stored row.
     nearest_distance: float
     typical_distance: float
+
+
+class FeatureGaussians(BaseModel):
+    """One feature's bell curve in each class, in the data's own units."""
+
+    model_config = ConfigDict(frozen=True)
+
+    feature: str
+    #: One per class, in the order of `GaussianReport.classes`.
+    means: list[float]
+    stds: list[float]
+    #: Variance of the class means over the average within-class variance.
+    separation: float
+
+
+class Evidence(BaseModel):
+    """What one feature adds to the log score of the predicted class and of its rival."""
+
+    model_config = ConfigDict(frozen=True)
+
+    feature: str
+    #: The value the model saw, after imputation: missing values show what they were filled with.
+    value: str
+    predicted: float
+    rival: float
+
+
+class GaussianExample(BaseModel):
+    """One test row's prediction, added up from the prior and each feature's log likelihood."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["miss", "hit"]
+    predicted: str
+    actual: str
+    #: The class being compared: the actual one for a miss, otherwise the runner-up.
+    rival: str
+    #: The model's probability for `predicted`.
+    confidence: float
+    prior: Evidence
+    #: The features that separate the two classes most for this row, largest gap first.
+    evidence: list[Evidence]
+    #: The sum over every other feature, so the column totals are the real log scores.
+    others: Evidence | None
+
+
+class CorrelatedPair(BaseModel):
+    """The numeric columns most correlated within a class, which the model treats as independent."""
+
+    model_config = ConfigDict(frozen=True)
+
+    a: str
+    b: str
+    correlation: float
+
+
+class GaussianReport(BaseModel):
+    """What a per-class Gaussian model learned, how it decides, and how far to trust its odds."""
+
+    model_config = ConfigDict(frozen=True)
+
+    classes: list[str]
+    priors: list[float]
+    #: The features that separate the classes most; at most a handful.
+    features: list[FeatureGaussians]
+    total_features: int
+    examples: list[GaussianExample]
+    mean_confidence: float
+    accuracy: float
+    correlated: CorrelatedPair | None
 
 
 class Estimator(Protocol):
@@ -274,6 +349,20 @@ class ReportsNeighbours(Protocol):
         X_test: pd.DataFrame,
         y_test: pd.Series,
     ) -> NeighbourReport: ...
+
+
+@runtime_checkable
+class ReportsClassGaussians(Protocol):
+    """Models that fit a bell curve per class and feature, which can show them and add them up."""
+
+    def class_gaussians(
+        self,
+        pipeline: Pipeline,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+    ) -> GaussianReport: ...
 
 
 @runtime_checkable

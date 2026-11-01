@@ -86,6 +86,7 @@ class CurvePlot(_Frozen):
     #: `unit`: both axes run 0–1 (rates, e.g. ROC); `data`: axes fit the points (e.g. a loss).
     axes: Literal["unit", "data"] = "unit"
     marker: CurveMarker | None = None
+    x_scale: Literal["linear", "log"] = "linear"
 
 
 Plot = Annotated[ScatterPlot | HeatmapPlot | CurvePlot, Field(discriminator="kind")]

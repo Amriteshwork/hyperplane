@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: betterexplained-bayes
+  note: "Start here: a screening test worked through in counts of people, showing why most positives can be false."
+- id: 3blue1brown-bayes-theorem
+  note: "The theorem drawn as areas, the same picture as this page's figure, but with narration."
+- id: mathsisfun-bayes
+  note: "More practice: fire and smoke, picnic weather and an allergy test, each worked with numbers."
+- id: seeing-theory
+  note: "Chapter 5, Bayesian Inference, lets you run Bayes' theorem and prior-to-posterior updates interactively."

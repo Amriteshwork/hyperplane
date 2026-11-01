@@ -1,0 +1,8 @@
+type: paper
+title: "On Discriminative vs. Generative Classifiers: A comparison of logistic regression and naive Bayes"
+url: https://papers.nips.cc/paper/2020-on-discriminative-vs-generative-classifiers-a-comparison-of-logistic-regression-and-naive-bayes
+author: Andrew Y. Ng and Michael I. Jordan
+level: advanced
+why: The classic result on when each kind of model wins as the training set grows.
+source: curated
+checked: 2026-11-01

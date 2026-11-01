@@ -21,13 +21,16 @@ from sklearn.pipeline import Pipeline
 from app.ml.base import (
     Buildable,
     CoefTable,
+    Describable,
     Estimator,
+    GaussianReport,
     ImportanceTable,
     NeighbourReport,
     Parameterised,
     Progress,
     ProgressFn,
     ReportsClassCoefficients,
+    ReportsClassGaussians,
     ReportsCoefficients,
     ReportsFeatureImportance,
     ReportsNeighbours,
@@ -54,7 +57,7 @@ STAGES = ("Splitting the data", "Fitting the model", "Evaluating on the test set
 
 
 @runtime_checkable
-class Trainable(Buildable, Parameterised, Protocol):
+class Trainable(Describable, Buildable, Parameterised, Protocol):
     """What the trainer needs from a pack."""
 
 
@@ -104,6 +107,7 @@ class TrainingReport(BaseModel):
     tuning: TuningSuggestion | None = None
     #: Predictions traced back to the stored rows behind them (models that keep their rows).
     neighbours: NeighbourReport | None = None
+    gaussians: GaussianReport | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,7 +137,10 @@ def train(
     )
     model = pack.build_estimator(pack.params_model.model_validate(config.params))
     pipeline = Pipeline(
-        [("preprocess", build_preprocessor(config.preprocessing)), ("model", model)]
+        [
+            ("preprocess", build_preprocessor(config.preprocessing, dense=pack.spec.dense_input)),
+            ("model", model),
+        ]
     )
 
     report(1)
@@ -178,6 +185,9 @@ def train(
             tuning=suggestion,
             neighbours=pack.neighbours(pipeline, X_train, y_train, X_test, y_test)
             if isinstance(pack, ReportsNeighbours)
+            else None,
+            gaussians=pack.class_gaussians(pipeline, X_train, y_train, X_test, y_test)
+            if isinstance(pack, ReportsClassGaussians)
             else None,
         ),
         X_test=X_test,

@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-gaussian-naive-bayes
+  note: "Start here: this exact model, with a worked example. It assumes you know the multinomial video below and logs."
+- id: statquest-naive-bayes
+  note: "If the Gaussian video moves too fast, this builds the Naive Bayes idea from scratch first."
+- id: sklearn-naive-bayes-guide
+  note: "Section 1.9.1 gives this model's formula, and the introduction warns not to take predict_proba's outputs too seriously."
+- id: cornell-cs4780-naive-bayes
+  note: "Derives the estimators for continuous features as Case #3, and shows when Naive Bayes is a linear classifier."
+- id: sklearn-calibration-guide
+  note: "How to check the probabilities this model gives, with GaussianNB as one of its examples."
+- id: ng-jordan-discriminative-generative
+  note: "Compares this kind of model with Logistic Regression: it nears its best error sooner, but that best is higher."

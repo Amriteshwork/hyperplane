@@ -1,0 +1,8 @@
+type: course
+title: "Bayes Classifier and Naive Bayes (CS4780 lecture note)"
+url: https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote05.html
+author: Kilian Weinberger, Cornell University
+level: intermediate
+why: A compact derivation of the model for categorical, count and continuous features.
+source: curated
+checked: 2026-11-01

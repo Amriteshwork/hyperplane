@@ -1,0 +1,96 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the bell curve from the probability page, to show the two formulas agree."
+    deep: |
+      `normal_pdf` is the height of the bell curve. Download with dependencies to get the file alongside.
+    concepts: [probability]
+
+  log-pdf: &log-pdf
+    span: block
+    short: "The log of the normal density, written out so nothing ever rounds to 0."
+    deep: |
+      Taking the log of the formula splits it in two: $-\tfrac12\log(2\pi\sigma^2)$ penalises wide
+      curves, and $-(x-\mu)^2 / 2\sigma^2$ penalises values far from the centre. Good fits balance
+      the two.
+    concepts: [logarithms-exponentials]
+
+  log-likelihood: &log-likelihood
+    span: block
+    short: "Add up the log density over the rows: the higher, the better these parameters fit."
+    deep: |
+      Adding logs is multiplying densities, which is only right if the rows are independent.
+
+  fit: &fit
+    span: block
+    short: "The best mean and variance have a closed form: the sample's own."
+    deep: |
+      Set the derivative of the log likelihood to zero and these come out. This variance divides by
+      $n$, not $n - 1$, so it's slightly too small on average. Maximum likelihood finds the best fit,
+      not an unbiased estimate.
+
+  demo: &demo
+    short: "Everything below runs only when this file is run, so other pages can import these."
+    deep: |
+      Keeping the demo under this guard means importing this file runs nothing, which the loader checks.
+
+  same-formula:
+    short: "Check: this is exactly the log of the probability page's bell curve."
+    deep: |
+      Writing the log out in full avoids computing a density that may round to 0, and the numbers still agree.
+
+  compare:
+    span: block
+    short: "The same data scored under two sets of parameters: the best fit, and a worse guess."
+    deep: |
+      The data doesn't change between these lines, only the parameters. That's what makes this a
+      likelihood rather than a probability.
+
+  search:
+    span: block
+    short: "Try thousands of settings by brute force: the winner sits next to the closed-form answer."
+    deep: |
+      Nothing here uses the formula, so it's an independent check. It's accurate to within the grid's
+      spacing.
+
+  underflow:
+    span: block
+    short: "Multiply 5,000 densities and get exactly 0; add their logs and get a usable number."
+    deep: |
+      Each density is well below 1, so the product shrinks past what a float can hold. Any model that
+      compares classes over many features would be comparing 0 with 0 without logs.
+    concepts: [logarithms-exponentials]
+
+  mse:
+    span: block
+    short: "With the variance fixed, the log likelihood is just the MSE, scaled and shifted."
+    deep: |
+      So minimising MSE and maximising a normal likelihood pick the same $\mu$. A squared-error loss
+      quietly assumes normal noise.
+    concepts: [mean-squared-error]
+
+  spike:
+    span: block
+    short: "A constant feature gives a variance of 0. A tiny floor makes a spike; a bigger one doesn't."
+    deep: |
+      With a variance of `1e-9`, a value one away costs half a billion in log likelihood, enough to
+      outvote every other feature put together. With `0.01`, the same value costs about 50. This is
+      what `var_smoothing` is for.
+
+pytorch:
+  log-pdf: *log-pdf
+  log-likelihood: *log-likelihood
+  fit: *fit
+  demo: *demo
+  ascent:
+    span: block
+    short: "Find the best parameters by gradient ascent instead, starting from a bad guess."
+    deep: |
+      Minimising the negative log likelihood *is* maximising the likelihood, and this is how models
+      without a closed form are trained. Optimising $\log\sigma^2$ keeps the variance positive with no
+      extra checks. It arrives at the sample's own mean and variance.
+    concepts: [gradient-descent, adam-optimizer]
+  torch-distribution:
+    short: "Check against PyTorch's own normal distribution."
+    deep: |
+      `log_prob` is what you would normally call. Writing it out shows there's nothing more to it.

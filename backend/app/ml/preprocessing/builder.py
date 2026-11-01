@@ -66,7 +66,8 @@ def assign_roles(profile: DatasetProfile, features: Sequence[str]) -> Preprocess
     )
 
 
-def build_preprocessor(config: PreprocessingConfig) -> ColumnTransformer:
+def build_preprocessor(config: PreprocessingConfig, *, dense: bool = False) -> ColumnTransformer:
+    """`dense` is for estimators that reject the sparse matrices many one-hot columns produce."""
     numeric = Pipeline(
         [
             ("impute", SimpleImputer(strategy="median")),
@@ -84,4 +85,6 @@ def build_preprocessor(config: PreprocessingConfig) -> ColumnTransformer:
             ]
         )
         transformers.append(("categorical", categorical, list(config.categorical)))
+    if dense:
+        return ColumnTransformer(transformers, sparse_threshold=0)
     return ColumnTransformer(transformers)

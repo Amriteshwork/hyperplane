@@ -9,4 +9,5 @@ algorithms:
 ---
 
 Probabilistic classifiers estimate the distribution of the features within each class and
-turn it into class probabilities with Bayes' theorem.
+turn it into class probabilities with Bayes' theorem. They introduce likelihood and the
+assumption of conditional independence.

@@ -1,0 +1,8 @@
+type: blog
+title: "Naive Bayes (scikit-learn user guide)"
+url: https://scikit-learn.org/stable/modules/naive_bayes.html
+author: scikit-learn developers
+level: intermediate
+why: The library's own account of the model family, including what its probabilities are not good for.
+source: curated
+checked: 2026-11-01

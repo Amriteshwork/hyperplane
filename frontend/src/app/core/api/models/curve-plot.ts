@@ -17,5 +17,6 @@ export interface CurvePlot {
   series: Array<CurveSeries>;
   title: string;
   x_label: string;
+  x_scale?: 'linear' | 'log';
   y_label: string;
 }

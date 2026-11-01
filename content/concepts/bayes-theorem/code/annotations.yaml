@@ -1,0 +1,63 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    short: "Reuse the bell curve from the probability page, for the continuous example at the end."
+    deep: |
+      `normal_pdf` is the height of the bell curve. Download with dependencies to get the file alongside.
+    concepts: [probability]
+
+  posterior:
+    span: block
+    short: "Multiply prior by likelihood for each class, then scale so they add up to 1."
+    deep: |
+      This is the whole theorem. The numbers on top are $P(x \mid c)\,P(c)$, and their sum is
+      $P(x)$. Using `axis=-1` lets the same line handle one case or a whole table of them.
+    concepts: [probability]
+
+  demo: &demo
+    short: "Everything below runs only when this file is run, so other pages can import `posterior`."
+    deep: |
+      Keeping the demo under this guard means importing this file runs nothing, which the loader checks.
+
+  test: &test
+    span: block
+    short: "The screening test: a 90% hit rate, but only about a 15% chance of being sick."
+    deep: |
+      The class that dominates is the healthy one: its 5% false-positive rate applies to 99% of
+      people, which beats the 90% hit rate on the 1% who are sick.
+
+  simulate: &simulate
+    span: block
+    short: "Simulate two million people and count: the formula matches what actually happens."
+    deep: |
+      `positive[sick.astype(int)]` looks up each person's chance of testing positive. Among those
+      who do, the share who are sick is the posterior, with no formula involved.
+
+  update: &update
+    span: block
+    short: "Use the posterior as the next prior: two positives give the same answer as both at once."
+    deep: |
+      This is only right if the two tests are independent once you know whether the person is sick.
+      Two tests failing for the same reason wouldn't count as twice the evidence.
+    concepts: [conditional-independence]
+
+  continuous:
+    span: block
+    short: "The same formula with bell-curve heights as likelihoods, checked on rows near x = 0.5."
+    deep: |
+      For a continuous feature, the likelihood is a density rather than a probability. The scale it
+      is measured in cancels out, since the ratio between classes is all that matters. This is how
+      Gaussian Naive Bayes treats each numeric feature.
+    concepts: [probability, likelihood]
+
+pytorch:
+  posterior:
+    span: block
+    short: "Multiply prior by likelihood for each class, then scale so they add up to 1."
+    deep: |
+      Identical to the NumPy version, apart from `dim` and `keepdim`. There are no gradients here:
+      this is plain tensor arithmetic.
+  demo: *demo
+  test: *test
+  simulate: *simulate
+  update: *update

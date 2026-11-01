@@ -3,6 +3,7 @@
 
 import { Coefficient } from '../models/coefficient';
 import { Evaluation } from '../models/evaluation';
+import { GaussianReport } from '../models/gaussian-report';
 import { Importance } from '../models/importance';
 import { NeighbourReport } from '../models/neighbour-report';
 import { NetworkSummary } from '../models/network-summary';
@@ -15,6 +16,7 @@ export interface TrainingReport {
   coefficients?: Array<Coefficient>;
   evaluation: Evaluation;
   feature_importance?: Array<Importance>;
+  gaussians?: GaussianReport | null;
   n_test: number;
   n_train: number;
   neighbours?: NeighbourReport | null;

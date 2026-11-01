@@ -1,0 +1,79 @@
+# Explanations for the `# @a:<anchor>` comments in numpy.py / pytorch.py (ADR 0006).
+numpy:
+  reuse:
+    span: block
+    short: "Reuse Bayes' theorem and the log density from the two pages this one builds on."
+    deep: |
+      The log density builds on the likelihood page. Download with dependencies to get the file alongside.
+    concepts: [bayes-theorem, likelihood]
+
+  naive:
+    span: block
+    short: "Add log densities over the features, then use Bayes' theorem to get probabilities."
+    deep: |
+      `.sum(axis=2)` is where the assumption lives. Adding logs is multiplying densities, which
+      treats each feature as separate evidence. Subtracting the largest score before `np.exp` stops
+      everything rounding to 0, and the scores already include the prior, so the final step passes
+      equal priors.
+    concepts: [logarithms-exponentials]
+
+  demo: &demo
+    short: "Everything below runs only when this file is run."
+    deep: |
+      Keeping the demo under this guard means importing this file runs nothing, which the loader checks.
+
+  coins:
+    span: block
+    short: "Two tosses depend on each other overall, but not once you know which coin it was."
+    deep: |
+      A head makes the two-headed coin more likely, which makes another head more likely, so overall
+      $P(\text{both}) = 5/8$ rather than $(3/4)^2$. Among rows with the fair coin, it is exactly
+      $1/4 = (1/2)^2$. The same structure applies to features and a class.
+
+  data:
+    span: block
+    short: "Two equally common classes whose one informative feature can be repeated."
+    deep: |
+      We use the true means and variances rather than fit them, so that any overconfidence below comes
+      from the assumption and not from estimation error.
+
+  exact:
+    span: block
+    short: "When features really are independent, the product is the true joint density."
+    deep: |
+      The right-hand side is the two-dimensional normal density with no correlation. So the assumption
+      isn't wrong in itself: it's exact whenever the data agrees with it.
+
+  double-count: &double-count
+    span: block
+    short: "Repeat one feature ten times: the confidence climbs while the accuracy doesn't move."
+    deep: |
+      With one copy the average confidence equals the accuracy: the probabilities are right. Ten
+      identical copies carry no new information, but the model counts them as ten pieces of evidence.
+      The class it already favoured is unchanged, so the labels stay put and only the stated certainty
+      grows.
+    concepts: [log-loss]
+
+  xor:
+    span: block
+    short: "XOR: each feature alone says nothing, so a model of single features can only guess."
+    deep: |
+      Within each class, every feature has about the same mean and variance. All the information is in
+      how the two combine, which is exactly what the model doesn't look at.
+    concepts: [decision-boundary]
+
+pytorch:
+  reuse:
+    short: "Reuse the log density from the likelihood page."
+    deep: |
+      The log density builds on the likelihood page. Download with dependencies to get the file alongside.
+    concepts: [likelihood]
+  naive:
+    span: block
+    short: "Add log densities over the features, then softmax into probabilities."
+    deep: |
+      `softmax` does the same scaling as the NumPy version's Bayes step, and it's stable for large
+      negative scores.
+    concepts: [softmax]
+  demo: *demo
+  double-count: *double-count

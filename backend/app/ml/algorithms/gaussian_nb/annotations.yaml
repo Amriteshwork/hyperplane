@@ -1,0 +1,254 @@
+# Explanations for `# @a:<anchor>` comments (ADR 0006). `short` is one sentence; `deep` is
+# Markdown with KaTeX math. `concepts` link to content/concepts/<id>.
+
+train:
+  imports:
+    span: block
+    short: "Load NumPy, pandas, joblib to save the model, and the scikit-learn pieces we use."
+    deep: |
+      `GaussianNB` (from `sklearn.naive_bayes`) is the model. `LogisticRegression` is only imported to
+      compare against. `clone` copies a pipeline unfitted, and `cross_val_score` compares smoothing
+      values without using the test set. NumPy is there because we add up one prediction by hand.
+
+  config:
+    span: block
+    short: "Every choice made in the Lab, written as constants so you can change and rerun them."
+    deep: |
+      These values were filled in from your run: the file, the column to predict (`TARGET`), which
+      columns are features, how much data to hold out, and the random seed.
+
+      `SEED` only fixes the train/test split. Fitting has no randomness: the same rows always give
+      the same means and variances.
+    concepts: [train-test-split]
+
+  load:
+    span: block
+    short: "Read the CSV, drop rows with no target, then split features (X) from the target (y)."
+    deep: |
+      `X` is the **feature matrix** (one row per example, one column per feature) and `y` holds the
+      class labels. Rows with a missing target can't be used; missing *feature* values are filled in
+      during preprocessing.
+
+  split:
+    span: block
+    short: "Hold out part of the data so we can measure performance on rows the model never saw."
+    deep: |
+      The means and variances come only from the training rows. With so few numbers fitted, the
+      training and test scores tend to stay close, but only the held-out score is an honest one.
+    concepts: [train-test-split]
+
+  preprocess:
+    span: block
+    short: "Fill in missing values, standardise numbers, one-hot encode categories, and keep it dense."
+    deep: |
+      **Scaling matters less here than for k-NN.** Each feature gets its own bell curve in its own
+      units, so a feature's scale doesn't change its likelihood ratio. It only matters through the
+      smoothing, which is a share of the largest variance: unscaled, one feature with big numbers
+      would widen every other feature's curve.
+
+      `sparse_threshold=0` is here because `GaussianNB` rejects sparse matrices, which many one-hot
+      columns would otherwise produce. A dense matrix costs more memory when a column has many
+      categories.
+
+      One-hot columns aren't bell-shaped: they are only ever 0 or 1. This model fits a curve to them
+      anyway, and that causes the problem the smoothing is there to limit.
+
+      All of it is learned **from the training set only**, so no information leaks from the test set.
+    concepts: [feature-scaling]
+
+  model:
+    span: block
+    short: "Create the model with your settings, chained after preprocessing."
+    deep: |
+      `var_smoothing` is the only setting. It adds this share of the largest feature variance to every
+      variance:
+
+      $$\sigma^2_{c,j} \leftarrow \sigma^2_{c,j} + \text{var\_smoothing} \cdot \max_j \operatorname{Var}(x_j)$$
+
+      The class priors are measured from the training rows. scikit-learn also accepts `priors`, one
+      number per class, if you know the real base rates differ from your sample.
+    concepts: [likelihood]
+
+  fit:
+    span: block
+    short: "Fit the preprocessing, then measure one mean and one variance per class and feature."
+    deep: |
+      There's no loss to minimise and no iterations: the averages *are* the maximum-likelihood fit, so
+      fitting is one pass over the data. That makes this among the fastest models to train, and it
+      needs far fewer rows than a model that has to learn how its features interact.
+    concepts: [likelihood]
+
+  predict:
+    span: block
+    short: "Predict the test rows: the likeliest class for each, and every class's probability."
+    deep: |
+      The probabilities come from Bayes' theorem. They are often pushed close to 0 or 1, so treat them
+      as a ranking rather than as odds you could bet on. The confidence check below measures this.
+    concepts: [bayes-theorem]
+
+  evaluate:
+    span: block
+    short: "Score the predictions with accuracy, precision, recall, F1, log-loss and ROC-AUC."
+    deep: |
+      The same metrics as Logistic Regression, so you can compare them directly. **Watch log-loss.**
+      Because the probabilities are extreme, a wrong answer is punished hard, so it often looks far
+      worse than accuracy. On Breast Cancer, the accuracy is around 0.92 while the log-loss is about
+      0.58; Logistic Regression's is about 0.10.
+    concepts: [classification-metrics, roc-auc, log-loss]
+
+  confusion:
+    span: block
+    short: "Count the test rows by actual class (rows) and predicted class (columns)."
+    deep: |
+      The diagonal holds the correct predictions. A rare class starts with a low prior, but the prior
+      is only one term in the sum: a few features can outweigh it, so rare classes do better here than
+      you might expect.
+    concepts: [classification-metrics, class-imbalance]
+
+  learned:
+    span: block
+    short: "Print everything the model learned: the priors, and each feature's mean and spread per class."
+    deep: |
+      This is the whole model. A feature whose means differ by a lot compared with its spreads
+      separates the classes well; if the means are about equal, it adds almost nothing.
+
+      These numbers are in standardised units, because the model never sees your raw values. The Lab
+      converts them back to the data's own units. The spreads include the smoothing, which is why a
+      one-hot column that never changes within a class still has a spread.
+    concepts: [likelihood, probability]
+
+  evidence:
+    span: block
+    short: "Add up one prediction by hand: the log prior plus each feature's log likelihood, per class."
+    deep: |
+      $$\log P(c) + \sum_j \log \mathcal{N}(x_j \mid \mu_{c,j}, \sigma^2_{c,j})$$
+
+      The `assert` shows that this one expression is everything `predict` does. Multiplying instead of
+      adding is what the theory says, but a product of hundreds of small densities would round to
+      zero, so we add logs.
+
+      The class with the largest sum wins. The Lab shows this same sum feature by feature, which is the
+      fastest way to see why a prediction went wrong.
+    concepts: [bayes-theorem, conditional-independence, logarithms-exponentials]
+
+  overconfidence:
+    span: block
+    short: "Compare how sure the model says it is with how often it is right."
+    deep: |
+      If the probabilities were honest, these two numbers would match. When the first is clearly higher,
+      the model is overconfident, and the usual reason is correlated features: the same evidence gets
+      counted more than once.
+    concepts: [conditional-independence]
+
+  independence:
+    span: block
+    short: "Find the two numeric features that are most correlated within a class."
+    deep: |
+      The model assumes that, once you know the class, features tell you nothing about each other.
+      Subtracting each row's class mean removes what the class explains, so what's left should be
+      unrelated. Any correlation in it is what the assumption ignores, and values near $\pm 1$ mean a
+      feature's evidence is being counted twice.
+
+      Correlation only sees straight-line relationships, so a low number doesn't prove independence.
+      One-hot columns are left out, as those from one category always move together.
+    concepts: [conditional-independence]
+
+  overfit:
+    span: block
+    short: "Compare the training accuracy with the test accuracy."
+    deep: |
+      Expect these to be close. With so few parameters and such a strong assumption, this model tends
+      to underfit rather than overfit, so a low score on both usually means it's too simple for the
+      data.
+    concepts: [overfitting-underfitting, bias-variance]
+
+  choose-smoothing:
+    span: block
+    short: "Score several smoothing values by 5-fold cross-validation on the training rows."
+    deep: |
+      Each value is scored on five different held-out parts of the training rows, with preprocessing
+      refitted each time, so the test set stays an honest final check. This is the same loop as the
+      Lab's "Cross-validated accuracy by Variance smoothing" plot, on a log axis because the values
+      span nine orders of magnitude.
+
+      On purely numeric data the curve is usually flat until the smoothing is large. With one-hot
+      columns it often climbs, because more smoothing limits the damage from categories a class
+      never showed.
+    concepts: [cross-validation, hyperparameter-search]
+
+  baseline:
+    span: block
+    short: "Train Logistic Regression on the same rows, for comparison."
+    deep: |
+      Both models end up scoring classes with a sum over features, but they fit it differently. Naive
+      Bayes describes each class and needs few rows; Logistic Regression learns the boundary directly
+      and usually wins once data is plentiful. If they are close, prefer whichever is simpler to run.
+    concepts: [conditional-independence]
+
+  save:
+    span: block
+    short: "Save the whole pipeline to a file you can load later."
+    deep: |
+      `joblib` writes both the preprocessing and the model. The model is small: just a mean and a
+      variance per class and feature, plus the priors. Only load joblib files you trust: loading can
+      run code.
+
+scratch:
+  numpy:
+    short: "NumPy is all this needs: some averages, some logs and an argmax."
+    deep: |
+      No solver and no gradient. Training is `mean` and `var`, and predicting is one formula.
+
+  class:
+    span: block
+    short: "The model's settings, and the three tables it learns."
+    deep: |
+      `class_prior_` has one number per class. `theta_` and `var_` have one row per class and one
+      column per feature, using the names scikit-learn uses.
+    concepts: [likelihood]
+
+  fit:
+    span: block
+    short: "Measure each class's share of the rows, and each feature's mean and variance within it."
+    deep: |
+      Features are handled separately within each class, and that's the naive assumption at work.
+      Modelling how they vary together would need a covariance for every pair of features. These
+      averages are also the maximum-likelihood estimates, so no optimiser is needed.
+    concepts: [likelihood, conditional-independence]
+
+  smoothing:
+    short: "Add a share of the largest feature variance to every variance."
+    deep: |
+      A variance of zero would mean dividing by zero, and a tiny one makes a bell curve a spike: any
+      other value then gets an enormous penalty. Adding the same amount everywhere puts a floor under
+      all the curves.
+    concepts: [likelihood]
+
+  joint:
+    span: block
+    short: "Each class's log prior plus the sum of its features' log likelihoods."
+    deep: |
+      Bayes' theorem says the posterior is proportional to prior × likelihood, and the naive assumption
+      turns the likelihood into a product over features. Taking logs turns the product into a sum, so
+      nothing underflows.
+
+      Reshaping `X` to `(queries, 1, features)` lets broadcasting compare each query with every class at
+      once.
+    concepts: [bayes-theorem, conditional-independence, logarithms-exponentials]
+
+  predict-proba:
+    span: block
+    short: "Turn the log scores into probabilities that add up to 1."
+    deep: |
+      This divides out the evidence $P(x)$. Going straight to `np.exp(joint)` would underflow to 0 for
+      every class on a row with many features. Only differences between classes matter, so we
+      subtract the largest log score first, which makes it a safe $\exp(0) = 1$.
+    concepts: [bayes-theorem, logarithms-exponentials]
+
+  predict:
+    span: block
+    short: "The class with the largest log score."
+    deep: |
+      The evidence $P(x)$ is the same for every class, so the label doesn't need it, and neither does it
+      need the exponentials. A class with a lower prior can still win if its likelihood is high enough.
+    concepts: [decision-boundary]

@@ -100,6 +100,7 @@ class ConceptArea(StrEnum):
     EVALUATION = "evaluation"
     FEATURES = "features"
     INSTANCE_BASED = "instance-based"
+    PROBABILISTIC = "probabilistic"
     NEURAL_NETWORKS = "neural-networks"
     SEQUENCE_MODELS = "sequence-models"
 
@@ -110,6 +111,7 @@ CONCEPT_AREA_TITLES: dict[ConceptArea, str] = {
     ConceptArea.EVALUATION: "Evaluation & generalisation",
     ConceptArea.FEATURES: "Features & regularisation",
     ConceptArea.INSTANCE_BASED: "Distances & neighbours",
+    ConceptArea.PROBABILISTIC: "Bayes & likelihood",
     ConceptArea.NEURAL_NETWORKS: "Neural networks",
     ConceptArea.SEQUENCE_MODELS: "Sequence models & transformers",
 }

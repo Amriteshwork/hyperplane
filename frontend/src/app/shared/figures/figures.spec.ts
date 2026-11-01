@@ -27,6 +27,10 @@ import { BertInputFigure } from './bert-input-figure';
 import { BoundaryPlaygroundFigure } from './boundary-playground-figure';
 import { BpttUnrolledFigure } from './bptt-unrolled-figure';
 import { EarlyStoppingFigure } from './early-stopping-figure';
+import { BayesBaseRateFigure } from './bayes-base-rate-figure';
+import { DoubleCountingFigure } from './double-counting-figure';
+import { LikelihoodExplorerFigure } from './likelihood-explorer-figure';
+import { NaiveBayesPlaygroundFigure } from './naive-bayes-playground-figure';
 import { DistanceBallsFigure } from './distance-balls-figure';
 import { DistanceConcentrationFigure } from './distance-concentration-figure';
 import { DEFAULT_FIGURES } from './figure-registry';
@@ -83,6 +87,55 @@ describe('figures', () => {
   it('registers a loader for every figure that resolves to a component', async () => {
     for (const load of Object.values(DEFAULT_FIGURES))
       expect(typeof (await load())).toBe('function');
+  });
+
+  const reading = (el: HTMLElement, id: string) =>
+    parseFloat(el.querySelector(`[data-testid="${id}"]`)?.textContent ?? '');
+
+  it('bayes base rate shows false positives swamping a rare condition', async () => {
+    const [fixture, el] = await mount(BayesBaseRateFigure);
+    expect(reading(el, 'posterior')).toBeCloseTo(15.4, 0); // 1% sick, 90% hit, 5% false alarm
+    slide(el, 'How common', 50);
+    await fixture.whenStable();
+    expect(reading(el, 'posterior')).toBeCloseTo(94.7, 0);
+    expect(el.querySelector('svg')?.getAttribute('aria-label')).toContain('94.7');
+  });
+
+  it('likelihood explorer rewards the sample mean and spread', async () => {
+    const [fixture, el] = await mount(LikelihoodExplorerFigure);
+    const start = reading(el, 'log-likelihood');
+    button(el, 'Jump to the best fit').click();
+    await fixture.whenStable();
+    const best = reading(el, 'log-likelihood');
+    expect(best).toBeGreaterThan(start);
+    expect(best).toBeCloseTo(reading(el, 'best-log-likelihood'), 1);
+    slide(el, 'Spread', 0.3);
+    await fixture.whenStable();
+    expect(reading(el, 'log-likelihood')).toBeLessThan(best);
+  });
+
+  it("double counting raises the model's certainty but not the truth", async () => {
+    const [fixture, el] = await mount(DoubleCountingFigure);
+    expect(reading(el, 'naive')).toBeCloseTo(reading(el, 'truth'), 5);
+    const truth = reading(el, 'truth');
+    slide(el, 'Copies', 10);
+    await fixture.whenStable();
+    expect(reading(el, 'truth')).toBe(truth);
+    expect(reading(el, 'naive')).toBeGreaterThan(truth + 10);
+  });
+
+  it('naive bayes playground grows overconfident as features correlate', async () => {
+    const [fixture, el] = await mount(NaiveBayesPlaygroundFigure);
+    const gap = () => reading(el, 'confidence') - reading(el, 'accuracy');
+    expect(Math.abs(gap())).toBeLessThan(5);
+    slide(el, 'Correlation', 0.95);
+    await fixture.whenStable();
+    expect(gap()).toBeGreaterThan(5);
+    const plot = el.querySelector('svg');
+    const before = reading(el, 'query-p');
+    plot?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    await fixture.whenStable();
+    expect(reading(el, 'query-p')).not.toBe(before);
   });
 
   it('knn playground memorises at k = 1, generalises at a larger k', async () => {

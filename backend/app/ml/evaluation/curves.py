@@ -58,6 +58,7 @@ def tuning_curve_plot(curve: TuningCurve) -> CurvePlot:
         marker=None
         if curve.chosen is None
         else CurveMarker(x=curve.chosen, label=f"This run ({curve.chosen:g})"),
+        x_scale="log" if curve.log_scale else "linear",
     )
 
 

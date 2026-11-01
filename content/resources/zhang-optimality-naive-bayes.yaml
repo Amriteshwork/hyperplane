@@ -1,0 +1,8 @@
+type: paper
+title: "The Optimality of Naive Bayes"
+url: https://www.cs.unb.ca/~hzhang/publications/FLAIRS04ZhangH.pdf
+author: Harry Zhang
+level: advanced
+why: Proposes a reason an assumption that is rarely true so often does no harm to classification.
+source: curated
+checked: 2026-11-01

@@ -1,0 +1,8 @@
+type: blog
+title: "Probability calibration (scikit-learn user guide)"
+url: https://scikit-learn.org/stable/modules/calibration.html
+author: scikit-learn developers
+level: intermediate
+why: How to check whether a classifier's probabilities mean what they say, and how to correct them.
+source: curated
+checked: 2026-11-01

@@ -7,6 +7,7 @@ import { Chart } from '../../shared/ui/chart/chart';
 import { DataTable, TableColumn } from '../../shared/ui/data-table/data-table';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { featureLabel } from './feature-label';
+import { GaussianExplorer } from './gaussian-explorer';
 import { NeighbourExplorer } from './neighbour-explorer';
 import { NetworkDiagram } from './network-diagram';
 import { barOptions, plotOptions } from './plot-options';
@@ -25,7 +26,16 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
 /** Metrics, evaluation plots, coefficients and whatever else this kind of model can show of a run. */
 @Component({
   selector: 'app-run-results',
-  imports: [DecimalPipe, HlmButton, Chart, DataTable, NeighbourExplorer, NetworkDiagram, StatCard],
+  imports: [
+    DecimalPipe,
+    HlmButton,
+    Chart,
+    DataTable,
+    GaussianExplorer,
+    NeighbourExplorer,
+    NetworkDiagram,
+    StatCard,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section aria-labelledby="metrics-heading">
@@ -94,6 +104,13 @@ const CLASS_COEFFICIENT_COLUMNS: readonly TableColumn[] = [
       <section class="mt-10" aria-labelledby="neighbours-heading">
         <h2 id="neighbours-heading" class="text-lg font-semibold">The rows behind a prediction</h2>
         <app-neighbour-explorer [report]="neighbours" />
+      </section>
+    }
+
+    @if (report().gaussians; as gaussians) {
+      <section class="mt-10" aria-labelledby="gaussians-heading">
+        <h2 id="gaussians-heading" class="text-lg font-semibold">What the model learned</h2>
+        <app-gaussian-explorer [report]="gaussians" [dark]="dark()" />
       </section>
     }
 

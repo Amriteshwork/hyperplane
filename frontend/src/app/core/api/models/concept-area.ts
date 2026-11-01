@@ -10,5 +10,6 @@ export type ConceptArea =
   | 'evaluation'
   | 'features'
   | 'instance-based'
+  | 'probabilistic'
   | 'neural-networks'
   | 'sequence-models';

@@ -181,6 +181,7 @@ def test_training_options_list_targets_algorithms_and_features(
         {"id": "logistic_regression", "name": "Logistic Regression"},
         {"id": "sgd_classifier", "name": "SGD Classifier"},
         {"id": "knn_classifier", "name": "KNN Classifier"},
+        {"id": "gaussian_nb", "name": "Gaussian Naive Bayes"},
         {"id": "mlp_classifier", "name": "MLP Classifier"},
     ]
     assert {f["column"]: f["role"] for f in options["features"]} == {

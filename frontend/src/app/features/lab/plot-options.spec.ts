@@ -1,7 +1,7 @@
 import { CurvePlot } from '../../core/api/models/curve-plot';
 import { HeatmapPlot } from '../../core/api/models/heatmap-plot';
 import { ScatterPlot } from '../../core/api/models/scatter-plot';
-import { barOptions, plotOptions } from './plot-options';
+import { barOptions, bellOptions, plotOptions } from './plot-options';
 
 const plot: ScatterPlot = {
   kind: 'scatter',
@@ -172,5 +172,51 @@ describe('barOptions', () => {
     ) as { yAxis: { data: string[] }; series: { data: number[] }[] };
     expect(options.yAxis.data).toEqual(['age', 'bmi']);
     expect(options.series[0].data).toEqual([1, 3]);
+  });
+});
+
+describe('bellOptions', () => {
+  const lines = (options: object) =>
+    (options as { series: { name: string; data: [number, number][] }[] }).series;
+
+  it('draws one normal curve per class, peaking at its mean', () => {
+    const [first, second] = lines(bellOptions(['a', 'b'], [0, 10], [1, 2], 'Bill'));
+    expect([first.name, second.name]).toEqual(['a', 'b']);
+    const peak = (data: [number, number][]) => data.reduce((p, q) => (q[1] > p[1] ? q : p));
+    expect(peak(first.data)[0]).toBe(0);
+    expect(peak(first.data)[1]).toBeCloseTo(1 / Math.sqrt(2 * Math.PI));
+    expect(peak(second.data)[0]).toBe(10);
+  });
+
+  it('keeps the peak of a curve far narrower than the grid', () => {
+    const [spike] = lines(bellOptions(['a', 'b'], [0.3, 0.5], [1e-5, 1], 'Flag'));
+    expect(Math.max(...spike.data.map(([, y]) => y))).toBeGreaterThan(1e4);
+  });
+});
+
+describe('plotOptions log axis', () => {
+  const curve: CurvePlot = {
+    kind: 'curve',
+    id: 'c',
+    title: 'T',
+    description: 'D',
+    x_label: 'Smoothing',
+    y_label: 'Score',
+    series: [
+      {
+        name: 'Score',
+        points: [
+          [1e-9, 0.7],
+          [1, 0.9],
+        ],
+      },
+    ],
+    axes: 'data',
+  };
+  const xAxis = (plot: CurvePlot) => (plotOptions(plot) as { xAxis: { type: string } }).xAxis.type;
+
+  it('uses one only when the plot asks for it', () => {
+    expect(xAxis({ ...curve, x_scale: 'log' })).toBe('log');
+    expect(xAxis(curve)).toBe('value');
   });
 });

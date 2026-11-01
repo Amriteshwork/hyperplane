@@ -1,0 +1,11 @@
+# Curated links in display order; `note` says what each teaches on this page (ADR 0016).
+- id: statquest-maximum-likelihood
+  note: "Start here: the idea of sliding a distribution along the data to find the best fit, in six minutes."
+- id: statquest-probability-not-likelihood
+  note: "The distinction that opens this page, made in five minutes. It's a follow-up to the video above."
+- id: seeing-theory
+  note: "Chapter 5's Likelihood Function section lets you explore the idea interactively."
+- id: statquest-mle-normal
+  note: "The full derivation of the formulas in the Maximum likelihood section, with the calculus shown."
+- id: probabilitycourse-mle
+  note: "Written definitions of likelihood and log-likelihood, with worked derivations including the normal case."

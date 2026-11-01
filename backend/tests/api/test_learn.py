@@ -28,9 +28,11 @@ def test_families_list_available_and_upcoming_algorithms(client: TestClient) -> 
     assert neighbours["knn_regressor"]["task_types"] == ["regression"]
     assert neighbours["knn_classifier"]["task_types"] == ["binary", "multiclass"]
     upcoming = {a["id"]: a for a in body["items"][2]["algorithms"]}
-    assert upcoming["gaussian_nb"] == {
-        "id": "gaussian_nb",
-        "name": "Gaussian Naive Bayes",
+    assert upcoming["gaussian_nb"]["available"] is True
+    assert upcoming["gaussian_nb"]["task_types"] == ["binary", "multiclass"]
+    assert upcoming["multinomial_nb"] == {
+        "id": "multinomial_nb",
+        "name": "Multinomial / Bernoulli NB",
         "available": False,
         "summary": None,
         "task_types": [],
@@ -82,6 +84,7 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
         "evaluation",
         "features",
         "instance-based",
+        "probabilistic",
         "neural-networks",
         "sequence-models",
     ]
@@ -90,6 +93,9 @@ def test_concept_index_groups_every_concept_by_area(client: TestClient) -> None:
         "lazy-learning",
         "curse-of-dimensionality",
     ]
+    probabilistic = areas["probabilistic"]
+    assert sorted(probabilistic) == ["bayes-theorem", "conditional-independence", "likelihood"]
+    assert probabilistic[-1] == "conditional-independence"  # builds on the other two
     assert areas["neural-networks"].index("neurons") < areas["neural-networks"].index(
         "backpropagation"
     )

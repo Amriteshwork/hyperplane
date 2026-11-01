@@ -138,6 +138,7 @@ describe('RunResults tuning suggestion', () => {
     const element = mount({ n_train: 8, n_test: 2, evaluation }).nativeElement as HTMLElement;
     expect(element.querySelector('[role="status"]')).toBeNull();
     expect(element.querySelector('app-neighbour-explorer')).toBeNull();
+    expect(element.querySelector('app-gaussian-explorer')).toBeNull();
   });
 });
 

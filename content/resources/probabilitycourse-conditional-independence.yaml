@@ -1,0 +1,8 @@
+type: course
+title: "Conditional Independence (Introduction to Probability, Statistics and Random Processes)"
+url: https://www.probabilitycourse.com/chapter1/1_4_4_conditional_independence.php
+author: Hossein Pishro-Nik
+level: beginner
+why: Two short worked examples that show each kind of independence failing without the other.
+source: curated
+checked: 2026-11-01

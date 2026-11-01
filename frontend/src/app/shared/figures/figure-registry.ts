@@ -54,6 +54,12 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
   'base-vs-chat': () => import('./base-vs-chat-figure').then((m) => m.BaseVsChatFigure),
   'reward-votes': () => import('./reward-votes-figure').then((m) => m.RewardVotesFigure),
   'rlhf-leash': () => import('./rlhf-leash-figure').then((m) => m.RlhfLeashFigure),
+  'bayes-base-rate': () => import('./bayes-base-rate-figure').then((m) => m.BayesBaseRateFigure),
+  'likelihood-explorer': () =>
+    import('./likelihood-explorer-figure').then((m) => m.LikelihoodExplorerFigure),
+  'double-counting': () => import('./double-counting-figure').then((m) => m.DoubleCountingFigure),
+  'naive-bayes-playground': () =>
+    import('./naive-bayes-playground-figure').then((m) => m.NaiveBayesPlaygroundFigure),
   'knn-playground': () => import('./knn-playground-figure').then((m) => m.KnnPlaygroundFigure),
   'knn-regression': () => import('./knn-regression-figure').then((m) => m.KnnRegressionFigure),
   'distance-balls': () => import('./distance-balls-figure').then((m) => m.DistanceBallsFigure),

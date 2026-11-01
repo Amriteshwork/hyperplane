@@ -85,7 +85,16 @@ function curveOptions(plot: CurvePlot): EChartsCoreOption {
     grid: { left: 56, right: 16, top: several || plot.marker ? 40 : 16, bottom: 48 },
     tooltip: { trigger: 'item' },
     legend: several ? { top: 0 } : undefined,
-    xAxis: range(plot.x_label),
+    xAxis:
+      plot.x_scale === 'log'
+        ? {
+            ...axis(plot.x_label),
+            type: 'log',
+            logBase: 10,
+            scale: false,
+            axisLabel: { formatter: tickOnLogAxis, hideOverlap: true },
+          }
+        : range(plot.x_label),
     yAxis: range(plot.y_label),
     series: plot.series.map((line, i) => ({
       type: 'line',
@@ -128,6 +137,41 @@ export function barOptions(
     },
     series: [{ type: 'bar', data: ordered.map((bar) => bar.value) }],
   };
+}
+
+/** One normal curve per class; each mean is on the grid, so even a very narrow curve shows its peak. */
+export function bellOptions(
+  classes: readonly string[],
+  means: readonly number[],
+  stds: readonly number[],
+  xLabel: string,
+): EChartsCoreOption {
+  // Rounded because ECharts prints the axis's two ends exactly as given.
+  const low = Number(Math.min(...means.map((m, i) => m - 4 * stds[i])).toPrecision(3));
+  const high = Number(Math.max(...means.map((m, i) => m + 4 * stds[i])).toPrecision(3));
+  const grid = Array.from({ length: 201 }, (_, i) => low + ((high - low) * i) / 200);
+  const xs = [...grid, ...means].sort((a, b) => a - b);
+  return {
+    grid: { left: 56, right: 16, top: 40, bottom: 48 },
+    tooltip: { trigger: 'item' },
+    legend: { top: 0 },
+    xAxis: { ...axis(xLabel), scale: false, min: low, max: high },
+    yAxis: { ...axis('Density'), scale: false, min: 0, nameGap: 40 },
+    series: classes.map((name, i) => ({
+      type: 'line',
+      name,
+      showSymbol: false,
+      data: xs.map((x) => [x, normalDensity(x, means[i], stds[i])]),
+    })),
+  };
+}
+
+function tickOnLogAxis(value: number): string {
+  return value < 0.001 ? value.toExponential(0).replace('e-', 'e−') : String(value);
+}
+
+function normalDensity(x: number, mean: number, std: number): number {
+  return Math.exp(-((x - mean) ** 2) / (2 * std ** 2)) / (std * Math.sqrt(2 * Math.PI));
 }
 
 function axis(name: string): object {
