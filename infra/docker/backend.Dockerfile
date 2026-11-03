@@ -36,6 +36,9 @@ FROM python:${PYTHON_VERSION}-slim-trixie AS runtime
 RUN groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --home-dir /app --no-create-home app \
  && mkdir -p /data/storage && chown app:app /data/storage
+# The base image ships no stdlib bytecode and PYTHONDONTWRITEBYTECODE stops it being cached, so
+# every process, healthchecks included, would recompile it (seconds each, past their 5 s timeout).
+RUN python -m compileall -q /usr/local/lib/python3.14
 
 COPY --from=builder --chown=app:app /app /app
 COPY --chown=app:app content/ /srv/content/

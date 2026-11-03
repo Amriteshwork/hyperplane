@@ -295,8 +295,9 @@ def test_chat_track_is_the_transformer_track_then_the_road_to_a_chatbot(
 
 def test_concept_pages_declare_their_videos(client: TestClient) -> None:
     videos = client.get("/api/v1/concepts/text-generation").json()["videos"]
-    assert videos == [
-        {"id": "beam-vs-greedy", "title": "Why the best first word can lose", "youtube_id": None}
+    # youtube_id is left out: it changes from None to a real id when a video is uploaded.
+    assert [(v["id"], v["title"]) for v in videos] == [
+        ("beam-vs-greedy", "Why the best first word can lose")
     ]
     assert client.get("/api/v1/concepts/vectors").json()["videos"] == []
 

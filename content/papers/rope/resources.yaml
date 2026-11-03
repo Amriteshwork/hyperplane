@@ -1,0 +1,13 @@
+# Curated links in display order; `note` says what each adds to this walkthrough (ADR 0016).
+- id: fleetwood-designing-positional-encoding
+  note: "Read alongside sections 2 and 3.1: the same 'what would a good positional encoding need?' road, with PyTorch you can run."
+- id: eleuther-rotary-embeddings
+  note: "The post that made RoPE famous outside China: the complex-number derivation, plus experiments where it beats learned and T5 positions."
+- id: 3blue1brown-linear-transformations
+  note: "Watch first if rotation matrices feel shaky: why a matrix's columns are where (1, 0) and (0, 1) land, the idea section 0 uses."
+- id: kazemnejad-positional-encoding
+  note: "The sinusoidal encoding RoPE grew out of, with the proof that a shift is a rotation, the seed of this whole paper."
+- id: barbero-round-and-round
+  note: "Advanced, for after section 3.4.3: what trained models actually do with each of RoPE's frequencies."
+- id: peng-yarn
+  note: "Advanced, for the epilogue: how RoPE models are stretched to contexts far longer than they were trained on."

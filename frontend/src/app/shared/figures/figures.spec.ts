@@ -40,6 +40,8 @@ import { KnnRegressionFigure } from './knn-regression-figure';
 import { NetworkShapeFigure } from './network-shape-figure';
 import { PositionalEncodingExplorerFigure } from './positional-encoding-explorer-figure';
 import { ReluSumFigure } from './relu-sum-figure';
+import { RopeDecayFigure } from './rope-decay-figure';
+import { RopeRotationFigure } from './rope-rotation-figure';
 import { TransformerBlockFigure } from './transformer-block-figure';
 import { XorNetworkFigure } from './xor-network-figure';
 
@@ -493,6 +495,33 @@ describe('figures', () => {
     const curve = el.querySelectorAll('svg')[2].getAttribute('aria-label') ?? '';
     expect(curve).toContain('Similarity of position 30');
     expect(curve).toContain('30 vs 33');
+  });
+
+  it('RoPE rotation: shifting both keeps the score only when rotating', async () => {
+    const [fixture, el] = await mount(RopeRotationFigure);
+    const strip = () => el.querySelectorAll('svg')[1].getAttribute('aria-label') ?? '';
+    const live = () => el.querySelector('[aria-live]')?.textContent ?? '';
+    expect(strip()).toContain('All equal');
+    const before = live().match(/Score q · k = ([-\d.]+)/)?.[1];
+    button(el, 'Shift both').click();
+    await fixture.whenStable();
+    expect(live()).toContain(`Score q · k = ${before}`);
+    button(el, 'Add a stamp').click();
+    await fixture.whenStable();
+    expect(strip()).toContain('They differ');
+  });
+
+  it('RoPE decay: a bigger base keeps distant scores alive', async () => {
+    const [fixture, el] = await mount(RopeDecayFigure);
+    const kept = () =>
+      Number(el.querySelector('[aria-live]')?.textContent?.match(/keeps\s+(-?\d+)%/)?.[1]);
+    const paperBase = kept();
+    button(el, '500,000').click();
+    await fixture.whenStable();
+    expect(kept()).toBeGreaterThan(paperBase);
+    button(el, '100').click();
+    await fixture.whenStable();
+    expect(kept()).toBeLessThan(paperBase);
   });
 
   it('transformer block: walks the stages and counts GPT-2 exactly', async () => {

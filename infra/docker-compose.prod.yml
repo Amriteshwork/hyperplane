@@ -1,0 +1,56 @@
+# Production overlay on docker-compose.yml (see infra/DEPLOY.md). Images come from GHCR, nothing
+# publishes a host port (traffic arrives through the Cloudflare Tunnel), and `:?` makes a missing
+# secret fail the deploy instead of falling back to the dev default in the base file.
+
+x-prod-env: &prod-env
+  APP_ENV: production
+  LOG_FORMAT: json
+  SESSION_COOKIE_SECURE: "true"
+
+x-prod-image: &backend-image ${IMAGE_PREFIX:-ghcr.io/amriteshwork/hyperplane}-backend:${IMAGE_TAG:?}
+
+services:
+  web:
+    image: ${IMAGE_PREFIX:-ghcr.io/amriteshwork/hyperplane}-web:${IMAGE_TAG:?}
+    ports: !reset []
+
+  api:
+    image: *backend-image
+    environment: *prod-env
+    ports: !reset []
+
+  worker:
+    image: *backend-image
+    environment: *prod-env
+
+  migrate:
+    image: *backend-image
+    environment: *prod-env
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  garage:
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?}
+      GARAGE_METRICS_TOKEN: ${GARAGE_METRICS_TOKEN:?}
+      GARAGE_DEFAULT_ACCESS_KEY: ${S3_ACCESS_KEY_ID:?}
+      GARAGE_DEFAULT_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:?}
+    ports: !reset []
+
+  # Outbound-only link to Cloudflare; the public hostname → http://web:80 is set in its dashboard.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped

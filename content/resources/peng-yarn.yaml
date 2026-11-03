@@ -1,0 +1,8 @@
+type: paper
+title: "YaRN: Efficient Context Window Extension of Large Language Models"
+url: https://arxiv.org/abs/2309.00071
+author: Peng et al. (2023)
+level: advanced
+why: "How to stretch a RoPE model's context: position interpolation, NTK-aware scaling and YaRN, compared side by side."
+source: curated
+checked: 2026-11-03

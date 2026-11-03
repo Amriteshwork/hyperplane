@@ -1,0 +1,8 @@
+type: paper
+title: "Round and Round We Go! What makes Rotary Positional Encodings useful?"
+url: https://arxiv.org/abs/2410.06205
+author: Barbero et al. (ICLR 2025)
+level: advanced
+why: "Looks inside a trained Gemma 7B: the fastest RoPE clocks build positional heads, the slowest carry meaning, and distance decay isn't the whole story."
+source: curated
+checked: 2026-11-03

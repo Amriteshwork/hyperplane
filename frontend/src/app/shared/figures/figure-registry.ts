@@ -22,6 +22,8 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
     import('./attention-heatmap-figure').then((m) => m.AttentionHeatmapFigure),
   'positional-encoding-explorer': () =>
     import('./positional-encoding-explorer-figure').then((m) => m.PositionalEncodingExplorerFigure),
+  'rope-rotation': () => import('./rope-rotation-figure').then((m) => m.RopeRotationFigure),
+  'rope-decay': () => import('./rope-decay-figure').then((m) => m.RopeDecayFigure),
   'transformer-block': () =>
     import('./transformer-block-figure').then((m) => m.TransformerBlockFigure),
   'bptt-unrolled': () => import('./bptt-unrolled-figure').then((m) => m.BpttUnrolledFigure),
