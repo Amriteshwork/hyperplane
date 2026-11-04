@@ -1,6 +1,6 @@
 ---
 title: RoFormer (RoPE), explained
-summary: The 2021 paper behind rotary position embeddings, the way Llama, Mistral, Qwen, Gemma and DeepSeek know where each word is. Every equation derived from scratch, from "what is a rotation?" to why far-away words fade, with the key ideas animated and two figures to play with.
+summary: The 2021 paper behind rotary position embeddings, the way Llama, Mistral, Qwen, Gemma and DeepSeek know where each word is. Every equation derived from scratch, from "what is a rotation?" to why far-away words fade, with the key ideas animated and three figures to play with, plus a 2024 update on what trained models actually do with each clock.
 order: 3
 source: su-rope
 concepts: [vectors, matrix-multiplication, embeddings, self-attention, multi-head-attention, positional-encoding, transformer]
@@ -15,6 +15,9 @@ videos:
   spinning-arrows:
     title: Why far-away words whisper
     youtube: M7RxKjzC9bY
+  previous-token-head:
+    title: "A previous-token head: turn the query back one notch"
+    youtube: _h647ojd3HM
 ---
 
 Here's a puzzle. You have two arrows, a **query** and a **key**, and a number you get from
@@ -703,12 +706,9 @@ can draw it yourself:
 
 **An honest caveat.** This is a **ceiling**, not a promise. A trained model can still put lots of
 attention on a word 1,000 places back if the query and key are built to line up through the slow
-pairs, and models do exactly that when they need to. A 2024 study of Gemma 7B (Barbero et al.,
-*"Round and Round We Go!"*) went further and argued that decay isn't the main reason RoPE works.
-They found the model uses the **fastest** pairs to build sharp positional heads ("attend to the
-previous word"), and the **slowest** pairs, which barely turn over a few thousand words, almost as
-position-free channels for **meaning**. Removing the very slowest frequencies even helped their
-small models. The clocks turn out to be a toolbox, and the model picks the tool.
+pairs, and models do exactly that when they need to. Notice too that the figure's solid line
+assumes the query and key **already match**. A 2024 study went further and argued that decay
+isn't the main reason RoPE works at all. That story is the **update at the end of this page**.
 
 **Why it mattered.** The decay gives RoPE a sensible default ("nearby words matter more"), without
 forbidding long-range attention. And the base, 10,000, controls how fast it happens: a knob that
@@ -801,7 +801,8 @@ followed, all of them about the clocks:
   word-to-word detail survives. Code Llama used a base of 1,000,000; Llama 3 uses **500,000**. Try
   that in the decay figure above: the curve holds up much further out.
 - **YaRN** (Peng et al., 2023): treat each pair differently, leaving fast clocks alone, stretching
-  slow ones, and adjusting the softmax temperature to match.
+  slow ones, and adjusting the softmax temperature to match. It has its own walkthrough:
+  [YaRN, explained](/papers/yarn).
 
 And RoPE escaped text. A picture has two directions, so vision models give half of each query's
 pairs the **row** position and half the **column** position; video models such as Qwen2-VL add a
@@ -811,3 +812,145 @@ third set for **time**. The turntable just gets more axes.
 the sinusoidal clocks RoPE grew from, with RoPE itself in eight lines of PyTorch. The
 [transformer track](/tracks/transformers) builds a small GPT from a NumPy array upward, so you can
 see exactly where those eight lines go.
+
+## Update (2024) · Round and Round: what trained models really do with the clocks
+
+> **The 2024 paper says:** *"A common belief is that RoPE is useful because it helps to decay token
+> dependency as relative distance increases. In this work, we argue that this is unlikely to be the
+> core reason."*
+
+Three years after RoFormer, a team at Google DeepMind and Oxford (Federico Barbero, Alex
+Vitvitskyi, Christos Perivolaropoulos, Razvan Pascanu and Petar Veličković) asked a question the
+original paper couldn't answer: **once a big model is trained, what does it actually do with each
+of RoPE's clocks?** Their paper, *"Round and Round We Go! What makes Rotary Positional Encodings
+useful?"* (ICLR 2025), opened up Gemma 7B (and checked Llama 3.1 8B) and found that the clocks
+split into two jobs. It's the best "sequel" to RoFormer there is, so here are its insights, in the
+same style as the rest of this page.
+
+### Insight 1: the decay only happens for vectors that already match
+
+Look back at section 3.4.3. The solid line in the decay figure is a query and key that are
+**identical**: at distance 0 every pair lines up, and moving apart can only make things worse. But
+real queries and keys are rarely identical. Two simple calculations show that the decay is not a
+general law.
+
+**A misaligned pair gets *closer* with distance.** Take one pair turning at speed $\theta$, with the
+query pointing east and the key pointing south, $90°$ apart. As the key's position moves $\Delta$
+places after the query's, RoPE turns it $\Delta\theta$ back towards east, so their score is
+$\cos(90° - \Delta\theta)$: it **starts at 0 and rises** to its maximum at $\Delta = 90°/\theta$.
+More generally (their Proposition 3.1), for any query and **any** distance $r$ you like, you can pick
+a key that scores highest at exactly that distance: take the query and turn it back by $r$ notches,
+$k = R(-r\theta)\,q$. Then at distance $r$, RoPE turns it forward again, $R(r\theta)\,k = q$, and the
+two line up perfectly. RoPE doesn't force "near beats far"; it lets the model **choose** which
+distance wins.
+
+**Random vectors don't decay at all.** Suppose the query and key are random, every number drawn
+independently from a bell curve centred on 0 (their Proposition 3.2). The score at distance $r$ is
+$q^\top R_{\Theta, r}\, k = \sum_{a,b} q_a\, (R_{\Theta,r})_{ab}\, k_b$. Take the average. Because
+$q$ and $k$ are independent, the average of each product splits, $\mathbb E[q_a k_b] =
+\mathbb E[q_a]\,\mathbb E[k_b] = 0 \cdot 0$:
+
+$$\mathbb E\big[q^\top R_{\Theta, r}\, k\big] = \sum_{a,b} \mathbb E[q_a]\,(R_{\Theta,r})_{ab}\,\mathbb E[k_b] = 0
+\qquad \text{for every distance } r .$$
+
+The average score is 0 at distance 1 and 0 at distance 1,000: no decay. The fading curve in
+section 3.4.3 is real, but it's a property of **matching** vectors, not of RoPE in general.
+
+### Insight 2: measure which clocks a model uses, with one inequality
+
+How do you tell which clocks a trained model relies on? The score is a sum over pairs, and each
+pair's contribution is a dot product of two little arrows. A dot product can never be bigger than
+the two lengths multiplied (the **Cauchy–Schwarz inequality**: $|\mathbf a \cdot \mathbf b| =
+\|\mathbf a\|\|\mathbf b\|\,|\cos\phi| \le \|\mathbf a\|\|\mathbf b\|$). So
+
+$$\big|\,\mathbf q_{[i]} \cdot \mathbf k_{[i]}\big| \;\le\; \|\mathbf q_{[i]}\|\;\|\mathbf k_{[i]}\| .$$
+
+If a model keeps pair $i$'s arrows **short**, that clock can't move the score much, whatever its
+angle. Measuring the average length of each pair, layer by layer, is a cheap X-ray of which clocks
+matter. The result in Gemma 7B (128 pairs per head):
+
+> *"Gemma greatly prefers to use the lowest frequencies of RoPE…"*
+
+Most of the length sits in the **slowest** clocks, in almost every layer. The fast clocks are mostly
+switched off, except in the first and last layers. And the **values**, which RoPE never rotates,
+show no such pattern, so it's RoPE's rotations that push the model there.
+
+### Insight 3: the fastest clocks build "positional heads"
+
+Some heads ignore meaning entirely and attend by position alone: a **diagonal** head (each word
+looks at itself) and a **previous-token** head (each word looks one step back). In Gemma these
+heads are exactly the ones that use the fastest clocks. The paper proves how (their Theorem 5.3),
+and the construction is lovely:
+
+- **Diagonal head.** Give every word the **same** query and key, $q = k = c$, living in the fastest
+  pair. The score at distance $\Delta$ is $\|c\|^2\cos(\Delta \cdot 1\text{ rad})$: biggest at
+  $\Delta = 0$, smaller everywhere else. Make $\|c\|$ large and softmax turns "biggest" into "all of
+  the attention".
+- **Previous-token head.** Same, but turn the query **back by one notch**: $q = R(-1\text{ rad})\,c$.
+  Now the arrows line up at distance exactly 1.
+
+(One fast clock alone has a weak spot: 44 radians is almost exactly 7 full turns, so distance 44
+looks nearly like distance 0. Several fast clocks together fix it, because they don't all come back
+round at the same time, the same wall-clock trick as in section 3.2.2.)
+
+::video[previous-token-head]
+
+Why the fastest clock? Because it's the most **sensitive**: it moves a full radian per word, so
+"distance 0" and "distance 1" give very different angles. The slowest clock (base 10,000) needs
+about 10,000 words to move one radian; it can't tell neighbours apart at all.
+
+And here's the twist that makes RoPE essential. **Without any positional encoding** (called
+**NoPE**), such a head is impossible (their Proposition 5.2). The proof is one example: feed in the
+same token many times, "the the the the…". With no positions, every word has the identical query and
+key, so every score is the same, and softmax spreads attention evenly: word $i$ gives itself only
+$1/i$ of its attention. No sharp diagonal, no previous-token head. RoPE's fast clocks are what let a
+word say "the one right before me", even among identical words.
+
+### Insight 4: the slowest clocks carry meaning, and slowly drift
+
+If the slow clocks barely turn, what are they for? Precisely that: **a pair that barely turns is
+almost position-free**, so its dot product is almost a pure "does this key mean what I'm looking
+for?" test. The paper found heads whose slow pairs act as **semantic channels**, like one head
+whose words attend to the most recent apostrophe.
+
+But "almost" is the problem. Over a long enough text, even the slowest clock turns noticeably, and
+a match that was perfect at distance 10 is scrambled at distance 100,000. The paper proves that a
+single rotating channel can't stay reliable over arbitrarily long contexts (their Theorem 6.1).
+
+That explains a mystery from section 5 above. With base 10,000 (and 128 numbers per head), the
+slowest clock turns once every ~54,000 words, so over Llama 3's 128,000-word context it would spin
+**more than 2 full turns**, and a semantic channel would point the wrong way at times. With base
+**500,000**, it turns once every ~2.6 million words: over 128,000 words it moves only about a
+twentieth of a turn. **Raising the base keeps the meaning channels stable**, which, the paper
+argues, is the real reason it helps long contexts.
+
+Pick a clock and watch how its contribution changes with distance:
+
+::figure[rope-bands]
+
+### Insight 5: so why rotate the slowest clocks at all? p-RoPE
+
+If the slowest clocks are best used as position-free channels, make them **exactly**
+position-free: don't rotate them. **p-RoPE** keeps RoPE on only the fastest fraction $p$ of the
+pairs and leaves the rest unrotated. $p = 1$ is ordinary RoPE; $p = 0$ is NoPE. They trained Gemma
+2B models from scratch (8,000-token context) and measured perplexity (lower is better):
+
+| Positions | Wiki | FlanV2 |
+|---|---|---|
+| NoPE (no positions) | 4.8594 | 6.6429 |
+| RoPE, base 10,000 | 4.4627 | 6.4429 |
+| RoPE, base 500,000 | 4.4485 | 6.4593 |
+| 0.25-RoPE (rotate only the fastest quarter) | 4.5302 | 6.5111 |
+| **0.75-RoPE** (leave the slowest quarter unrotated) | **4.4414** | **6.4422** |
+| 0.75-RoPE "reversed" (drop the *fastest* quarter instead) | 4.4592 | 6.4683 |
+
+Leaving the slowest quarter unrotated did as well as or slightly better than plain RoPE, and better
+than raising the base; dropping the fastest quarter instead did worse. The gains are small, the
+models are small, and the authors are clear that perplexity isn't the same as downstream skill. But
+the picture is clean.
+
+**Why it mattered.** RoFormer derived *what* RoPE is; this paper shows *how* models use it. RoPE is
+less "a fading glow with distance" and more **a set of tools**: fast clocks for exact positions
+("the word before me"), slow clocks for nearly position-free meaning. That reframing changes how
+people stretch context too: the slow clocks are the fragile ones, which is exactly what
+[YaRN](/papers/yarn) treats separately.

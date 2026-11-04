@@ -24,6 +24,9 @@ export const DEFAULT_FIGURES: Readonly<Record<string, FigureLoader>> = {
     import('./positional-encoding-explorer-figure').then((m) => m.PositionalEncodingExplorerFigure),
   'rope-rotation': () => import('./rope-rotation-figure').then((m) => m.RopeRotationFigure),
   'rope-decay': () => import('./rope-decay-figure').then((m) => m.RopeDecayFigure),
+  'rope-bands': () => import('./rope-bands-figure').then((m) => m.RopeBandsFigure),
+  'yarn-frequencies': () =>
+    import('./yarn-frequencies-figure').then((m) => m.YarnFrequenciesFigure),
   'transformer-block': () =>
     import('./transformer-block-figure').then((m) => m.TransformerBlockFigure),
   'bptt-unrolled': () => import('./bptt-unrolled-figure').then((m) => m.BpttUnrolledFigure),

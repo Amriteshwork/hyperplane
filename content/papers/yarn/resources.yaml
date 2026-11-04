@@ -1,0 +1,9 @@
+# Curated links in display order; `note` says what each adds to this walkthrough (ADR 0016).
+- id: su-rope
+  note: "The original RoPE paper. Every clock on this page is one of its rotating pairs; this site's RoPE walkthrough derives them from scratch."
+- id: chen-position-interpolation
+  note: "The method section 2.3 builds on: squeeze the positions, fine-tune briefly, and why that beats extrapolating."
+- id: barbero-round-and-round
+  note: "Why the fast and slow clocks need different treatment: positional heads versus semantic channels, measured in Gemma."
+- id: pawar-context-extension-survey
+  note: "Where YaRN sits among every other way of stretching a model's context, for after this page."

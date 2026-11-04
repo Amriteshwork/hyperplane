@@ -1,0 +1,8 @@
+type: paper
+title: "Extending Context Window of Large Language Models via Positional Interpolation"
+url: https://arxiv.org/abs/2306.15595
+author: Chen et al. (Meta, 2023)
+level: advanced
+why: "Position Interpolation: squeeze positions into the trained range instead of extrapolating, and a short fine-tune takes LLaMA to 32k tokens."
+source: curated
+checked: 2026-11-04

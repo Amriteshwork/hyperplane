@@ -8,6 +8,6 @@
 - id: kazemnejad-positional-encoding
   note: "The sinusoidal encoding RoPE grew out of, with the proof that a shift is a rotation, the seed of this whole paper."
 - id: barbero-round-and-round
-  note: "Advanced, for after section 3.4.3: what trained models actually do with each of RoPE's frequencies."
+  note: "The paper behind this page's 2024 update: Gemma 7B's positional heads, semantic channels and p-RoPE, with every proof."
 - id: peng-yarn
-  note: "Advanced, for the epilogue: how RoPE models are stretched to contexts far longer than they were trained on."
+  note: "Advanced, for the epilogue: how RoPE models are stretched far past their training length. Walked through on this site as YaRN, explained."

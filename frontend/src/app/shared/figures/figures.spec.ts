@@ -40,10 +40,12 @@ import { KnnRegressionFigure } from './knn-regression-figure';
 import { NetworkShapeFigure } from './network-shape-figure';
 import { PositionalEncodingExplorerFigure } from './positional-encoding-explorer-figure';
 import { ReluSumFigure } from './relu-sum-figure';
+import { RopeBandsFigure } from './rope-bands-figure';
 import { RopeDecayFigure } from './rope-decay-figure';
 import { RopeRotationFigure } from './rope-rotation-figure';
 import { TransformerBlockFigure } from './transformer-block-figure';
 import { XorNetworkFigure } from './xor-network-figure';
+import { YarnFrequenciesFigure } from './yarn-frequencies-figure';
 
 async function mount<T>(type: Type<T>): Promise<[ComponentFixture<T>, HTMLElement]> {
   const fixture = TestBed.createComponent(type);
@@ -522,6 +524,32 @@ describe('figures', () => {
     button(el, '100').click();
     await fixture.whenStable();
     expect(kept()).toBeLessThan(paperBase);
+  });
+
+  it('RoPE bands: the slowest clock drifts at base 10,000 and holds at 500,000', async () => {
+    const [fixture, el] = await mount(RopeBandsFigure);
+    const live = () => el.querySelector('[aria-live]')?.textContent ?? '';
+    expect(live()).toContain('In between');
+    button(el, '500,000').click();
+    await fixture.whenStable();
+    expect(live()).toContain('semantic channel');
+    slide(el, 'Clock (pair)', 0);
+    await fixture.whenStable();
+    expect(live()).toContain('positional clock');
+  });
+
+  it('YaRN frequencies: only NTK-aware extrapolates, only by-parts keeps fast clocks', async () => {
+    const [fixture, el] = await mount(YarnFrequenciesFigure);
+    const live = () => el.querySelector('[aria-live]')?.textContent?.replace(/\s+/g, ' ') ?? '';
+    expect(live()).toContain('0.063 rad'); // PI at 16×: 1/16
+    expect(live()).toContain('Untouched clocks: 0 of 64');
+    button(el, 'NTK-aware').click();
+    await fixture.whenStable();
+    expect(live()).toContain('never seen in training: 17');
+    button(el, 'NTK-by-parts').click();
+    await fixture.whenStable();
+    expect(live()).toContain('Untouched clocks: 21 of 64');
+    expect(live()).toContain('never seen in training: 0');
   });
 
   it('transformer block: walks the stages and counts GPT-2 exactly', async () => {

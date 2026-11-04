@@ -1,0 +1,8 @@
+type: paper
+title: "The What, Why, and How of Context Length Extension Techniques in Large Language Models: A Detailed Survey"
+url: https://arxiv.org/abs/2401.07872
+author: Pawar et al. (2024)
+level: advanced
+why: "A map of the whole context-extension field: interpolation, extrapolation, attention changes and how they're evaluated."
+source: curated
+checked: 2026-11-04
