@@ -89,11 +89,21 @@ so 64 clocks). Clock 0 turns at $b^0 = 1$ radian per token; the last turns at ab
 
 $$\lambda_d = \frac{2\pi}{\theta_d} = 2\pi\, b^{2d/|D|}.$$
 
-**Turns during training.** How many full turns a clock makes across the training length $L$:
+**Which clocks are in danger?** Here's the question to ask. A longer text means bigger gaps, and a
+bigger gap turns a clock further. When does that produce an angle the model has never seen?
 
-$$r(d) = \frac{L}{\lambda_d}.$$
+Angles live on a circle, so turning by $2\pi$ lands you back where you started. If a clock went
+**all the way round** at least once during training, then every angle on its face has already
+come up, and no gap, however long, can show it anything new. If it **didn't**, it has only ever
+seen the slice from 0 up to $L\,\theta_d$, and a long enough gap pushes it off that slice.
 
-That last number decides everything. Here it is for Llama 2 ($L = 4{,}096$):
+So the one number that matters is how many full turns a clock made across the training length
+$L$:
+
+$$r(d) = \frac{L}{\lambda_d} = \frac{L\,\theta_d}{2\pi}.$$
+
+$r \ge 1$: safe, every angle is familiar. $r < 1$: in danger. Here it is for Llama 2
+($L = 4{,}096$):
 
 | Clock | Wavelength $\lambda$ (tokens) | Turns in training $r$ | Has it seen every angle? |
 |---|---|---|---|
@@ -103,9 +113,8 @@ That last number decides everything. Here it is for Llama 2 ($L = 4{,}096$):
 | 46 | 4,712 | 0.87 | **no**: never a full turn |
 | 63 (slowest) | 54,410 | 0.075 | **no**: only 1/13 of a turn |
 
-A clock with $r > 1$ has been all the way round: whatever angle a longer gap produces, the model
-has met it before. A clock with $r < 1$ has only ever seen a **slice** of its circle. Ask it for a
-bigger gap and it lands in the part of the circle the model has never seen.
+The fast clocks are safe hundreds of times over. The danger is all at the slow end: the last 18
+clocks never finished a turn, and the slowest saw only a thin wedge of its face.
 
 **The stretch.** To read $L'$ tokens instead of $L$, the **scale factor** is
 
@@ -188,36 +197,42 @@ them away. In practice, PI fine-tunes stopped working beyond about $s = 8$:
 > *"…only able to achieve a scaling factor of roughly $s=8$ before the LLM's outputs starts to
 > degrade, even after fine-tuning."*
 
-**The fix: slow the slow clocks, spare the fast ones.** Instead of one slowdown for all, spread the
-"interpolation pressure": the fastest clock untouched, the slowest slowed by the full $s$, the ones
-between something in between. The neat way to do that is to **change the base** $b$.
+**Let's design the fix ourselves.** PI slows every clock by $s$. What do we actually need?
 
-**Deriving the new base.** The speeds are $\theta_d = b^{-2d/|D|}$. Look at what a new base $b'$
-does at the two ends:
+- **The slowest clock must be slowed by $s$.** It's the one most in danger (section 0), and $s$ is
+  exactly what PI uses to keep it on its slice.
+- **The fastest clock should be slowed by 1×**, not at all. It's the one PI damaged, and it has
+  turned hundreds of times, so it doesn't need protecting.
 
-- **The fastest clock** ($d = 0$) turns at $b'^{\,0} = 1$, **whatever the base**. It's spared
-  automatically.
-- **The slowest clock** is $d = |D|/2 - 1$, so its exponent is $-\frac{2d}{|D|} =
-  -\frac{|D| - 2}{|D|}$. We want it slowed by exactly $s$, like PI would:
+What about the 62 clocks in between? We need some slowdown that goes from $1$ at clock 0 to $s$ at
+the last clock, $d_{\max} = |D|/2 - 1$. A straight line from 1 to $s$ would be the obvious first
+guess, but look at how the clocks are spaced. Each one is slower than the one before by the same
+**ratio**:
 
-$$b'^{\,-\frac{|D|-2}{|D|}} = \frac{1}{s}\; b^{-\frac{|D|-2}{|D|}}
-\quad\Longleftrightarrow\quad b'^{\,\frac{|D|-2}{|D|}} = s\; b^{\frac{|D|-2}{|D|}} .$$
+$$\frac{\theta_{d+1}}{\theta_d} = \frac{b^{-2(d+1)/|D|}}{b^{-2d/|D|}} = b^{-2/|D|}.$$
 
-Raise both sides to the power $\frac{|D|}{|D|-2}$:
+The clocks are evenly spaced on a **log scale**, like the keys of a piano. The slowdown that fits
+that spacing is also even on a log scale: every step multiplies it by the same amount. Going from
+1 to $s$ in $d_{\max}$ equal multiplications gives
+
+$$\text{slowdown}(d) = s^{\,d/d_{\max}} = s^{\frac{2d}{|D|-2}} .$$
+
+**Now the surprise.** Write down clock $d$'s new speed and collect the powers:
+
+$$\theta_d \cdot s^{-\frac{2d}{|D|-2}}
+= b^{-\frac{2d}{|D|}} \cdot \Big(s^{\frac{|D|}{|D|-2}}\Big)^{-\frac{2d}{|D|}}
+= \Big(b \cdot s^{\frac{|D|}{|D|-2}}\Big)^{-\frac{2d}{|D|}} .$$
+
+That's exactly RoPE's own formula, $b'^{\,-2d/|D|}$, with a **different base**:
 
 $$\boxed{\;b' = b \cdot s^{\frac{|D|}{|D|-2}}\;}$$
 
-For Llama 2 ($|D| = 128$, $b = 10{,}000$) and $s = 16$: $b' = 10{,}000 \times 16^{1.016} \approx
-167{,}000$. That's all "NTK-aware scaling" is: a bigger base. **Code Llama** used the same idea
-with a base of 1,000,000, and Meta's long-context Llama 2 paper called it "adjusted base frequency".
-
-**What happens to the clocks in between?** Divide the new speed by the old one:
-
-$$\frac{h(\theta_d)}{\theta_d} = \frac{b'^{\,-2d/|D|}}{b^{-2d/|D|}}
-= \Big(s^{\frac{|D|}{|D|-2}}\Big)^{-2d/|D|} = s^{-\frac{2d}{|D|-2}} .$$
-
-So clock $d$ is slowed by $s^{2d/(|D|-2)}$: 1× for the fastest, rising smoothly (on a log scale) to
-$s$× for the slowest. The pressure is spread out.
+We set out to design a new slowdown for every clock and ended up changing **one number in a
+config file**. That's why the idea spread so fast: it was first posted on Reddit as a one-line
+change anyone could try. For Llama 2 ($|D| = 128$, $b = 10{,}000$) and $s = 16$:
+$b' = 10{,}000 \times 16^{1.016} \approx 167{,}000$. That's all "NTK-aware scaling" is: a bigger
+base. **Code Llama** used the same idea with a base of 1,000,000, and Meta's long-context Llama 2
+paper called it "adjusted base frequency".
 
 **The catch: some clocks now extrapolate.** Take a clock in the slow half that never completed a
 turn in training ($r < 1$). At the new length $sL$, its largest angle is
@@ -242,19 +257,41 @@ treatment**. It just used a blunt tool, one base for all, to do it.
 > positional information, as they are crucial for the network to distinguish the relative order of
 > nearby tokens."*
 
-**In plain words.** Go back to the table in section 0 and ask, for each clock, the only question
-that matters: **has it seen every angle?** That's the number of turns in training, $r = L/\lambda$.
-The paper's rules follow directly:
+**In plain words.** NTK-aware failed because it chose each clock's slowdown by its **place in the
+line-up** (clock 0, clock 1, …). But section 0 already told us what actually matters: **has the
+clock seen every angle?** So let's start again, and decide each clock's speed from its turns in
+training, $r$.
 
-- **Many turns ($r$ large): don't touch it.** The clock has seen every angle many times, so a
-  longer text can't surprise it. And these fast clocks are exactly what tells nearby words apart,
-  so slowing them only hurts.
-- **Less than one turn ($r < 1$): slow it by the full $s$.** It has only seen a slice of its circle.
-  Slowing it by $s$ (just like PI) keeps every new angle inside that slice. No extrapolation.
-- **In between: a bit of both.**
+**A clock that never finished a turn ($r < 1$).** It has seen angles from 0 up to $L\,\theta_d$.
+Give it a new speed $h$. At the new length $sL$ it reaches $sL \cdot h$, and we need that to stay
+on the familiar slice:
 
-To blend smoothly, use a **ramp** $\gamma$ that goes from 0 ("slow fully") to 1 ("leave alone") as
-$r$ goes from $\alpha$ to $\beta$:
+$$sL \cdot h \le L\,\theta_d \quad\Longleftrightarrow\quad h \le \frac{\theta_d}{s} .$$
+
+So it must be slowed by **at least** $s$. Slowing it more would only squeeze neighbouring words
+together for nothing, so the best choice is **exactly** $s$: $h = \theta_d/s$, PI's speed.
+
+**A clock that went all the way round ($r \ge 1$).** No angle can surprise it, so there's no
+constraint at all. Slowing it can only blur nearby words, as PI showed. Best choice: **leave it
+alone**, $h = \theta_d$.
+
+That gives a sharp rule: slow by $s$ if $r < 1$, otherwise don't touch it. Now test it on the
+clocks right at the edge. A clock with $r = 0.99$ gets slowed 16×; its neighbour with $r = 1.01$
+isn't touched at all. Two almost identical clocks treated in opposite ways. And is a clock that
+made **one or two** turns really "safe"? It has seen each angle only once or twice, at specific
+positions in the text, so the model may still be reading where it is from those angles, not just
+how far apart two words are. The paper makes this point about clocks that never finish a turn:
+
+> *"…every other token during pre-training has an unique distance to it, which the neural network
+> can use to determine its absolute position."*
+
+For a clock with only a few turns, that's nearly as true. Only clocks with **many** turns are
+purely about relative distance, the ones the paper says not to touch.
+
+**So soften the edge.** Instead of one cut-off, use two: below $\alpha$ turns, slow fully; above
+$\beta$ turns, leave alone; in between, mix the two speeds. The simplest mix is a straight line, a
+**ramp** $\gamma$ that goes from 0 ("slow fully") to 1 ("leave alone") as $r$ goes from $\alpha$ to
+$\beta$:
 
 $$\gamma(r) = \begin{cases} 0 & r < \alpha \\[2pt] \dfrac{r - \alpha}{\beta - \alpha} & \alpha \le r \le \beta \\[6pt] 1 & r > \beta \end{cases}$$
 
@@ -263,8 +300,15 @@ and mix the two speeds with it:
 $$h(\theta_d) = \big(1 - \gamma(r(d))\big)\,\frac{\theta_d}{s} + \gamma(r(d))\,\theta_d .$$
 
 When $\gamma = 0$ this is $\theta_d/s$ (PI's speed); when $\gamma = 1$ it's $\theta_d$ (untouched).
-For Llama the paper found $\alpha = 1$ and $\beta = 32$ work well: clocks that made fewer than 1
-turn get the full slowdown, clocks that made more than 32 are left alone.
+
+**Where do the edges go?** Our argument fixes one of them: $\alpha = 1$, since anything under one
+turn **must** be slowed by $s$. The other one can't be derived; "how many turns count as
+plenty?" is a question about how a trained model behaves, so the authors tried values and
+measured:
+
+> *"The values of $\alpha$ and $\beta$ should be tuned on a case-by-case basis. For example, we
+> have found experimentally that for the Llama family of models, good values for $\alpha$ and
+> $\beta$ are $\alpha=1$ and $\beta=32$."*
 
 **Worked example: Llama 2.** With $L = 4{,}096$:
 

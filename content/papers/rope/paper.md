@@ -517,16 +517,14 @@ next section uses that freedom well.
 **In plain words.** Real queries and keys have $d = 64$ or $128$ numbers per head, not 2. The fix
 is beautifully simple: **pair them up**. Numbers 1 and 2 form one arrow, 3 and 4 another, and so
 on: $d/2$ little arrows. Rotate each pair by its position, each pair with **its own speed**
-$\theta_i$:
+$\theta_i$ (why its own speed, we'll see in a moment):
 
 $$R_{\Theta, m} = \begin{pmatrix}
 R(m\theta_1) & & & \\
 & R(m\theta_2) & & \\
 & & \ddots & \\
 & & & R(m\theta_{d/2})
-\end{pmatrix},$$
-
-$$\theta_i = 10000^{-2(i-1)/d}.$$
+\end{pmatrix}.$$
 
 Blank entries are zeros: each $2 \times 2$ block turns its own pair and ignores the rest. A dot
 product is a sum over coordinates, so it's a sum over pairs, and the 2D proof works pair by pair:
@@ -539,17 +537,48 @@ q_m^\top k_n &= \mathbf q^\top R_{\Theta, m}^\top R_{\Theta, n}\, \mathbf k
 \end{aligned}
 $$
 
-where $\mathbf q_{[i]}$ is the $i$-th pair. Still only the gap. Still exact.
+where $\mathbf q_{[i]}$ is the $i$-th pair. Still only the gap. Still exact. The proof works for
+**any** speeds. So which speeds should we pick? Let's design them.
 
-**Why many speeds and not one?** Imagine every pair turned at $\theta = 1$ radian per word. An
-arrow that turns 1 radian per step comes back round after $2\pi \approx 6.28$ words. So distance 0
-and distance 63 look almost the same (63 is almost exactly ten full turns). One clock can't tell
-"next to me" from "63 words away": the angle **wraps around**.
+**Try one speed for every pair.** Say $\theta = 1$ radian per word. An arrow that turns 1 radian
+per step comes back round after $2\pi \approx 6.28$ words. So distance 0 and distance 63 look
+almost the same (63 is almost exactly ten full turns). One clock can't tell "next to me" from "63
+words away": the angle **wraps around**. Pick a slower speed and the wrap-around moves further
+out, but now neighbours sit almost on top of each other. One speed can't do both jobs.
 
-The fix is the one your wall clock uses. The second hand is fast and tells moments apart within a
+**So use several, like a wall clock.** The second hand is fast and tells moments apart within a
 minute; the minute hand is slower; the hour hand slower still. Read together, they're never
-ambiguous within a day. RoPE's speeds $\theta_i$ go from **1 radian per word** for the first pair
-down to about **1/10,000** for the last, spaced evenly on a log scale. With $d = 128$:
+ambiguous within a day. That's why each pair gets its own speed. Three choices remain.
+
+**How fast can the fastest clock be?** Not faster than half a turn per word. At 4 radians per word,
+a step forward lands in the same place as a step of $4 - 2\pi \approx -2.3$ radians, and the clock
+can't tell "one word ahead" from "a bit behind". Anything under $\pi \approx 3.14$ is unambiguous;
+RoPE takes a round **1 radian per word**: a full turn every 6 words.
+
+**How slow should the slowest be?** Slow enough not to come round within any text we care about,
+so it can tell "near" from "far" across the whole document. RoPE aims for about
+**1/10,000 radian per word**: a full turn every ~60,000 words.
+
+**How should the ones in between be spaced?** The obvious guess is evenly, a straight line from 1
+down to 0.0001. Then the speeds go 1, 0.984, 0.968, … and almost every pair is a fast clock. All
+the distances from about 100 to 10,000 words would hang on the last couple of clocks. Distances
+don't work like that. Telling 1 word from 2 matters about as much as telling 100 from 200: what
+counts is the **ratio**. So space the speeds by equal **ratios**: each clock slower than the one
+before by the same factor $c$. With $d/2$ clocks starting at speed 1, clock $i$ turns at
+$\theta_i = c^{\,i-1}$. Ask that $d/2$ steps of $c$ bring you down to $1/10{,}000$:
+
+$$c^{\,d/2} = \frac{1}{10{,}000} \quad\Longrightarrow\quad c = 10{,}000^{-2/d}
+\quad\Longrightarrow\quad \boxed{\;\theta_i = 10{,}000^{-2(i-1)/d}\;}$$
+
+That's the paper's formula. (The last clock, $i = d/2$, stops one step short of the target, at
+about 1/8,700 radian per word.) Now every factor of 10 in distance gets the same number of
+clocks. With $d = 128$, the 64 speeds cover four factors of 10 (from 1 down to 0.0001), so each
+gets 16 clocks: pairs 1–16 come round every 6 to 54 words, pairs 17–32 every 63 to 540
+words, and so on.
+
+One honest note: nothing above forces the number **10,000**. It's the **base**, a choice inherited
+from the original transformer. Later models raised it (Llama 3 uses 500,000), and the
+update at the end of this page explains why that helps. With $d = 128$:
 
 | Pair | Speed $\theta_i$ (radians per word) | One full turn every… |
 |---|---|---|
@@ -673,9 +702,21 @@ pointing in random directions curls up on itself: the sum **cancels**. That's th
 
 ::video[spinning-arrows]
 
-**The derivation (summation by parts).** The paper turns that picture into a bound. The trick is
-the discrete cousin of integration by parts, called **Abel summation**. Define the running sums of
-the spinning arrows, with no $h$ at all:
+**Turning the picture into a bound.** Can we prove the score shrinks? Try the obvious move first:
+the size of a sum is at most the sum of the sizes, and a spinning arrow $e^{i\Delta\theta_i}$
+always has length 1, so
+
+$$\Big|\sum_i h_i\, e^{i\Delta\theta_i}\Big| \;\le\; \sum_i |h_i| .$$
+
+True, but useless: $\Delta$ has vanished, so the bound is the same at every distance. It went wrong
+because it sized up each arrow **on its own**, and the cancellation only happens **between**
+arrows. We need a quantity that measures how much the spinning arrows cancel each other. The
+natural one is their **running sum**: add up the first $j$ spinning arrows and see how far you get.
+When they point every which way, that sum stays short.
+
+So the plan is to rewrite the score in terms of running sums instead of single arrows. The tool
+for that is the discrete cousin of integration by parts, called **Abel summation** (or
+summation by parts). Define the running sums of the spinning arrows, with no $h$ at all:
 
 $$S_j = \sum_{i=0}^{j-1} e^{i\Delta\theta_i}, \qquad S_0 = 0 .$$
 
