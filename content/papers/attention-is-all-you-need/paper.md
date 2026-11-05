@@ -1,6 +1,6 @@
 ---
 title: Attention Is All You Need, explained
-summary: The 2017 paper that introduced the transformer, section by section, in plain words, with every equation unpacked and the key ideas animated.
+summary: The 2017 paper that introduced the transformer, section by section, in plain words. Attention, softmax, √d, multiple heads and the sine-wave positions are each derived from the problem they solve, with the key ideas animated.
 order: 1
 source: vaswani-attention-is-all-you-need
 concepts: [softmax, embeddings, self-attention, causal-masking, multi-head-attention, positional-encoding, residual-connections, layer-normalization, adam-optimizer, transformer]
@@ -34,7 +34,9 @@ papers in computer science.
 
 **How to read this page.** Each section below follows one section of the paper, in order.
 Each one starts with **what the paper says** (a short quote), then explains it **in plain
-words**, shows it in a figure or animation, and says **why it mattered**. Links at the end
+words**, shows it in a figure or animation, and says **why it mattered**. The key formulas
+aren't just handed over: we start from the problem, try the obvious fixes, watch them fail,
+and arrive at the paper's answer, so you could have invented it yourself. Links at the end
 of each section go to this site's concept pages, which build each idea from scratch with
 maths and runnable code. Keep the original open in another tab if you like. Section numbers
 here match it.
@@ -122,8 +124,11 @@ sub-layers: **attention** (words exchange information) and a small **feed-forwar
 $$\text{output} = \operatorname{LayerNorm}\big(x + \operatorname{Sublayer}(x)\big)$$
 
 - **$x + \ldots$, the residual connection.** The sub-layer only computes a *change* to add
-  to $x$, rather than replacing it. Information and gradients get an express lane through
-  all twelve layers.
+  to $x$, rather than replacing it. Why does that help? Differentiate:
+  $\frac{d}{dx}\big[x + F(x)\big] = 1 + F'(x)$. However small $F'$ is, the gradient passes
+  through the **1** untouched. Without the $+x$, the gradient through a stack is a product of
+  one factor per layer, and twelve factors of 0.5 make $0.5^{12} \approx 0.0002$: the
+  early layers would barely learn. Information and gradients get an express lane.
 - **LayerNorm** rescales each word's vector to a standard size, so values don't drift as
   layers stack up.
 
@@ -147,18 +152,60 @@ paper's 65 million parameters (213 million for its big version) to hundreds of b
 > set of key-value pairs to an output, where the query, keys, values, and output are all
 > vectors."*
 
-**In plain words.** This is the heart of the paper, and it's a **dictionary lookup**, made
-soft. In a Python dict you bring a key, find the one entry that matches exactly, and get its
-value. In attention, every word produces three vectors:
+**In plain words.** This is the heart of the paper. Rather than start from the formula, let's
+build it from the problem, and see that each piece is forced.
 
-- a **query**: *what am I looking for?* For "it" in *"the animal didn't cross the street
-  because it was too tired"*: something like "a noun that can get tired".
-- a **key**: *what do I offer?* For "animal": "I'm a noun, I'm alive".
-- a **value**: *what I'll hand over if you pick me.*
+**The problem.** Take "it" in *"the animal didn't cross the street because it was too
+tired"*. To understand "it", the model has to pull in information from "animal". In general:
+**each word should collect information from the other words, mostly from the relevant
+ones.** Say word $j$ comes in as a vector $x_j$. Word $i$'s output should be some combination
+of what the other words have.
 
-Instead of one exact match, a word compares its query with **every** key, and takes a
-**blend** of all the values: mostly the best matches, a little of the rest. The paper's
-equation does all words at once:
+**First try: average everyone.** $o_i = \frac1n \sum_j x_j$. Every word gets the same
+output, the sentence's average, so "it" learns nothing in particular about "animal". The
+weights must depend on **relevance**.
+
+**Second try: pick the single best match**, like a Python dictionary: bring a key, take the
+entry that matches. But "pick the best" is a jump. Nudge a score a little and the choice
+either doesn't change at all or flips completely. Training works by nudging weights and
+measuring what improves (gradients), and a hard choice gives a gradient of zero almost
+everywhere. Nothing would be learned.
+
+**So: a soft choice.** Give every other word a weight $a_{ij}$: positive, adding up to 1,
+bigger for better matches, and changing **smoothly** as the scores change. Then
+$o_i = \sum_j a_{ij} \cdot (\text{what word } j \text{ hands over})$. Two things to design:
+the **score**, and how scores become **weights**.
+
+**The score: a dot product, but of what?** We need one number saying how well two words
+match. The simplest is a dot product: large when two vectors point the same way, near 0 when
+unrelated, negative when opposed. For a whole sentence it's a single matrix multiplication.
+The obvious version, $x_i \cdot x_j$, has two flaws:
+
+- **Every word matches itself best**, because $x_i \cdot x_i = \|x_i\|^2$. Words would
+  mostly look at themselves.
+- **It's symmetric**: $x_i \cdot x_j = x_j \cdot x_i$. Relevance isn't. "It" badly needs
+  "animal"; "animal" barely needs "it".
+
+Both go away if each word makes **two different vectors** with two learned matrices: a
+**query** $q_i = x_i W^Q$, *what am I looking for?*, and a **key** $k_j = x_j W^K$, *what do I
+offer?* The score $q_i \cdot k_j$ is no longer symmetric, and a word no longer matches itself
+automatically. By the same logic, what a word is **matched on** needn't be what it **hands
+over**, so a third matrix makes a **value** $v_j = x_j W^V$. That's a dictionary lookup,
+made soft: queries, keys and values.
+
+**The weights: deriving softmax.** Turn a row of scores $s_1, \ldots, s_n$ into weights.
+Positive, whatever the score: exponentiate, since $e^{s} > 0$ always, and bigger scores
+give bigger results. Adding up to 1: divide by the total.
+
+$$a_j = \frac{e^{s_j}}{\sum_k e^{s_k}} .$$
+
+That's **softmax**, and it's smooth everywhere. (Why not square the scores to make them
+positive? Then a strongly *negative* score would count as a great match.) A bonus: add the
+same number to every score and the $e^{c}$ cancels top and bottom, so only **differences**
+between scores matter.
+
+Stack every word's query, key and value as the rows of matrices $Q, K, V$, and all of the
+above, for all words at once, is the paper's equation:
 
 $$\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
 
@@ -178,12 +225,27 @@ Read it right to left, in three steps:
 > *"We suspect that for large values of $d_k$, the dot products grow large in magnitude,
 > pushing the softmax function into regions where it has extremely small gradients."*
 
-A dot product adds up $d_k$ products. If each is random noise of size about 1, the sum grows
-like $\sqrt{d_k}$: with $d_k = 64$, scores land around ±8. Softmax of scores that far apart
-is nearly all-or-nothing: one weight near 1, the rest near 0. The model then can't learn,
-because nudging a score barely changes anything. Dividing by $\sqrt{d_k}$ brings the scores
-back to a size of about 1, where softmax stays soft. It's a one-character fix to a
-real training problem.
+The paper only says "we suspect". We can derive it. At the start of training, think of each
+number in a query and a key as independent noise with average 0 and spread (variance) 1. The
+score adds up $d_k$ products:
+
+$$q \cdot k = \sum_{t=1}^{d_k} q_t\, k_t .$$
+
+Each product $q_t k_t$ has average 0 and variance $\mathbb E[q_t^2]\,\mathbb E[k_t^2] = 1$.
+Variances of independent terms **add**, so the score has variance $d_k$, and its typical
+size is $\sqrt{d_k}$. With $d_k = 64$, scores land around $\pm 8$.
+
+Why is that bad? Differentiate softmax's weight $a_j = e^{s_j}/Z$ (with $Z = \sum_k e^{s_k}$)
+with respect to its own score, using the quotient rule:
+
+$$\frac{\partial a_j}{\partial s_j} = \frac{e^{s_j} Z - e^{s_j} e^{s_j}}{Z^2} = a_j\,(1 - a_j) .$$
+
+That's large only when $a_j$ is somewhere in the middle. Scores 16 apart make one weight
+$e^{16} \approx 9$ million times another: every weight is nearly 1 or nearly 0, so every
+$a_j(1 - a_j)$ is nearly 0, and nudging a score changes almost nothing. Learning stalls.
+
+The fix follows directly: divide the score by its typical size, $\sqrt{d_k}$, and the variance
+is back to 1, where softmax stays soft. A one-character fix to a real training problem.
 
 Try it: pick a word and see where it looks. Then raise the sharpness, which is what
 unscaled dot products do, and watch softmax harden into all-or-nothing.
@@ -207,6 +269,12 @@ needs several answers at once. For "it", the model may want to know **what it re
 (the animal), **what's happening to it** (tired), and **where in the sentence it sits**. A
 single blend mixes all of that into one average: the blurring section 2 warned about.
 
+Why can't one attention do both? Because one attention gives "it" **one set of weights**,
+one way of splitting its attention across the sentence. If one question wants all of it on
+"animal" and another wants all of it on "tired", no single split satisfies both. The best
+compromise is 50/50, and "it" receives half of each value, blended together. Two questions
+need two sets of weights: **two attentions**.
+
 So the paper runs **8 attentions side by side**, called **heads**. Each word vector has
 $d_{\text{model}} = 512$ numbers. Rather than one head working on all 512, each head gets its
 own learned projection down to $d_k = 64$ numbers and runs its own attention there, with its
@@ -216,8 +284,13 @@ matrix $W^O$:
 $$\operatorname{MultiHead}(Q,K,V) = \operatorname{Concat}(\text{head}_1, \ldots, \text{head}_8)\, W^O,
 \qquad \text{head}_i = \operatorname{Attention}(QW_i^Q,\, KW_i^K,\, VW_i^V)$$
 
-**The neat part: it's free.** Eight heads of size 64 cost exactly as much as one head of
-size 512. The same multiplications are just split into eight groups.
+**The neat part: it's free.** Count the weights. One head working on all 512 numbers needs a
+$512 \times 512$ query matrix. Eight heads of 64 need eight $512 \times 64$ matrices: side by
+side, that's $512 \times (8 \times 64) = 512 \times 512$. Same for keys and values. Eight
+heads of size 64 cost exactly as much as one head of size 512; the same multiplications are
+just split into eight groups. (Why shrink each head to $d_{\text{model}}/8$? Precisely so the
+cost stays fixed. The price is that each head compares queries and keys with only 64
+numbers.)
 
 ::video[multi-head-split]
 
@@ -282,8 +355,12 @@ pre-softmax linear transformation"*), which saves parameters and makes sense: a 
 vector should look similar going in and coming out.
 
 The paper also multiplies the embeddings by $\sqrt{d_{\text{model}}} \approx 22.6$ when
-they go in. That makes them larger than the position stamps added next, so position
-doesn't drown out meaning.
+they go in, without saying why. Here's the usual reading, in numbers. The position stamps
+added next (section 3.5) are 256 (sine, cosine) pairs, each pair of length 1, so a stamp has
+length $\sqrt{256} = 16$. Embeddings are commonly started with numbers of size about
+$1/\sqrt{512}$, which gives a vector of length about 1. Added as they are, the stamp would be
+16 times bigger than the word: position would drown out meaning. Times 22.6, the word is the
+bigger of the two again.
 
 **Why it mattered.** The "talk, then think" rhythm of attention followed by a feed-forward
 network is still the shape of every transformer block today.
@@ -303,17 +380,52 @@ man" and "man bites dog" would look identical. An RNN gets order for free becaus
 in order. A transformer has to be **told**.
 
 The fix is to **add a position stamp** to each word's embedding before the first layer: a
-vector that's different for position 0, 1, 2, … The paper builds the stamps from sine
-waves:
+vector that's different for position 0, 1, 2, … What should the stamp be? Let's try the
+obvious options.
+
+**Try: the position number itself**, $0, 1, 2, \ldots$ It grows without limit. At position
+500, the stamp is hundreds of times bigger than the word's meaning and swamps it.
+
+**Try: the position divided by the length**, so it stays between 0 and 1. Now "the next
+word" is a step of $1/10$ in a 10-word sentence and $1/1{,}000$ in a 1,000-word one. The same
+distance looks different in every sentence.
+
+**Try: count in binary.** Write the position as bits:
+
+| Position | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| bit 0 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 1 |
+| bit 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 1 |
+| bit 2 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 1 |
+
+Every number stays 0 or 1, however long the text, and every position gets a different
+pattern. Look at the rows: each bit **repeats** in a cycle, and each cycle is **twice as
+long** as the one above. Bit 0 flips every word, bit 1 every 2 words, bit 2 every 4. That's
+a row of clocks, each running at half the speed of the last. Binary is almost what we want.
+Its only flaw is that it **jumps**: 0, then suddenly 1. Neural networks learn best from
+values that change smoothly.
+
+**Make the clocks smooth.** Replace each flipping bit with a smooth wave of the same rhythm:
+a sine. One sine isn't quite enough, because it rises and falls and so passes through each
+value twice per cycle: $\sin$ alone can't tell "on the way up" from "on the way down". Pair it
+with a cosine and the two together are the coordinates of a point going round a circle:
+**the angle of a clock hand**, which is unambiguous within a turn.
+
+**Choose the speeds.** Binary halves the speed at each step: the speeds form a geometric
+sequence. The paper does the same with a gentler ratio: the first clock turns 1 radian per
+word, and the speeds shrink by equal ratios down to about $1/10{,}000$ for the last. With
+$d/2$ clocks, that's $\omega_i = 10000^{-2i/d}$ for clock $i = 0, 1, \ldots$, and the stamp
+is every clock's (sine, cosine) reading:
 
 $$PE_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \qquad
 PE_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right)$$
 
-Picture **a row of clocks**, each with one hand. The first clock's hand turns fast, one
-notch per word. Each next clock turns more slowly, the last one hardly at all. To stamp
-position 37, read off the angle of every hand. Fast clocks tell nearby positions apart;
-slow clocks tell far-apart positions apart. Together, every position gets a unique
-fingerprint.
+The 10,000 is a choice, not a derivation: it sets the slowest clock to take about 60,000
+words per turn, far longer than any sentence the paper translated.
+
+Picture **a row of clocks**, each with one hand. To stamp position 37, read off the angle of
+every hand. Fast clocks tell nearby positions apart; slow clocks tell far-apart positions
+apart. Together, every position gets a unique fingerprint.
 
 ::video[positional-clocks]
 
@@ -321,9 +433,27 @@ fingerprint.
 > to attend by relative positions, since for any fixed offset $k$, $PE_{pos+k}$ can be
 > represented as a linear function of $PE_{pos}$."*
 
-"Three words later" is the same turn of every clock hand, wherever you start. So "look
-three words back" is one fixed rotation, which a network can learn once and reuse
-everywhere. Move the position below and watch each clock's hand turn:
+We can check that claim. Take one clock with speed $\omega$ and use the angle-addition
+formulas on its reading $k$ words later:
+
+$$
+\begin{aligned}
+\sin(\omega(pos + k)) &= \cos(\omega k)\,\sin(\omega\, pos) + \sin(\omega k)\,\cos(\omega\, pos), \\
+\cos(\omega(pos + k)) &= -\sin(\omega k)\,\sin(\omega\, pos) + \cos(\omega k)\,\cos(\omega\, pos).
+\end{aligned}
+$$
+
+As a matrix:
+
+$$\begin{pmatrix} \sin(\omega(pos+k)) \\ \cos(\omega(pos+k)) \end{pmatrix}
+= \begin{pmatrix} \cos\omega k & \sin\omega k \\ -\sin\omega k & \cos\omega k \end{pmatrix}
+\begin{pmatrix} \sin(\omega\, pos) \\ \cos(\omega\, pos) \end{pmatrix} .$$
+
+The matrix contains $k$ but **not** $pos$. So "$k$ words later" is one fixed rotation of
+every clock, wherever you start: a linear function, exactly as claimed. "Look three words
+back" is something a network can learn once and reuse everywhere. (Rotary embeddings, RoPE,
+take this one step further and apply the rotation to queries and keys directly.) Move the
+position below and watch each clock's hand turn:
 
 ::figure[positional-encoding-explorer]
 
@@ -348,6 +478,18 @@ with vectors of size $d$ (Table 1 in the paper):
 | Self-attention | $n^2 \cdot d$ | 1 | 1 |
 | Recurrent | $n \cdot d^2$ | $n$ | $n$ |
 | Convolutional (window $k$) | $k \cdot n \cdot d^2$ | 1 | $\log_k n$ |
+
+Each entry is a count you can do yourself:
+
+- **Attention:** $n \times n$ scores, each a dot product of length $d$: $n^2 d$.
+- **Recurrent:** at each of $n$ steps, the memory vector (size $d$) is multiplied by a
+  $d \times d$ matrix: $n d^2$.
+- **Convolution:** at each of $n$ positions, $k$ neighbours each go through a $d \times d$
+  matrix: $k n d^2$. Each layer widens what a word can see by a factor of about $k$, so
+  covering $n$ words takes about $\log_k n$ layers (dilated convolutions, as the paper notes).
+
+So attention is cheaper than recurrence exactly when $n^2 d < n d^2$, that is, when
+$n < d$: when the sentence is shorter than the vector.
 
 - **Steps that must wait:** an RNN must finish word 1 before word 2. Attention does all
   words in one go.
@@ -379,7 +521,10 @@ $$\text{lrate} = d_{\text{model}}^{-0.5} \cdot \min\!\big(\text{step}^{-0.5},\;
 
 It looks scary; it's a ramp and a slope. For the first 4,000 steps the learning rate
 **climbs in a straight line** (the second term is smaller). After that it **slowly decays**
-like $1/\sqrt{\text{step}}$ (the first term is smaller). Why warm up? At the start the
+like $1/\sqrt{\text{step}}$ (the first term is smaller). The two terms are equal where
+$\text{step}^{-0.5} = \text{step} \cdot 4000^{-1.5}$, that is, at step 4,000, so that's the
+peak: $512^{-0.5} \cdot 4000^{-0.5} \approx 0.0007$. The shape is an engineering choice the
+authors found to work, not something derived. Why warm up? At the start the
 weights are random and Adam's running averages of the gradients are still unreliable, so big
 steps can throw the model somewhere it never recovers from. Start gently, speed up once
 things settle, then slow down to fine-tune.
